@@ -121,8 +121,8 @@
 	"home-page-slug": "",
 	"all-footnotes-page-slug": "_all-footnotes",
 	"og-setup": {
-		"columns": 1,
-		"excerpt": false,
+		"columns": 2,
+		"excerpt": true,
 		"title-font-url": "https://fonts.googleapis.com/css2?family=Kreon:wght@500&display=swap",
 		"footnote-font-url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap"
 	},
