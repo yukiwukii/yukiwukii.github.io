@@ -1,5 +1,5 @@
 {
-	"database-id": "1a55baa2cec48003a6bdf0cfa64fa84d",
+	"database-id": "1a55baa2cec480f8832de1144e68153a",
 	"author": "Nadya Yuki Wangsajaya",
 	"tracking": {
 		"google-analytics": {
@@ -36,9 +36,9 @@
 	"base-path": "",
 	"giscus": {
 		"data-repo": "yukiwukii/yukiwukii.github.io",
-		"data-repo-id": "R_kgDON_GJYg",
+		"data-repo-id": "R_kgDON_SkwQ",
 		"data-category": "Announcements",
-		"data-category-id": "DIC_kwDON_GJYs4CnTld",
+		"data-category-id": "DIC_kwDON_Skwc4CnUVF",
 		"data-mapping": "pathname",
 		"data-input-position": "top",
 		"data-reactions-enabled": true
@@ -121,8 +121,8 @@
 	"home-page-slug": "",
 	"all-footnotes-page-slug": "_all-footnotes",
 	"og-setup": {
-		"columns": 2,
-		"excerpt": true,
+		"columns": 1,
+		"excerpt": false,
 		"title-font-url": "https://fonts.googleapis.com/css2?family=Kreon:wght@500&display=swap",
 		"footnote-font-url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap"
 	},
