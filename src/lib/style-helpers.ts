@@ -121,7 +121,7 @@ export const getTextToAstroIcon = (text: string) => {
 		"table-of-contents": "mdi:table-of-contents",
 		"clear-search": "mdi:format-clear",
 		close: "mdi:close-thick",
-		"checkbox-blank": "mdi:checkbox-blank-outline",
+		"checkbox-unchecked": "mdi:checkbox-blank-outline",
 		"checkbox-checked": "mdi:checkbox-marked",
 		"clipboard-copy-code": "mdi:clipboard",
 		"clipboard-copy-code-done": "mdi:clipboard-check",
@@ -132,6 +132,7 @@ export const getTextToAstroIcon = (text: string) => {
 		"theme-dark": "iconoir:half-moon",
 		"theme-light": "iconoir:sun-light",
 		"to-top": "mdi:keyboard-arrow-up",
+		"theme-system": "tabler:sun-moon",
 		menu: "mdi:hamburger-menu",
 		filter: "mdi:filter",
 		"table-search": "mdi:table-search",
@@ -191,7 +192,7 @@ export const getTextToSVGPath = (text: string) => {
 			"m12.546 9.966l-.94-.941l.788-1.904h-2.73L8.427 5.885h10.689v1.23h-5.358zm6.793 10.788l-7.973-7.993l-2.308 5.431H7.706l2.725-6.365l-7.377-7.358l.708-.707l16.284 16.284z",
 		close:
 			"M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z",
-		"checkbox-blank":
+		"checkbox-unchecked":
 			"M19 3H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m0 2v14H5V5z",
 		"checkbox-checked":
 			"m10 17l-5-5l1.41-1.42L10 14.17l7.59-7.59L19 8m0-5H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2",
@@ -214,6 +215,8 @@ export const getTextToSVGPath = (text: string) => {
 		"theme-light":
 			"M12 18a6 6 0 1 0 0-12a6 6 0 0 0 0 12m10-6h1M12 2V1m0 22v-1m8-2l-1-1m1-15l-1 1M4 20l1-1M4 4l1 1m-4 7h1",
 		"to-top": "M7.41 18.41L6 17l6-6l6 6l-1.41 1.41L12 13.83zm0-6L6 11l6-6l6 6l-1.41 1.41L12 7.83z",
+		"theme-system":
+			"M 9.173 14.83 a 4 4 0 1 1 5.657 -5.657 m -2.83 2.827 a 7.5 7.5 0 0 0 8.845 2.492 A 9 9 0 0 1 5.642 18.36 M 3 12 h 1 m 8 -9 v 1 M 5.6 5.6 l 0.7 0.7 M 3 21 L 21 3",
 		"toggle-triangle": "M 9.2075 8.5912 L 15.8925 12.45 L 9.2075 16.3087 Z",
 		menu: "M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3",
 		filter:

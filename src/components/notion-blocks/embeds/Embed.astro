@@ -1,5 +1,5 @@
 ---
-import * as interfaces from "../../../lib/interfaces.ts";
+import * as interfaces from "@/lib/interfaces.ts";
 import {
 	isTweetURL,
 	isTikTokURL,
@@ -11,20 +11,20 @@ import {
 	isEmbeddableURL,
 	isBlueskyAppURL,
 	isNotionEmbedURL,
-} from "../../../lib/blog-helpers.ts";
-import Caption from "../Caption.astro";
+} from "@/lib/blog-helpers.ts";
+import Caption from "@/components/notion-blocks/Caption.astro";
 
-import Bookmark from "./Bookmark.astro";
-import TweetEmbed from "./TweetEmbed.astro";
-import TikTokEmbed from "./TikTokEmbed.astro";
-import InstagramEmbed from "./InstagramEmbed.astro";
-import PinterestEmbed from "./PinterestEmbed.astro";
-import CodePenEmbed from "./CodePenEmbed.astro";
-import EmbedGeneric from "./EmbedGeneric.astro";
-import SpotifyEmbed from "./SpotifyEmbed.astro";
-import GoogleMapsEmbed from "./GoogleMapsEmbed.astro";
-import BlueskyEmbed from "./BlueskyEmbed.astro";
-import NotionEmbed from "./NotionEmbed.astro";
+import Bookmark from "@/components/notion-blocks/embeds/Bookmark.astro";
+import TweetEmbed from "@/components/notion-blocks/embeds/TweetEmbed.astro";
+import TikTokEmbed from "@/components/notion-blocks/embeds/TikTokEmbed.astro";
+import InstagramEmbed from "@/components/notion-blocks/embeds/InstagramEmbed.astro";
+import PinterestEmbed from "@/components/notion-blocks/embeds/PinterestEmbed.astro";
+import CodePenEmbed from "@/components/notion-blocks/embeds/CodePenEmbed.astro";
+import EmbedGeneric from "@/components/notion-blocks/embeds/EmbedGeneric.astro";
+import SpotifyEmbed from "@/components/notion-blocks/embeds/SpotifyEmbed.astro";
+import GoogleMapsEmbed from "@/components/notion-blocks/embeds/GoogleMapsEmbed.astro";
+import BlueskyEmbed from "@/components/notion-blocks/embeds/BlueskyEmbed.astro";
+import NotionEmbed from "@/components/notion-blocks/embeds/NotionEmbed.astro";
 
 export interface Props {
 	block: interfaces.Block;
@@ -38,6 +38,24 @@ try {
 } catch (err) {
 	console.log(err);
 }
+
+// Helper function to transform known URLs to their embeddable versions.
+function transformEmbedUrl(url: URL): URL {
+	// Check if the URL is a GitHub Gist URL.
+	if (url.hostname === "gist.github.com") {
+		// If it doesn't already have the embeddable extension, add ".pibb?scroll=true"
+		if (!url.pathname.endsWith(".pibb")) {
+			return new URL(url.toString() + ".pibb"); //height is automatically cropped to be fixed, so we do not need to set ?scroll=true
+		}
+	}
+	return url;
+}
+
+// Apply transformation for known embeddable URLs (currently only gist)
+if (url) {
+	url = transformEmbedUrl(url);
+}
+
 const plainTextCaption = block.Embed?.Caption.map((richText) => richText.PlainText).join(" ");
 ---
 
