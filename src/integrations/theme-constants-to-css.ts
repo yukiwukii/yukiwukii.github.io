@@ -288,7 +288,7 @@ ${createCssVariables("dark")}
     @apply text-3xl font-bold text-accent-2;
   }
 	ul li, ol li {
-    @apply mb-2;
+    @apply mb-4;
   }
 }
 
