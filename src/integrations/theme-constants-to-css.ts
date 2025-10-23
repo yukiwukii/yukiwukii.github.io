@@ -290,6 +290,9 @@ ${createCssVariables("dark")}
 	ul li, ol li {
     @apply mb-4;
   }
+	ul li:last-child, ol li:last-child {
+	  @apply mb-0;
+	}
 }
 
 @utility transition-height {
