@@ -38,19 +38,58 @@ jobs:
         id: determine_cleanup
         run: |
           PUSH_NEEDED="false"
+          EVENT="${{ github.event_name }}"
+          REPO="${{ github.repository }}"
+          UPSTREAM_REPO="nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog"
+
+          echo "🔍 Checking cleanup conditions for $REPO (event: $EVENT)"
+
           # Only check for cleanup if we are NOT on the template repo itself.
-          if [[ "${{ github.repository }}" != "nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog" ]]; then
+          if [[ "$REPO" != "$UPSTREAM_REPO" ]]; then
             # Scenario 1: New repository created from template.
-            if [[ "${{ github.event_name }}" == "create" ]]; then
+            if [[ "$EVENT" == "create" ]]; then
               echo "✅ Triggered by 'create' event. Cleanup push is required."
               PUSH_NEEDED="true"
             # Scenario 2: Existing user synced from the upstream template via a push.
-            elif [[ "${{ github.event_name }}" == "push" ]]; then
-              # We search for the template repository's OWNER, which is always present in a
-              # merge commit message from an upstream PR (e.g., "from nerdymomocat-templates/...")
+            elif [[ "$EVENT" == "push" ]]; then
+              echo "🔁 Push event detected, checking for upstream sync conditions..."
+
+              # ---------------------------------------------------------------------------------------
+              # Method 1 (legacy): detect commit message referencing the upstream template owner.
+              # ---------------------------------------------------------------------------------------
               if echo '${{ toJSON(github.event.commits) }}' | jq -r '.[].message' | grep -q 'from nerdymomocat-templates/'; then
                 echo "✅ Detected a commit message in this push referencing the upstream template owner. Cleanup push is required."
                 PUSH_NEEDED="true"
+              fi
+
+              # ---------------------------------------------------------------------------------------
+              # Method 2 (robust): compare SHA with upstream repo to catch fast-forward/discard syncs.
+              # ---------------------------------------------------------------------------------------
+              echo "Fetching upstream main branch for SHA comparison..."
+              git fetch https://github.com/$UPSTREAM_REPO.git main --depth=1 || true
+
+              if git rev-parse FETCH_HEAD >/dev/null 2>&1; then
+                LOCAL_SHA=$(git rev-parse HEAD)
+                UPSTREAM_SHA=$(git rev-parse FETCH_HEAD)
+                echo "🧩 Local HEAD:    $LOCAL_SHA"
+                echo "🧩 Upstream HEAD: $UPSTREAM_SHA"
+
+                # --- Case A: Fast-forward or discard sync (exact same SHA)
+                if [[ "$LOCAL_SHA" == "$UPSTREAM_SHA" ]]; then
+                  echo "✅ Detected fast-forward or discard sync (same SHA). Cleanup push is required."
+                  PUSH_NEEDED="true"
+                else
+                  # --- Case B: Merge-based sync (different SHA but merge commit)
+                  LAST_COMMIT_MSG=$(git log -1 --pretty=%B || echo "")
+                  if echo "$LAST_COMMIT_MSG" | grep -Eiq "merge pull request|sync fork|update from|template"; then
+                    echo "✅ Detected merge-based sync via commit message. Cleanup push is required."
+                    PUSH_NEEDED="true"
+                  else
+                    echo "ℹ️ No direct upstream sync indicators found in latest commit."
+                  fi
+                fi
+              else
+                echo "⚠️ Upstream fetch failed or no FETCH_HEAD found; skipping SHA comparison."
               fi
             fi
           else
