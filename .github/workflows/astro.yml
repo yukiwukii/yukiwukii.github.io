@@ -46,8 +46,10 @@ jobs:
               PUSH_NEEDED="true"
             # Scenario 2: Existing user synced from the upstream template via a push.
             elif [[ "${{ github.event_name }}" == "push" ]]; then
-              if echo '${{ toJSON(github.event.commits) }}' | jq -r '.[].message' | grep -q 'nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog'; then
-                echo "✅ Detected a commit message in this push referencing the upstream template. Cleanup push is required."
+              # We search for the template repository's OWNER, which is always present in a
+              # merge commit message from an upstream PR (e.g., "from nerdymomocat-templates/...")
+              if echo '${{ toJSON(github.event.commits) }}' | jq -r '.[].message' | grep -q 'from nerdymomocat-templates/'; then
+                echo "✅ Detected a commit message in this push referencing the upstream template owner. Cleanup push is required."
                 PUSH_NEEDED="true"
               fi
             fi
