@@ -135,6 +135,8 @@ export default (): AstroIntegration => ({
 
       const createCssVariables = (theme) => {
         let cssContent = "";
+        let bgHex = "#ffffff";
+
         for (const key in theme_config.colors) {
           let color = theme_config.colors[key][theme];
           let cssValue;
@@ -147,12 +149,30 @@ export default (): AstroIntegration => ({
             // Normalize the provided color value to hex
             cssValue = normalizeColor(color);
           }
+
+          if (key === "bg") bgHex = cssValue;
+
           cssContent += `    --theme-${key}: ${cssValue};\n`;
         }
-        return cssContent;
+
+      // Compute popover-bg based on bg color
+      const refHex =
+          parseInt(bgHex.slice(5, 7), 16) > parseInt(bgHex.slice(1, 3), 16)
+          ? theme === "light" ? "#D2E7F7" : "#acd5e7" // cool
+          : theme === "light" ? "#FBE4CE" : "#F3C699"; // warm
+
+      const mix = (v1: string, v2: string) =>
+        Math.round(0.9 * parseInt(v1, 16) + 0.1 * parseInt(v2, 16))
+          .toString(16)
+          .padStart(2, "0");
+
+      const popoverHex = `#${mix(bgHex.slice(1, 3), refHex.slice(1, 3))}${mix(bgHex.slice(3, 5), refHex.slice(3, 5))}${mix(bgHex.slice(5, 7), refHex.slice(5, 7))}`;
+      cssContent += `    --theme-popover-bg: ${popoverHex};`;
+
+      	return cssContent;
       };
 
-      let cssContent = `@import "tailwindcss";
+      const cssContent = `@import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -165,6 +185,7 @@ export default (): AstroIntegration => ({
   --color-accent: var(--theme-accent);
   --color-accent-2: var(--theme-accent-2);
   --color-quote: var(--theme-quote);
+  --color-popover-bg: var(--theme-popover-bg);
 ${colorDefinitions}
 }
 
