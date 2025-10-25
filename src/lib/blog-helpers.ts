@@ -199,9 +199,8 @@ const _filterRichTexts = (
 });
 
 const _extractReferencesInBlock = (postId: string, block: Block): ReferencesInPage => {
-	//MISSING TABLE ROWS
 	// console.debug("here in _extractReferencesInBlock");
-	const rich_texts =
+	let rich_texts =
 		block.Bookmark?.Caption ||
 		block.BulletedListItem?.RichTexts ||
 		block.Callout?.RichTexts ||
@@ -221,6 +220,23 @@ const _extractReferencesInBlock = (postId: string, block: Block): ReferencesInPa
 		block.Toggle?.RichTexts ||
 		block.Video?.Caption ||
 		[];
+
+	// Extract RichTexts from table cells
+	if (block.Table?.Rows) {
+		const tableRichTexts: RichText[] = [];
+		block.Table.Rows.forEach((row) => {
+			row.Cells.forEach((cell) => {
+				if (cell.RichTexts && cell.RichTexts.length > 0) {
+					tableRichTexts.push(...cell.RichTexts);
+				}
+			});
+		});
+		// Combine table RichTexts with existing rich_texts
+		if (tableRichTexts.length > 0) {
+			rich_texts = [...rich_texts, ...tableRichTexts];
+		}
+	}
+
 	let filteredRichText = _filterRichTexts(postId, block, rich_texts);
 	let direct_media_link =
 		block.NAudio?.External?.Url ||
@@ -681,5 +697,61 @@ export const isEmbeddableURL = async (url: URL): Promise<boolean> => {
 	} catch (error) {
 		console.error("Error checking URL:", error);
 		return false;
+	}
+}
+
+/**
+ * Load cached HTML for a post
+ * @param postSlug - The slug of the post
+ * @param shouldUseCache - Whether to attempt to load cache
+ * @returns The cached HTML string or empty string if not found
+ */
+export async function loadCachedHtml(postSlug: string, shouldUseCache: boolean): Promise<string> {
+	if (!shouldUseCache) return "";
+
+	const cacheFilePath = path.join(BUILD_FOLDER_PATHS["blocksHtmlCache"], `${postSlug}.html`);
+	try {
+		return await fs.promises.readFile(cacheFilePath, "utf-8");
+	} catch (e) {
+		return ""; // Fallback to rendering if cache read fails
+	}
+}
+
+/**
+ * Load cached headings for a post
+ * @param postSlug - The slug of the post
+ * @param postLastUpdatedBeforeLastBuild - Whether the post was updated before last build
+ * @returns The cached headings or null if not found
+ */
+export async function loadCachedHeadings(
+	postSlug: string,
+	postLastUpdatedBeforeLastBuild: boolean,
+): Promise<any | null> {
+	if (!postLastUpdatedBeforeLastBuild) return null;
+
+	const headingsCacheDir = BUILD_FOLDER_PATHS["headingsCache"];
+	const headingsCacheFile = path.join(headingsCacheDir, `${postSlug}.json`);
+
+	try {
+		const headingsData = await fs.promises.readFile(headingsCacheFile, "utf-8");
+		return superjson.parse(headingsData);
+	} catch (e) {
+		return null; // Fallback to building headings if cache read fails
+	}
+}
+
+/**
+ * Save headings to cache
+ * @param postSlug - The slug of the post
+ * @param headings - The headings to save
+ */
+export async function saveCachedHeadings(postSlug: string, headings: any): Promise<void> {
+	const headingsCacheDir = BUILD_FOLDER_PATHS["headingsCache"];
+	const headingsCacheFile = path.join(headingsCacheDir, `${postSlug}.json`);
+
+	try {
+		await fs.promises.writeFile(headingsCacheFile, superjson.stringify(headings), "utf-8");
+	} catch (e) {
+		console.error("Error saving headings cache:", e);
 	}
 };

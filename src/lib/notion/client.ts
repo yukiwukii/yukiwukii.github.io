@@ -15,7 +15,13 @@ import {
 	LAST_BUILD_TIME,
 	HIDE_UNDERSCORE_SLUGS_IN_LISTS,
 	BUILD_FOLDER_PATHS,
+	IN_PAGE_FOOTNOTES_ENABLED,
+	FOOTNOTES,
 } from "../../constants";
+import {
+	extractFootnotesFromBlockAsync,
+	extractFootnotesInPage,
+} from "../../lib/footnotes";
 import type * as responses from "@/lib/notion/responses";
 import type * as requestParams from "@/lib/notion/request-params";
 import type {
@@ -59,6 +65,7 @@ import type {
 	Reference,
 	NAudio,
 	ReferencesInPage,
+	Footnote,
 } from "@/lib/interfaces";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Client, APIResponseError } from "@notionhq/client";
@@ -83,8 +90,87 @@ let dsCache: Database | null = null;
 let blockIdPostIdMap: { [key: string]: string } | null = null;
 let allTagsWithCountsCache: { name: string; count: number; description: string; color: string }[] | null = null;
 
+// Footnotes: Comments API permission check cache (checked once per build)
+// null = not checked yet, true = has permission, false = no permission
+let hasCommentsPermission: boolean | null = null;
+
+// Footnotes: Adjusted config (set once at module initialization, includes permission fallback)
+// Export so other files can use the same config
+export let adjustedFootnotesConfig: any = null;
+
+// Footnotes: Track initialization promise to ensure it only runs once
+let initializationPromise: Promise<void> | null = null;
+
+/**
+ * Initialize footnotes config once at module load
+ * This checks permissions and applies fallback if needed
+ */
+async function initializeFootnotesConfig(): Promise<void> {
+	// Return existing promise if already initializing/initialized
+	if (initializationPromise) {
+		return initializationPromise;
+	}
+
+	// Create and store the initialization promise
+	initializationPromise = (async () => {
+	// If footnotes not enabled, set to empty object
+	if (!IN_PAGE_FOOTNOTES_ENABLED || !FOOTNOTES) {
+		adjustedFootnotesConfig = {};
+		return;
+	}
+
+	// Check if block-comments is configured (includes block-inline-text-comments for future)
+	const isBlockCommentsConfigured =
+		FOOTNOTES?.["in-page-footnotes-settings"]?.source?.["block-comments"] === true ||
+		FOOTNOTES?.["in-page-footnotes-settings"]?.source?.["block-inline-text-comments"] === true;
+
+	if (isBlockCommentsConfigured) {
+		// Check permission
+		console.log('Footnotes: Checking Comments API permission (block-comments source configured)...');
+		console.log('           The "@notionhq/client warn" below is EXPECTED and means permission is granted.');
+
+		try {
+			await client.comments.list({ block_id: "00000000-0000-0000-0000-000000000000" });
+			hasCommentsPermission = true;
+			console.log('Footnotes: ✓ Permission confirmed - block-comments source available.');
+			adjustedFootnotesConfig = FOOTNOTES;
+		} catch (error: any) {
+			if (error?.status === 403 || error?.code === 'restricted_resource') {
+				hasCommentsPermission = false;
+				console.log('Footnotes: ✗ Permission denied - falling back to end-of-block source.');
+				// Create fallback config
+				adjustedFootnotesConfig = {
+					...FOOTNOTES,
+					"in-page-footnotes-settings": {
+						...FOOTNOTES["in-page-footnotes-settings"],
+						source: {
+							...FOOTNOTES["in-page-footnotes-settings"].source,
+							"block-comments": false,
+							"block-inline-text-comments": false,
+							"end-of-block": true,
+						}
+					}
+				};
+			} else {
+				hasCommentsPermission = true;
+				console.log('Footnotes: ✓ Permission confirmed - block-comments source available.');
+				adjustedFootnotesConfig = FOOTNOTES;
+			}
+		}
+	} else {
+		// No permission check needed
+		adjustedFootnotesConfig = FOOTNOTES;
+	}
+	})();
+
+	return initializationPromise;
+}
+
 const BUILDCACHE_DIR = BUILD_FOLDER_PATHS["buildcache"];
 async function getResolvedDataSourceId(): Promise<string> {
+	// Initialize config once at module load
+	await initializeFootnotesConfig();
+
 	if (resolvedDataSourceId) {
 		return resolvedDataSourceId;
 	}
@@ -280,11 +366,15 @@ export async function getPostByPageId(pageId: string): Promise<Post | null> {
 
 export async function getPostContentByPostId(
 	post: Post,
-): Promise<{ blocks: Block[]; referencesInPage: ReferencesInPage[] | null }> {
+): Promise<{ blocks: Block[]; referencesInPage: ReferencesInPage[] | null; footnotesInPage: Footnote[] | null }> {
 	const tmpDir = BUILD_FOLDER_PATHS["blocksJson"];
 	const cacheFilePath = path.join(tmpDir, `${post.PageId}.json`);
 	const cacheReferencesInPageFilePath = path.join(
 		BUILD_FOLDER_PATHS["referencesInPage"],
+		`${post.PageId}.json`,
+	);
+	const cacheFootnotesInPageFilePath = path.join(
+		BUILD_FOLDER_PATHS["footnotesInPage"],
 		`${post.PageId}.json`,
 	);
 	const isPostUpdatedAfterLastBuild = LAST_BUILD_TIME
@@ -293,6 +383,7 @@ export async function getPostContentByPostId(
 
 	let blocks: Block[];
 	let referencesInPage: ReferencesInPage[] | null;
+	let footnotesInPage: Footnote[] | null = null;
 
 	if (!isPostUpdatedAfterLastBuild && fs.existsSync(cacheFilePath)) {
 		// If the post was not updated after the last build and cache file exists, return the cached data
@@ -308,19 +399,50 @@ export async function getPostContentByPostId(
 				"utf-8",
 			);
 		}
+		// Load or extract footnotes (only if footnotes are enabled)
+		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled) {
+			if (fs.existsSync(cacheFootnotesInPageFilePath)) {
+				footnotesInPage = superjson.parse(fs.readFileSync(cacheFootnotesInPageFilePath, "utf-8"));
+				// Still need to update blocks with indices in case blocks cache is old
+				extractFootnotesInPage(blocks);
+			} else {
+				footnotesInPage = extractFootnotesInPage(blocks);
+				fs.writeFileSync(
+					cacheFootnotesInPageFilePath,
+					superjson.stringify(footnotesInPage),
+					"utf-8",
+				);
+				// Re-save blocks cache with updated footnote indices
+				fs.writeFileSync(cacheFilePath, superjson.stringify(blocks), "utf-8");
+			}
+		}
 	} else {
 		// If the post was updated after the last build or cache does not exist, fetch new data
 		blocks = await getAllBlocksByBlockId(post.PageId);
-		// Write the new data to the cache file
+
+		// Extract footnotes first (this assigns Index and SourceBlockId to block.Footnotes in place)
+		// Only if footnotes are enabled
+		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled) {
+			footnotesInPage = extractFootnotesInPage(blocks);
+		}
+
+		// Now write blocks to cache (with updated footnote indices)
 		fs.writeFileSync(cacheFilePath, superjson.stringify(blocks), "utf-8");
+
+		// Extract and save references
 		referencesInPage = extractReferencesInPage(post.PageId, blocks);
 		fs.writeFileSync(cacheReferencesInPageFilePath, superjson.stringify(referencesInPage), "utf-8");
+
+		// Save footnotes cache (only if footnotes are enabled)
+		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled && footnotesInPage) {
+			fs.writeFileSync(cacheFootnotesInPageFilePath, superjson.stringify(footnotesInPage), "utf-8");
+		}
 	}
 
 	// Update the blockIdPostIdMap
 	updateBlockIdPostIdMap(post.PageId, blocks);
 
-	return { blocks, referencesInPage };
+	return { blocks, referencesInPage, footnotesInPage };
 }
 
 function formatUUID(id: string): string {
@@ -437,7 +559,7 @@ export async function getAllBlocksByBlockId(blockId: string): Promise<Block[]> {
 		params["start_cursor"] = res.next_cursor as string;
 	}
 
-	const allBlocks = results.map((blockObject) => _buildBlock(blockObject));
+	const allBlocks = await Promise.all(results.map((blockObject) => _buildBlock(blockObject)));
 
 	for (let i = 0; i < allBlocks.length; i++) {
 		const block = allBlocks[i];
@@ -468,6 +590,24 @@ export async function getAllBlocksByBlockId(blockId: string): Promise<Block[]> {
 			block.Quote.Children = await getAllBlocksByBlockId(block.Id);
 		} else if (block.Type === "callout" && block.Callout && block.HasChildren) {
 			block.Callout.Children = await getAllBlocksByBlockId(block.Id);
+		}
+
+		// Extract footnotes AFTER children are fetched
+		// This is critical for start-of-child-blocks mode which needs the Children array populated
+		try {
+			if (adjustedFootnotesConfig && adjustedFootnotesConfig["in-page-footnotes-settings"]?.enabled) {
+				const extractionResult = await extractFootnotesFromBlockAsync(
+					block,
+					adjustedFootnotesConfig,
+					client
+				);
+				if (extractionResult.footnotes.length > 0) {
+					block.Footnotes = extractionResult.footnotes;
+				}
+			}
+		} catch (error) {
+			console.error(`Failed to extract footnotes from block ${block.Id}:`, error);
+			// Continue without footnotes rather than failing the entire build
 		}
 	}
 
@@ -525,7 +665,7 @@ export async function getBlock(blockId: string, forceRefresh = false): Promise<B
 			},
 		);
 
-		const block = _buildBlock(res);
+		const block = await _buildBlock(res);
 
 		// Update our mapping and cache with this new block
 		const blockIdPostIdMap = getBlockIdPostIdMap();
@@ -875,7 +1015,7 @@ export async function getDataSource(): Promise<Database> {
 	return database;
 }
 
-function _buildBlock(blockObject: responses.BlockObject): Block {
+async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 	const block: Block = {
 		Id: blockObject.id,
 		Type: blockObject.type,

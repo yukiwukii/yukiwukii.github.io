@@ -7,15 +7,18 @@ import {
 	resetFirstImage,
 	setCurrentHeadings,
 	setTrackCurrentPageId,
+	getReferencesInPage,
+	loadCachedHtml,
+	loadCachedHeadings,
+	saveCachedHeadings,
 } from "@/lib/blog-helpers";
 import { getAllPosts, getPostContentByPostId, processFileBlocks } from "@/lib/notion/client";
-import { getReferencesInPage } from "@/lib/blog-helpers";
 import type { Post } from "@/lib/interfaces";
 import { buildHeadings } from "@/utils";
-import { BUILD_FOLDER_PATHS, LAST_BUILD_TIME } from "@/constants";
-import fs from "fs/promises";
-import path from "path";
-import superjson from "superjson";
+import { LAST_BUILD_TIME } from "@/constants";
+import { adjustedFootnotesConfig } from "@/lib/notion/client";
+import type { Block } from "@/lib/interfaces";
+import FootnotesSection from "@/components/blog/FootnotesSection.astro";
 
 export async function getStaticPaths() {
 	const posts = await getAllPosts();
@@ -88,44 +91,32 @@ if (!post) {
 
 // Load cached HTML only if shouldUseCache is true
 let cachedHtml = "";
-if (postFound && shouldUseCache) {
-	const cacheFilePath = path.join(BUILD_FOLDER_PATHS["blocksHtmlCache"], `${post.Slug}.html`);
-	try {
-		cachedHtml = await fs.readFile(cacheFilePath, "utf-8");
-	} catch (e) {
-		cachedHtml = ""; // Fallback to rendering if cache read fails
-	}
+if (postFound) {
+	cachedHtml = await loadCachedHtml(post.Slug, shouldUseCache);
 }
 
+// Load cached headings if available
 let cachedHeadings = null;
-const headingsCacheDir = BUILD_FOLDER_PATHS["headingsCache"];
-if (postFound && postLastUpdatedBeforeLastBuild) {
-	const headingsCacheFile = path.join(headingsCacheDir, `${post.Slug}.json`);
-	try {
-		const headingsData = await fs.readFile(headingsCacheFile, "utf-8");
-		cachedHeadings = superjson.parse(headingsData);
-	} catch (e) {
-		cachedHeadings = null; // Fallback to building headings if cache read fails
-	}
+if (postFound) {
+	cachedHeadings = await loadCachedHeadings(post.Slug, postLastUpdatedBeforeLastBuild);
 }
+
+let footnotesInPage = null;
 
 if (postFound) {
 	const result = await getPostContentByPostId(post);
 	blocks = result.blocks;
 	referencesInPage = result.referencesInPage;
+	footnotesInPage = result.footnotesInPage;
 
 	// Use cached headings if available, otherwise build and save them
 	if (cachedHeadings) {
 		headings = cachedHeadings;
 	} else {
 		headings = buildHeadings(blocks);
-		const headingsCacheFile = path.join(headingsCacheDir, `${post.Slug}.json`);
-		try {
-			await fs.writeFile(headingsCacheFile, superjson.stringify(headings), "utf-8");
-		} catch (e) {
-			console.error("Error saving headings cache:", e);
-		}
+		await saveCachedHeadings(post.Slug, headings);
 	}
+
 	setCurrentHeadings(headings);
 
 	// Process file blocks only if cache isn't used
@@ -148,18 +139,22 @@ if (postFound) {
 
 {
 	postFound && resetFirstImage() && setTrackCurrentPageId(post.PageId) && (
-		<PostLayout post={post} headings={headings} shouldUseCache={shouldUseCache}>
-			{shouldUseCache && cachedHtml ? (
-				<div
-					class="post-body max-w-[708px] print:max-w-full"
-					data-html-type="cached"
-					set:html={cachedHtml}
-				/>
-			) : (
-				<div class="post-body max-w-[708px] print:max-w-full" data-html-type="new">
-					<NotionBlocks blocks={blocks} />
-				</div>
-			)}
+		<PostLayout post={post} headings={headings} shouldUseCache={shouldUseCache} footnotesInPage={footnotesInPage}>
+			<div class="post-body max-w-[708px] print:max-w-full" data-html-type={shouldUseCache && cachedHtml ? "cached" : "new"}>
+				{shouldUseCache && cachedHtml ? (
+					<div set:html={cachedHtml} />
+				) : (
+					<>
+						<NotionBlocks blocks={blocks} />
+						{/* Footnotes section - only render when NOT using cache (cached HTML already includes it) */}
+						{adjustedFootnotesConfig?.['in-page-footnotes-settings']?.enabled &&
+						 adjustedFootnotesConfig?.['in-page-footnotes-settings']?.['generate-footnotes-section'] &&
+						 footnotesInPage && (
+							<FootnotesSection footnotes={footnotesInPage} />
+						)}
+					</>
+				)}
+			</div>
 		</PostLayout>
 	)
 }

@@ -1,8 +1,10 @@
-import config from "../constants-config.json";
-const key_value_from_json = { ...config };
-
 import fs from "fs";
 import path from "path";
+import JSON5 from "json5";
+
+const configContent = fs.readFileSync("./constants-config.json5", "utf8");
+const config = JSON5.parse(configContent);
+const key_value_from_json = { ...config };
 
 import {
 	transformerNotationFocus,
@@ -20,6 +22,7 @@ export const BUILD_FOLDER_PATHS = {
 	headingsCache: path.join("./tmp", "blocks-json-cache", "headings"),
 	referencesInPage: path.join("./tmp", "blocks-json-cache", "references-in-page"),
 	referencesToPage: path.join("./tmp", "blocks-json-cache", "references-to-page"),
+	footnotesInPage: path.join("./tmp", "blocks-json-cache", "footnotes-in-page"),
 	ogImages: path.join("./tmp", "og-images"),
 	rssCache: path.join("./tmp", "rss-cache"),
 	blocksHtmlCache: path.join("./tmp", "blocks-html-cache"),
@@ -30,53 +33,66 @@ export const BUILD_FOLDER_PATHS = {
 
 export const NOTION_API_SECRET =
 	import.meta.env.NOTION_API_SECRET || process.env.NOTION_API_SECRET || "";
-export const DATABASE_ID = process.env.DATABASE_ID || key_value_from_json["database-id"] || "";
+export const DATABASE_ID = process.env.DATABASE_ID || key_value_from_json?.notion?.["database-id"] || "";
 export const DATA_SOURCE_ID =
-	process.env.DATA_SOURCE_ID || key_value_from_json["data-source-id"] || "";
-export const AUTHOR = key_value_from_json["author"] || "";
+	process.env.DATA_SOURCE_ID || key_value_from_json?.notion?.["data-source-id"] || "";
+export const AUTHOR = key_value_from_json?.["site-info"]?.author || "";
 export const TRACKING = key_value_from_json["tracking"] || {};
 export const WEBMENTION_API_KEY =
 	import.meta.env.WEBMENTION_API_KEY ||
 	process.env.WEBMENTION_API_KEY ||
-	key_value_from_json["webmention"]["webmention-api-key"] ||
+	key_value_from_json?.comments?.webmention?.["webmention-api-key"] ||
 	"";
-export const WEBMENTION_LINK = key_value_from_json["webmention"]["webmention-link"] || "";
+export const WEBMENTION_LINK = key_value_from_json?.comments?.webmention?.["webmention-link"] || "";
 
 export const CUSTOM_DOMAIN =
-	process.env.CUSTOM_DOMAIN || key_value_from_json["custom-domain"] || ""; // <- Set your custom domain if you have. e.g. alpacat.com
+	process.env.CUSTOM_DOMAIN || key_value_from_json?.["site-info"]?.["custom-domain"] || ""; // <- Set your custom domain if you have. e.g. alpacat.com
 export const BASE_PATH =
-	process.env.BASE || process.env.BASE_PATH || key_value_from_json["base-path"] || ""; // <- Set sub directory path if you want. e.g. /docs/
+	process.env.BASE || process.env.BASE_PATH || key_value_from_json?.["site-info"]?.["base-path"] || ""; // <- Set sub directory path if you want. e.g. /docs/
 
-export const NUMBER_OF_POSTS_PER_PAGE = key_value_from_json["number-of-posts-per-page"] || 10;
+export const NUMBER_OF_POSTS_PER_PAGE = key_value_from_json?.["collections-and-listings"]?.["number-of-posts-per-page"] || 10;
 
-export const ENABLE_LIGHTBOX = key_value_from_json["enable-lightbox"] || false;
+export const ENABLE_LIGHTBOX = key_value_from_json?.["block-rendering"]?.["enable-lightbox"] || false;
 
 /**
  *  a collection which represents a page
  */
-export const MENU_PAGES_COLLECTION = key_value_from_json["menu-pages-collection"] || "main";
+export const MENU_PAGES_COLLECTION = key_value_from_json?.["collections-and-listings"]?.["menu-pages-collection"] || "main";
 
-export const HEADING_BLOCKS = key_value_from_json["heading-blocks"] || [
+export const HEADING_BLOCKS = key_value_from_json?.["block-rendering"]?.["heading-blocks"] || [
 	"heading_11",
 	"heading_2",
 	"heading_3",
 ];
 
-export const FULL_PREVIEW_COLLECTIONS = key_value_from_json["full-preview-collections"] || [];
+export const FULL_PREVIEW_COLLECTIONS = key_value_from_json?.["collections-and-listings"]?.["full-preview-collections"] || [];
 
 export const HIDE_UNDERSCORE_SLUGS_IN_LISTS =
-	key_value_from_json["hide-underscore-slugs-in-lists"] || false;
+	key_value_from_json?.["collections-and-listings"]?.["hide-underscore-slugs-in-lists"] || false;
 
-export const HOME_PAGE_SLUG = key_value_from_json["home-page-slug"] || "home";
-export const ALL_FOOTNOTES_PAGE_SLUG = key_value_from_json["all-footnotes-page-slug"] || null;
+export const HOME_PAGE_SLUG = key_value_from_json?.["collections-and-listings"]?.["home-page-slug"] || "home";
+
+/**
+ * Footnotes configuration
+ * - "sitewide-footnotes-page-slug": Legacy manual footnotes page (already works via NBlocksPopover)
+ * - "in-page-footnotes-settings": Automatic in-page footnotes with markers (new feature)
+ */
+export const FOOTNOTES = key_value_from_json["footnotes"] || null;
+
+// Legacy manual footnotes page slug (used by NBlocksPopover)
+export const SITEWIDE_FOOTNOTES_PAGE_SLUG = FOOTNOTES?.["sitewide-footnotes-page-slug"] || "_all-footnotes";
+
+// Helper to check if in-page footnotes are enabled
+export const IN_PAGE_FOOTNOTES_ENABLED =
+	FOOTNOTES?.["in-page-footnotes-settings"]?.enabled === true;
 
 export const OG_SETUP = key_value_from_json["og-setup"] || {
 	columns: 1,
 	excerpt: false,
 };
 
-// export const OPTIMIZE_IMAGES = key_value_from_json["optimize-images"] == null ? true : key_value_from_json["optimize-images"];
-export const OPTIMIZE_IMAGES = key_value_from_json["optimize-images"] || false;
+// export const OPTIMIZE_IMAGES = key_value_from_json?.["block-rendering"]?.["optimize-images"] == null ? true : key_value_from_json?.["block-rendering"]?.["optimize-images"];
+export const OPTIMIZE_IMAGES = key_value_from_json?.["block-rendering"]?.["optimize-images"] || false;
 
 export const SHORTCODES = key_value_from_json["shortcodes"] || {
 	"html-render": "",
@@ -103,20 +119,20 @@ console.log("Last Build Start Time:", LAST_BUILD_TIME);
 
 export const REFERENCES = key_value_from_json["references"] || null;
 
-export const RECENT_POSTS_ON_HOME_PAGE = key_value_from_json["recent-posts-on-home-page"] || false;
+export const RECENT_POSTS_ON_HOME_PAGE = key_value_from_json?.["collections-and-listings"]?.["recent-posts-on-home-page"] || false;
 
 export const SOCIALS = key_value_from_json["socials"] || {};
 
-export const GISCUS = key_value_from_json["giscus"] || null;
+export const GISCUS = key_value_from_json?.comments?.giscus || null;
 
-export const BLUESKY_COMM = key_value_from_json["bluesky-comments"] || {};
+export const BLUESKY_COMM = key_value_from_json?.comments?.["bluesky-comments"] || {};
 
 export const THEME = key_value_from_json["theme"] || {};
 
 export const GOOGLE_SEARCH_CONSOLE_META_TAG =
-	key_value_from_json["google-search-console-html-tag"] || null;
+	key_value_from_json?.tracking?.["google-search-console-html-tag"] || null;
 
-export const FULL_WIDTH_SM = key_value_from_json["full-width-social-embeds"] || false;
+export const FULL_WIDTH_SM = key_value_from_json?.["block-rendering"]?.["full-width-social-embeds"] || false;
 
 const TRANSFORMER_FUNCTIONS_ARR = [
 	transformerNotationFocus(),
