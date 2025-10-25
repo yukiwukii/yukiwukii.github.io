@@ -328,7 +328,7 @@ const popoverTriggers = document.querySelectorAll(getPopoverSelector());
    * - Hover marker or note: Highlights both
    * - Overlapping notes: Automatically stacked with gaps
    */
-  document.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('load', () => {
     // Initialize margin notes if on large screen
     if (window.matchMedia('(min-width: 1024px)').matches) {
       positionMarginNotes();
@@ -403,7 +403,7 @@ const popoverTriggers = document.querySelectorAll(getPopoverSelector());
       }
 
       const marginNote = document.createElement('aside');
-      marginNote.className = 'footnote-margin-note absolute left-full ml-8 w-32 xl:ml-12 xl:w-48 text-sm leading-relaxed text-textColor/70 transition-opacity duration-200 pointer-events-auto';
+      marginNote.className = 'footnote-margin-note absolute left-full ml-8 w-32 xl:ml-12 xl:w-48 text-sm leading-relaxed text-textColor/60 transition-opacity duration-200 pointer-events-auto';
       marginNote.dataset.noteId = footnoteId;
 
       const content = template.content.cloneNode(true);
@@ -501,6 +501,22 @@ const popoverTriggers = document.querySelectorAll(getPopoverSelector());
     opacity: 1;
     color: var(--color-textColor);
   }
+
+	[data-margin-note].highlighted {
+		background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+		border-radius: 3px;
+		padding: 0 2px;
+		margin: 0 -2px; /* This prevents the padding from shifting surrounding text */
+	}
+
+	/* Add this new rule to highlight the number inside the margin note */
+	.footnote-margin-note.highlighted sup {
+		background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+		border-radius: 3px;
+		padding: 0 2px;
+		margin: 0 -2px; /* Prevents padding from shifting text */
+		color: var(--color-quote); /* Keep the quote color for the number */
+	}
 
   /* Make second child (first content block after <sup>) in blocks-type margin notes display inline with the marker */
   .footnote-margin-blocks > :nth-child(2) {

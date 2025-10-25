@@ -1,71 +1,105 @@
-// This file now supports JSON5 format - you can add comments to document your configuration!
+// This file now supports JSON5 format - and has comments to document your configuration! Te configuration has changed significantly since earlier versions. Please review all settings.
 {
 	// === Notion Configuration ===
+	// This section configures the connection to your Notion database.
 	notion: {
-		"data-source-id": "f6e3813f-eb93-4a77-bbf4-81ad653d63ba", // Preferred: Use this for your main Notion database
-		"database-id": "", // Fallback: Used if data-source-id is not provided
+		// (Preferred) The Data Source ID for your Notion integration. This is a more stable way to connect to your database. You can find this in UI here: https://developers.notion.com/reference/retrieve-a-data-source#finding-a-data-source-id
+		"data-source-id": "f6e3813f-eb93-4a77-bbf4-81ad653d63ba",
+
+		// (Fallback) The classic Database ID. This is used only if 'data-source-id' is empty. The integration will automatically find the Data Source ID and use the first one from this if needed.
+		"database-id": "",
 	},
 
 	// === Site Information ===
+	// Basic details about your website used for metadata, RSS feeds, and SEO.
 	"site-info": {
-		author: "", // Author name for RSS feeds and metadata (important for SEO and attribution)
-		"custom-domain": "", // Your custom domain (e.g., "example.com") - leave empty if using default hosting
-		"base-path": "", // Base path for subdirectory deployment (e.g., "/blog") - leave empty for root
+		// Your name or the name of your site's author. Used in RSS feeds, OG images etc and other metadata for attribution.
+		author: "",
+
+		// Your custom domain name (e.g., "example.com"). Important: Do NOT include "https://" or a trailing slash. Leave this empty if you are deploying to a service like Vercel or Netlify without a custom domain.
+		"custom-domain": "",
+
+		// The sub-directory your site is deployed in (e.g., "/blog"). Leave empty if your site is at the root of your domain. Must start with a forward slash "/" if used.
+		"base-path": "",
 	},
 
 	// === Collections & Post Listings ===
-	// Configuration for post listings, collections, and page organization
+	// Configure how your posts are organized and displayed in lists.
 	"collections-and-listings": {
-		"home-page-slug": "", // Slug of the page to use as home page (empty = use default)
-		"recent-posts-on-home-page": false, // Show recent posts section on home page
-		"number-of-posts-per-page": 10, // Number of posts displayed per page in listings
-		"menu-pages-collection": "main", // Name of the Notion collection used for menu pages
-		"full-preview-collections": ["Stream"], // Collections that show full post content in list views (not just excerpts)
-		"hide-underscore-slugs-in-lists": true, // Hide pages with slugs starting with underscore from listings
+		// The slug of the Notion page you want to use as your website's home page.
+		"home-page-slug": "home",
+
+		// If true, a section with the 5 most recent posts will be displayed on the home page.
+		"recent-posts-on-home-page": true,
+
+		// The number of posts to show on each page of a paginated list (e.g., /posts, /tags/mytag).
+		"number-of-posts-per-page": 10,
+
+		// The name of the Notion 'Collection' property value for pages that should appear in the main navigation menu. These are treated as static pages (e.g., 'About', 'Contact') rather than blog posts.
+		"menu-pages-collection": "main",
+
+		// An array of 'Collection' names where posts should be displayed in full on list pages. Useful for microblogs or "stream" style collections where showing the full content is desired.
+		"full-preview-collections": ["Stream"],
+
+		// If true, any post with a slug starting with an underscore (e.g., "_draft-post") will be hidden from all lists (home page, collections, tags), from sitemap and search. The page will still be built and accessible via its direct URL.
+		"hide-underscore-slugs-in-lists": true,
 	},
 
 	// === Theme Customization ===
+	// Customize the look and feel of your site, including colors and fonts.
 	theme: {
+		// Define your site's color palette.
+		// Colors MUST be in RGB format, with spaces between numbers (e.g., "255 255 255").
 		colors: {
-			// Colors are in RGB format: "R G B" (e.g., "255 255 255" for white)
+			// Background colors
 			bg: {
 				light: "249 249 249",
 				dark: "28 30 32",
 			},
+			// Main text colors
 			text: {
 				light: "34 39 42",
 				dark: "255 255 255",
 			},
+			// Link colors
 			link: {
 				light: "85 123 118",
 				dark: "199 200 203",
 			},
+			// Primary accent color (e.g., for titles, highlights)
 			accent: {
 				light: "203 41 65",
 				dark: "41 188 136",
 			},
+			// Secondary accent color (e.g., for borders, subtle highlights)
 			"accent-2": {
 				light: "17 17 17",
 				dark: "237 237 237",
 			},
+			// Color for blockquotes and other special text
 			quote: {
 				light: "203 41 65",
 				dark: "205 254 183",
 			},
 		},
 		"fontfamily-google-fonts": {
-			// Combined Google Fonts URL for all fonts used
+			// Provide the single, combined URL from Google Fonts for all font families you want to use.
 			"combined-url": "https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap",
+
+			// Font family names must exactly match the name provided by Google Fonts.
 			"sans-font-name": "Roboto",
 			"serif-font-name": "",
-			"mono-font-name": "Roboto\\ Mono", // Note: backslash escape for spaces
+
+			// Important: If a font name contains a space, you must escape it with two backslashes.
+			"mono-font-name": "Roboto\\ Mono",
 		},
 	},
 
 	// === Social Media Links ===
-	// Social media links displayed on your site
+	// Add your social media profile URLs here. They will be displayed in the site's social list component.
+	// The keys (e.g., 'github', 'twitter') are fixed and correspond to specific icons.
 	socials: {
-		email: "",
+		email: "mailto:your-email@example.com",
 		github: "",
 		googlescholar: "",
 		semanticscholar: "",
@@ -80,6 +114,7 @@
 		calendar: "",
 		kofi: "",
 		"buy-me-a-coffee": "",
+		// This link is for forked repo you'll end up having. Feel free to change it to your needs.
 		"this-github-repo": "https://github.com/nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog",
 	},
 
@@ -87,123 +122,165 @@
 	tracking: {
 		"google-analytics": {
 			"use-ga": true,
-			"public-ga-tracking-id": "", // Your GA4 measurement ID (e.g., G-XXXXXXXXXX)
+			// Your Google Analytics 4 Measurement ID (e.g., G-XXXXXXXXXX).
+			"public-ga-tracking-id": "",
 		},
+		// Umami is a privacy-focused, open-source analytics alternative to Google Analytics.
 		umami: {
-			// Umami is a privacy-focused, open-source analytics alternative
 			"use-umami": false,
+			// The website ID from your Umami dashboard.
 			"data-website-id": "",
+			// Set to true if you are hosting your own Umami instance.
 			"self-hosted": false,
+			// The URL to your self-hosted Umami script (e.g., "https://my-umami.com/script.js").
 			"self-hosted-umami-url": "",
 		},
-		"google-search-console-html-tag": "", // Google Search Console verification meta tag content (for SEO)
+		// For verifying site ownership with Google.
+		// Paste the 'content' attribute from the meta tag provided by Google Search Console.
+		// e.g., <meta name="google-site-verification" content="YOUR_CODE_HERE" /> -> "YOUR_CODE_HERE"
+		"google-search-console-html-tag": "",
 	},
 
 	// === Open Graph Image Generation ===
+	// Customize the appearance of automatically generated social sharing images (OG images).
 	"og-setup": {
-		columns: 1, // Number of columns in OG image layout
-		excerpt: false, // Include excerpt text in OG image
+		// Layout style: 1 for a single column with a background image, 2 for a side-by-side layout.
+		columns: 1,
+		// If true, the post's excerpt will be included in the OG image.
+		excerpt: false,
+		// Google Font URLs for the title and footnote text on the OG image.
 		"title-font-url": "https://fonts.googleapis.com/css2?family=Kreon:wght@500&display=swap",
 		"footnote-font-url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap",
 	},
 
 	// === Comments Configuration ===
 	comments: {
-		// Giscus: GitHub Discussions-based comments
+		// Giscus is a comments system powered by GitHub Discussions. It's free and open-source. Go here for the process of setting it up: https://giscus.app/
 		giscus: {
 			"data-repo": "nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog",
 			"data-repo-id": "R_kgDOK0FuUA",
 			"data-category": "Announcements",
 			"data-category-id": "DIC_kwDOK0FuUM4CbZ5A",
-			"data-mapping": "pathname", // How to map pages to discussions: pathname, url, title, etc.
-			"data-input-position": "top", // Comment box position: top or bottom
+			"data-mapping": "pathname",
+			"data-input-position": "top",
 			"data-reactions-enabled": true,
 		},
 
-		// Bluesky comments integration
+		// Display comments from Bluesky posts related to your blog posts.
 		"bluesky-comments": {
 			"show-comments-from-bluesky": false,
 			"auto-search-for-match": {
+				// If true, the site will automatically search for a Bluesky post by the specified author
+				// that contains a link to the current blog post and a specific emoji.
 				"turn-on-auto-search": false,
-				author: "", // Your Bluesky handle
-				"echo-feed-emoji": "", // Emoji used to identify echo posts
+				// Your Bluesky handle (e.g., "yourname.bsky.social").
+				author: "",
+				// The emoji used in your Bluesky post to signify it's a blog post "echo" and should be searched.
+				"echo-feed-emoji": "",
 			},
 		},
 
-		// Webmention: Receive comments/likes from other sites
+		// Webmention allows your site to receive notifications when other websites link to it.
+		// Requires an account with a service like webmention.io.
 		webmention: {
+			// Your API key from your webmention service.
 			"webmention-api-key": "",
-			"webmention-link": "", // Your webmention endpoint URL
+			// Your personal webmention endpoint URL.
+			"webmention-link": "",
 		},
 	},
 
 	// === Block Rendering & Visual Display ===
-	// Global settings for how content blocks and media are rendered
+	// Global settings for how Notion content blocks and media are displayed.
 	"block-rendering": {
-		"enable-lightbox": true, // Enable lightbox/modal for images
-		"full-width-social-embeds": false, // Make social media embeds (Twitter, YouTube, etc.) full width
-		"heading-blocks": ["heading_1", "heading_2", "heading_3"], // Which Notion heading blocks to include in table of contents
-		"optimize-images": true, // Optimize images during build (can increase build time significantly)
+		// If true, clicking on an image will open it in a full-screen lightbox/modal view.
+		"enable-lightbox": true,
+		// If true, embedded content like tweets will span the full width of the content area on smaller screens.
+		"full-width-social-embeds": false,
+		// An array of Notion heading block types to be included in the Table of Contents.
+		"heading-blocks": ["heading_1", "heading_2", "heading_3"],
+		// If true, images from Notion will be optimized (converted to WebP, resized).
+		// Warning: This can significantly increase build time, especially for sites with many images, but will be very helpful for your site size (because there isn't multiple size image rendering).
+		"optimize-images": true,
 	},
 
 	// === Shortcodes ===
-	// Special markers for content handling in Notion blocks
+	// Special text markers in Notion code blocks (especially for webtrotion) that trigger custom rendering behavior.
 	shortcodes: {
-		"html-render": "<!DOCTYPE html> <!-- iframe -->", // Renders HTML in iframe
-		"html-inject": "<!DOCTYPE html> <!-- inject -->", // Injects HTML directly
+		// In a Notion code block, starting with this text will render the rest of the content as HTML inside an iframe.
+		"html-render": "<!DOCTYPE html> <!-- iframe -->",
+		// In a Notion code block, starting with this text will inject the rest of the content directly as raw HTML.
+		"html-inject": "<!DOCTYPE html> <!-- inject -->",
+		// This feature is currently not implemented.
 		"expressive-code": {
-			// Currently unsupported
 			start: "<<expressive-code-start>>",
 			end: "<<expressive-code-end>>",
 		},
-		"shiki-transform": "<<shiki-transform>>", // Enhanced code block syntax highlighting
-		table: "<<🗂️>>", // Special table rendering
+		// Triggers advanced syntax highlighting features via Shiki transformers. See documentation https://shiki.style/packages/transformers for details
+		"shiki-transform": "<<shiki-transform>>",
+		// In a Notion table's first cell, this marker enables datatable features (sorting, filtering).
+		table: "<<🗂️>>",
 	},
 
 	// === Footnotes Configuration ===
+	// Settings for both manual (sitewide) and automatic (in-page) footnotes.
 	footnotes: {
-		// Slug for the sitewide footnotes page (manual footnotes)
+		// The slug for a single, dedicated page that contains all footnotes for the entire site.
+		// This is a legacy method for manual footnote management.
 		"sitewide-footnotes-page-slug": "_all-footnotes",
 
-		// Automatic in-page footnotes settings
+		// Settings for the modern, automatic in-page footnote system.
 		"in-page-footnotes-settings": {
 			enabled: true,
 
-			// Where to look for footnote content in Notion blocks
+			// Defines where the system should look for footnote content.
+			// Important: Only ONE of these source options can be 'true' at a time.
 			source: {
-				"end-of-block": true, // Text after a marker at end of block
-				"start-of-child-blocks": false, // First child block as footnote
-				"block-comments": false, // Notion comments as footnotes
-				"block-inline-text-comments": false, // Inline comments as footnotes
+				// Looks for definitions at the end of a text block, like `[^ft_1]: My footnote content.`Sepearate it by two soft new lines (using shift+enter). This is the method that will work when you export Notion content to Markdown.
+				"end-of-block": true,
+				// Treats the first n set of child block(s) indented under a parent block as the footnote content. (n = number of footnote markers in the parent block)
+				"start-of-child-blocks": false,
+				// Uses Notion comments on a block as footnote content.
+				// Requires granting "Read comments" permission to your Notion integration. Else falls back to 'end-of-block' method.
+				"block-comments": false,
+				// Not yet implemented.
+				"block-inline-text-comments": false,
 			},
 
-			// Prefix for footnote markers (e.g., "ft_1", "ft_2")
+			// The prefix for footnote markers in your Notion text. e.g., `[^ft_1]` for a prefix of `ft_`.
 			"marker-prefix": "ft_",
 
-			// Automatically generate footnotes section at page end
+			// If true, a collated list of all footnotes will be automatically generated at the bottom of the page.
 			"generate-footnotes-section": true,
 
-			// How footnotes appear in text
+			// Defines how footnote markers are displayed within the text.
 			"intext-display": {
-				"always-popup": false, // Always show as popup vs. margin notes
-				"small-popup-large-margin": true, // Use small popup on mobile, margin notes on desktop
+				// If true, footnotes will always appear as a popup on click.
+				"always-popup": false,
+				// (Recommended) On large screens, displays footnotes in the margin. On smaller screens, it falls back to a popup.
+				"small-popup-large-margin": true,
 			},
 		},
 	},
 
 	// === References Configuration ===
-	// Configure which types of references/links are shown on pages
+	// Controls the "Interlinked Content" section that appears at the bottom of posts.
 	references: {
-		"site-links-in-page": true, // Show internal links found in this page
-		"external-links-in-page": true, // Show external links found in this page
-		"media-and-file-links-in-this-page": true, // Show media/file links
-		"links-to-this-page": true, // Show backlinks (pages linking to this one)
-		popovers: true, // Enable link preview popovers
-		footnotes: true, // Show footnotes section
+		// If true, displays a list of links to other pages on your site that are mentioned in the current page.
+		"site-links-in-page": true,
+		// If true, displays a list of external websites linked from the current page.
+		"external-links-in-page": true,
+		// If true, displays a list of media files (images, videos, audio) embedded in the current page.
+		"media-and-file-links-in-this-page": true,
+		// If true, displays a list of "backlinks" - other pages on your site that link to the current page.
+		"links-to-this-page": true,
+		// If true, enables hover-previews for internal links.
+		popovers: true,
 	},
 
 	// === URL Redirects ===
-	// Map old paths to new ones (e.g., {"/old-page": "/new-page"})
-	// Note: This is placed at the end as redirect lists can become very long
+	// Create 301 redirects for old URLs to new URLs. Useful for SEO when migrating content.
+	// Format: "/old-path": "/new-path"
+	// Example: "/my-old-post.html": "/posts/my-new-post-slug/"
 	redirects: {},
 }

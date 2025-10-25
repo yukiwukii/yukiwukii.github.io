@@ -49,6 +49,7 @@ Acknowledgments: Thanks to [Astro Cactus](https://github.com/chrismwilliams/astr
 - **Auto-generated related content and pages that link to this page**
 - **Pretty looking wikipedia like popups on hover that works with links to any block on any page.**
 - **Floating Table of Contents**
+- **Footnotes support**
 
 ## Demo
 
