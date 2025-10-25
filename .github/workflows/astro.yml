@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # 'write' is needed for the cleanup commit
-  pages: write
-  id-token: write
+  contents: write # 'write' is needed for the cleanup job's commit
+  pages: write    # 'write' is needed for the build/deploy jobs
+  id-token: write # 'write' is needed for OIDC in the deploy job
 
 concurrency:
   group: "pages"
@@ -23,23 +23,32 @@ env:
   DELETE_CACHES_GH_TOKEN: ${{ secrets.DELETE_CACHES_GH_TOKEN }}
 
 jobs:
-  # This single job now handles initialization, building, and uploading the artifact.
-  build:
+  # =================================================================================================
+  # WORKFLOW STRATEGY: cleanup -> build -> deploy
+  #
+  # This workflow is split into three dependent jobs for clarity and safety.
+  # 1. `cleanup`: Determines if the repo needs an initial cleanup (e.g., after being created
+  #    from a template). If needed, it performs a commit and push.
+  # 2. `build`: Runs after `cleanup` completes. It checks out the repository again to ensure it has
+  #    the latest code (including any cleanup commits) before building the site.
+  # 3. `deploy`: This job ONLY runs if the `build` job was successful.
+  #
+  # This separation is possible and safe because pushes made with the default `GITHUB_TOKEN`
+  # do not trigger new workflow runs, which successfully prevents accidental recursive loops.
+  # =================================================================================================
+
+  cleanup:
+    name: Initialize & Cleanup
     runs-on: ubuntu-latest
-    environment: github-pages
-    timeout-minutes: 45
+    timeout-minutes: 15
 
     steps:
-      # =============================================================================================
-      # BLOCK 1: INITIALIZE & CLEAN (IF NEEDED)
-      # These first steps determine if a cleanup is needed and perform it.
-      # =============================================================================================
-			# ✅ Step 1: Checkout repository first (shallow)
       - name: "Checkout repository (shallow)"
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1  # only fetch latest commit for speed
+          fetch-depth: 1 # only fetch latest commit for speed
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: "Initialize: Determine if cleanup is required"
         id: determine_cleanup
         run: |
@@ -60,17 +69,13 @@ jobs:
             elif [[ "$EVENT" == "push" ]]; then
               echo "🔁 Push event detected, checking for upstream sync conditions..."
 
-              # ---------------------------------------------------------------------------------------
-              # Method 1 (legacy): detect commit message referencing the upstream template owner.
-              # ---------------------------------------------------------------------------------------
+              # Method 1 (legacy): detect commit message
               if echo '${{ toJSON(github.event.commits) }}' | jq -r '.[].message' | grep -q 'from nerdymomocat-templates/'; then
                 echo "✅ Detected a commit message in this push referencing the upstream template owner. Cleanup push is required."
                 PUSH_NEEDED="true"
               fi
 
-              # ---------------------------------------------------------------------------------------
               # Method 2 (robust): compare SHA with upstream repo to catch fast-forward/discard syncs.
-              # ---------------------------------------------------------------------------------------
               echo "Fetching upstream main branch for SHA comparison..."
               git fetch https://github.com/$UPSTREAM_REPO.git main --depth=1 || true
 
@@ -103,13 +108,13 @@ jobs:
           fi
           echo "push_needed=${PUSH_NEEDED}" >> $GITHUB_OUTPUT
 
-      - name: "Checkout repository"
+      - name: "Checkout repository (full history for push)"
+        if: steps.determine_cleanup.outputs.push_needed == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Initialize: Perform Cleanup and Push"
-        id: perform_cleanup
         if: steps.determine_cleanup.outputs.push_needed == 'true'
         run: |
           echo "🧹 Performing automated cleanup..."
@@ -123,88 +128,94 @@ jobs:
             git config user.email 'github-actions[bot]@users.noreply.github.com'
             git commit -m "chore: Initialize repository from template"
             git push
-            echo "🚀 Cleanup commit has been pushed. The new workflow run will handle the build."
-            echo "pushed_changes=true" >> $GITHUB_OUTPUT
+            echo "🚀 Cleanup commit has been pushed. Continuing to build..."
           else
             echo "✅ Repository is already clean. No push needed."
-            echo "pushed_changes=false" >> $GITHUB_OUTPUT
           fi
 
-      # =============================================================================================
-      # BLOCK 2: BUILD PROCESS
-      # Every step below will ONLY run if the cleanup step above did NOT push any changes.
-      # If a push DID happen, this workflow run is cancelled and the NEW run handles the build.
-      # =============================================================================================
-      - name: Continue to Build
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
-        run: echo "✅ No cleanup push was performed. Proceeding with build..."
+  build:
+    name: Build Website
+    needs: cleanup
+    runs-on: ubuntu-latest
+    environment: github-pages # Needed for actions/configure-pages
+    timeout-minutes: 45
+
+    steps:
+      # This checkout step is crucial. It runs after the 'cleanup' job and pulls the
+      # latest state of the branch, including the cleanup commit if one was made.
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 21
 
       # Idea from https://www.voorhoede.nl/en/blog/super-fast-npm-install-on-github-actions/
       - name: Restore Node Modules Cache
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: npm-cache-restore
         uses: actions/cache/restore@v4
         with:
           path: ./node_modules
           key: modules-${{ hashFiles(format('{0}/package-lock.json', env.BUILD_PATH)) }}
+
       - name: Clear Previous Node Modules Cache (if needed)
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && steps.npm-cache-restore.outputs.cache-hit != 'true' && env.DELETE_CACHES_GH_TOKEN != ''
+        if: steps.npm-cache-restore.outputs.cache-hit != 'true' && env.DELETE_CACHES_GH_TOKEN != ''
         run: |
           gh cache list --key modules- --json key --jq '.[].key' | xargs -I {} gh cache delete {}
         env:
           GH_TOKEN: ${{ env.DELETE_CACHES_GH_TOKEN }}
+
       - name: Install dependencies
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && steps.npm-cache-restore.outputs.cache-hit != 'true'
+        if: steps.npm-cache-restore.outputs.cache-hit != 'true'
         run: npm ci --ignore-scripts
         working-directory: ${{ env.BUILD_PATH }}
+
       - name: Setup Pages
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: pages
         uses: actions/configure-pages@v5
+
       - name: Restore Cached old_package.json
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: restore-old-package-json
         uses: actions/cache/restore@v4
         with:
           path: ./old_package.json
           key: old-package-json-cache-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: old-package-json-cache-${{ github.repository_id }}-
+
       - name: Restore Cached `tmp`
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: cache-tmp-restore
         uses: actions/cache/restore@v4
         with:
           path: ./tmp
           key: tmp-webtrotion-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: tmp-webtrotion-${{ github.repository_id }}-
+
       - name: Restore Cached `public`
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: cache-public-restore
         uses: actions/cache/restore@v4
         with:
           path: ./public
           key: public-webtrotion-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: public-webtrotion-${{ github.repository_id }}-
+
       - name: Restore Cached constants-config
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: restore-constants-config
         uses: actions/cache/restore@v4
         with:
           path: ./constants-config.json5
           key: constants-config-${{ hashFiles(format('{0}/constants-config.json5', env.BUILD_PATH)) }}
+
       - name: Process constants-config if cache not hit
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && steps.restore-constants-config.outputs.cache-hit != 'true'
+        if: steps.restore-constants-config.outputs.cache-hit != 'true'
         run: |
           echo "Constants-config changed or cache miss (may be migrating from .json to .json5); trimming tmp (except .gitkeep) and deleting public/notion..."
           # Insert any additional processing or cleanup commands as needed.
           find tmp -mindepth 1 -not -name '.gitkeep' -exec rm -rf {} +
           rm -rf public/notion
+
       - name: Trim public and tmp files based on cache changes
         env:
           CACHE_HIT: ${{ steps.npm-cache-restore.outputs.cache-hit }}
@@ -289,28 +300,28 @@ jobs:
         working-directory: ${{ env.BUILD_PATH }}
 
       - name: Clear Previous `tmp` and `public` Cache (if needed)
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && env.DELETE_CACHES_GH_TOKEN != ''
+        if: env.DELETE_CACHES_GH_TOKEN != ''
         run: |
           gh cache list --json key --jq '.[].key' | grep -E '.*(tmp|public).*(web|blog)trotion' | xargs -I {} gh cache delete {}
         env:
           GH_TOKEN: ${{ env.DELETE_CACHES_GH_TOKEN }}
 
       - name: Clear Previous `old-package-json-cache` (if needed)
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && env.DELETE_CACHES_GH_TOKEN != ''
+        if: env.DELETE_CACHES_GH_TOKEN != ''
         run: |
           gh cache list --key old-package-json-cache- --json key --jq '.[].key' | xargs -I {} gh cache delete {}
         env:
           GH_TOKEN: ${{ env.DELETE_CACHES_GH_TOKEN }}
 
       - name: Clear Previous constants config Cache (if needed)
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && steps.restore-constants-config.outputs.cache-hit != 'true' && env.DELETE_CACHES_GH_TOKEN != ''
+        if: steps.restore-constants-config.outputs.cache-hit != 'true' && env.DELETE_CACHES_GH_TOKEN != ''
         run: |
           gh cache list --key constants-config- --json key --jq '.[].key' | xargs -I {} gh cache delete {}
         env:
           GH_TOKEN: ${{ env.DELETE_CACHES_GH_TOKEN }}
 
       - name: Save node cache manually
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && steps.npm-cache-restore.outputs.cache-hit != 'true'
+        if: steps.npm-cache-restore.outputs.cache-hit != 'true'
         id: npm-cache-save
         uses: actions/cache/save@v4
         with:
@@ -318,7 +329,6 @@ jobs:
           key: modules-${{ hashFiles(format('{0}/package-lock.json', env.BUILD_PATH)) }}
 
       - name: Save New `tmp` Cache
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: cache-tmp-save
         uses: actions/cache/save@v4
         with:
@@ -326,7 +336,6 @@ jobs:
           key: tmp-webtrotion-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save New `public` Cache
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         id: cache-public-save
         uses: actions/cache/save@v4
         with:
@@ -334,31 +343,30 @@ jobs:
           key: public-webtrotion-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Copy package.json to old_package.json
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         run: cp ./package.json ./old_package.json
 
       - name: Save old_package.json Cache
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         uses: actions/cache/save@v4
         with:
           path: ./old_package.json
           key: old-package-json-cache-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+
       - name: Save Cached constants-config
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true' && steps.restore-constants-config.outputs.cache-hit != 'true'
+        if: steps.restore-constants-config.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: ./constants-config.json5
           key: constants-config-${{ hashFiles(format('{0}/constants-config.json5', env.BUILD_PATH)) }}
+
       - name: Upload artifact
-        if: steps.perform_cleanup.outputs.pushed_changes != 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ env.BUILD_PATH }}/dist
 
   deploy:
+    name: Deploy to Pages
     needs: build
     runs-on: ubuntu-latest
-    name: Deploy
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
