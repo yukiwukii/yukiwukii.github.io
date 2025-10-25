@@ -34,6 +34,12 @@ jobs:
       # BLOCK 1: INITIALIZE & CLEAN (IF NEEDED)
       # These first steps determine if a cleanup is needed and perform it.
       # =============================================================================================
+			# ✅ Step 1: Checkout repository first (shallow)
+      - name: "Checkout repository (shallow)"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1  # only fetch latest commit for speed
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: "Initialize: Determine if cleanup is required"
         id: determine_cleanup
         run: |
