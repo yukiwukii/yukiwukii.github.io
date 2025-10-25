@@ -1,3 +1,13 @@
+> ⚠️ **Important Upgrade Notice – Version 2.0.0**
+>
+> Upgrading to **v2.0.0** requires changes to your `constants-config` file:
+>
+> - The configuration format has been updated to **JSON5**.
+> - You **must migrate or update** your existing `constants-config` to the new `.json5` format.
+> - Failing to do so may **break your setup or runtime behavior**.
+>
+> **Do not upgrade to v2.0.0** unless you are prepared to handle this change.
+
 <div align="center">
   <img alt="Webtrotion Cat" src="https://github.com/nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog/assets/125716950/b8206c1e-7c27-46d5-b192-850699117c8b" width="70" />
 </div>
