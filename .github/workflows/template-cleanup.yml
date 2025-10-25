@@ -1,0 +1,87 @@
+# .github/workflows/template-cleanup.yml
+name: Automated Template Initialization
+
+# TRIGGERS: Runs on new repo creation or on pushes to the main branch.
+on:
+  create:
+  push:
+    branches:
+      - main # Or your default branch
+
+# PERMISSIONS: Required to commit the cleanup changes back to the repo.
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    name: Initialize Repository from Template
+    runs-on: ubuntu-latest
+
+    # SAFETY CHECK: Guarantees this workflow NEVER runs on the template repository itself.
+    if: github.repository != 'nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog'
+
+    steps:
+      - name: "Determine if cleanup is required"
+        id: determine_cleanup
+        run: |
+          CLEANUP_REQUIRED="false"
+          COMMIT_MESSAGE=""
+
+          # SCENARIO 1: New repository created from template.
+          # The 'create' event is the most direct and reliable signal for this.
+          if [[ "${{ github.event_name }}" == "create" ]]; then
+            echo "✅ Triggered by 'create' event. Cleanup is required."
+            CLEANUP_REQUIRED="true"
+            COMMIT_MESSAGE="chore: Initialize repository from template"
+
+          # SCENARIO 2: Existing user synced from the upstream template via a push.
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # ==================================================================================
+            # THIS IS THE ROBUST, LINTER-FRIENDLY LOGIC:
+            # 1. `toJSON(github.event.commits)` safely converts the commit array into a JSON string.
+            # 2. `jq -r '.[].message'` parses this JSON, extracting the raw message from each commit.
+            # 3. `grep -q ...` quietly checks if any of those messages contain the upstream repo name.
+            # This is the most reliable way to perform this check without triggering validation warnings.
+            # ==================================================================================
+            if echo '${{ toJSON(github.event.commits) }}' | jq -r '.[].message' | grep -q 'nerdymomocat-templates/webtrotion-astro-notion-cms-website-blog'; then
+              echo "✅ Detected a commit message in this push referencing the upstream template. Cleanup is required."
+              CLEANUP_REQUIRED="true"
+              COMMIT_MESSAGE="chore: Clean up template files after upstream sync"
+            else
+              echo "ℹ️ This push does not contain a merge from the upstream template. No cleanup needed."
+            fi
+          fi
+
+          echo "cleanup_required=${CLEANUP_REQUIRED}" >> $GITHUB_OUTPUT
+          echo "commit_message=${COMMIT_MESSAGE}" >> $GITHUB_OUTPUT
+
+      - name: "Checkout the repository"
+        if: steps.determine_cleanup.outputs.cleanup_required == 'true'
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Perform cleanup"
+        if: steps.determine_cleanup.outputs.cleanup_required == 'true'
+        run: |
+          echo "🧹 Searching for template files to remove..."
+          git rm -r --ignore-unmatch .agents
+          git rm --ignore-unmatch .editorconfig
+          git rm --ignore-unmatch README.md
+          echo "Cleanup scan complete."
+
+      - name: "Commit and push changes"
+        if: steps.determine_cleanup.outputs.cleanup_required == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Only commit if `git rm` actually staged any changes.
+          if ! git diff --cached --quiet; then
+            echo "Changes detected. Committing and pushing..."
+            git commit -m "${{ steps.determine_cleanup.outputs.commit_message }}"
+            git push
+            echo "🚀 Changes have been pushed to the repository."
+          else
+            echo "✅ No template files found to remove. The repository is already clean."
+          fi
