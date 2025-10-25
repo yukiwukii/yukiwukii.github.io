@@ -20,6 +20,7 @@ The `_extractReferencesInBlock` function in `src/lib/blog-helpers.ts` had a comm
 ## Root Cause
 
 In `src/lib/blog-helpers.ts`, the `_extractReferencesInBlock` function (lines 201-247) extracted RichTexts from many block types:
+
 - Bookmark captions
 - List items (bulleted, numbered, todo)
 - Callouts, quotes, toggles
@@ -34,6 +35,7 @@ But it **completely omitted** `block.Table.Rows[].Cells[].RichTexts`, meaning al
 ## Solution Implemented
 
 ### Modified File
+
 - `src/lib/blog-helpers.ts` (lines 201-240)
 
 ### Changes Made
@@ -43,18 +45,18 @@ Added table cell processing logic to `_extractReferencesInBlock` function:
 ```typescript
 // Extract RichTexts from table cells
 if (block.Table?.Rows) {
-    const tableRichTexts: RichText[] = [];
-    block.Table.Rows.forEach((row) => {
-        row.Cells.forEach((cell) => {
-            if (cell.RichTexts && cell.RichTexts.length > 0) {
-                tableRichTexts.push(...cell.RichTexts);
-            }
-        });
-    });
-    // Combine table RichTexts with existing rich_texts
-    if (tableRichTexts.length > 0) {
-        rich_texts = [...rich_texts, ...tableRichTexts];
-    }
+	const tableRichTexts: RichText[] = [];
+	block.Table.Rows.forEach((row) => {
+		row.Cells.forEach((cell) => {
+			if (cell.RichTexts && cell.RichTexts.length > 0) {
+				tableRichTexts.push(...cell.RichTexts);
+			}
+		});
+	});
+	// Combine table RichTexts with existing rich_texts
+	if (tableRichTexts.length > 0) {
+		rich_texts = [...rich_texts, ...tableRichTexts];
+	}
 }
 ```
 
@@ -90,6 +92,7 @@ The reference extraction system now properly tracks:
 ## Testing
 
 To test the fix:
+
 1. Run the build command to regenerate reference data
 2. Check pages with tables containing links
 3. Verify "references in page" includes table links

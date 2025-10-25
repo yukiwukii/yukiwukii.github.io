@@ -5,12 +5,21 @@ module.exports = {
 	singleQuote: false,
 	tabWidth: 2,
 	useTabs: true,
-	plugins: ["prettier-plugin-astro", "prettier-plugin-tailwindcss" /* Must come last */],
+	plugins: [
+		"prettier-plugin-astro",
+		"prettier-plugin-tailwindcss", // Must come last
+	],
 	overrides: [
 		{
 			files: "*.astro",
 			options: {
 				parser: "astro",
+			},
+		},
+		{
+			files: "*.json5",
+			options: {
+				parser: "json5",
 			},
 		},
 	],

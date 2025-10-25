@@ -698,7 +698,7 @@ export const isEmbeddableURL = async (url: URL): Promise<boolean> => {
 		console.error("Error checking URL:", error);
 		return false;
 	}
-}
+};
 
 /**
  * Load cached HTML for a post
@@ -754,4 +754,4 @@ export async function saveCachedHeadings(postSlug: string, headings: any): Promi
 	} catch (e) {
 		console.error("Error saving headings cache:", e);
 	}
-};
+}

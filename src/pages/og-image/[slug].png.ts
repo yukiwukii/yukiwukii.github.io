@@ -1143,12 +1143,13 @@ export async function GET({ params: { slug }, props }: APIContext) {
 	} else if (type == "collectionpage") {
 		const collectionDescription = (props as any)?.description || "";
 		chosen_markup = collectionDescription
-			? obj_img_none_with_desc(keyStr + " : " + "A collection of posts", " ", collectionDescription, author)
-			: obj_img_none_without_desc(
+			? obj_img_none_with_desc(
 					keyStr + " : " + "A collection of posts",
 					" ",
+					collectionDescription,
 					author,
-				);
+				)
+			: obj_img_none_without_desc(keyStr + " : " + "A collection of posts", " ", author);
 	} else if (type == "tagsindex") {
 		chosen_markup = obj_img_none_without_desc("All topics I've written about", " ", author);
 	} else if (type == "collectionsindex") {

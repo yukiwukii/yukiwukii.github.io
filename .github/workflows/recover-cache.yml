@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       cache_key:
-        description: 'The exact key or prefix of the cache to recover'
+        description: "The exact key or prefix of the cache to recover"
         required: true
 
 jobs:

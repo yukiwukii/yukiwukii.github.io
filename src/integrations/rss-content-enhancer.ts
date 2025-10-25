@@ -530,7 +530,7 @@ function removeFootnoteBackLinks(node) {
 				return false;
 			},
 			node.children,
-			true
+			true,
 		);
 
 		if (hasFootnotesHeading) {
@@ -538,7 +538,7 @@ function removeFootnoteBackLinks(node) {
 			const olElement = DomUtils.findOne(
 				(elem) => elem.type === "tag" && elem.name === "ol",
 				node.children,
-				true
+				true,
 			);
 
 			if (olElement && olElement.children) {

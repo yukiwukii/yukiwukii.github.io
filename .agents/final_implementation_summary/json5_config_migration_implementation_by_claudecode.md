@@ -1,6 +1,7 @@
 # JSON5 Config Migration & Restructuring - Implementation Summary
 
 ## Overview
+
 Successfully migrated `constants-config.json` to JSON5 format and reorganized the configuration structure with nested groupings for better organization and inline documentation.
 
 **Status:** ✅ COMPLETED
@@ -91,6 +92,7 @@ redirects                      (moved from website to root level)
 ```
 
 **Key reorganization decisions:**
+
 - `custom-domain` and `base-path` moved from `website` to `site-info` (more logical grouping)
 - `redirects` moved from `website.redirects` to root level `redirects` (can get very long)
 - `website` parent key removed entirely
@@ -99,6 +101,7 @@ redirects                      (moved from website to root level)
 #### Step 2: Updated All Code References
 
 **File: `src/constants.ts`** (20 changes)
+
 - Line 36: `["database-id"]` → `?.notion?.["database-id"]`
 - Line 38: `["data-source-id"]` → `?.notion?.["data-source-id"]`
 - Line 39: `["author"]` → `?.["site-info"]?.author`
@@ -123,14 +126,17 @@ redirects                      (moved from website to root level)
 **Note:** Used optional chaining (`?.`) throughout for safety against undefined values.
 
 **File: `astro.config.ts`** (1 change)
+
 - Line 77: `["redirects"]` → `?.redirects` (now at root level, no longer nested)
 
 **File: `src/integrations/theme-constants-to-css.ts`** (No changes needed)
+
 - Still accesses `key_value_from_json["theme"]` which remains at root level
 
 #### Step 3: Updated Documentation
 
 Updated `.agents/feature_initial_docs.md/json5_for_constants_config.md` with:
+
 - Complete mapping of old → new structure (20 keys)
 - Line-by-line changes needed in each file
 - Implementation steps and completion status
@@ -138,6 +144,7 @@ Updated `.agents/feature_initial_docs.md/json5_for_constants_config.md` with:
 #### Step 4: Comprehensive Audit
 
 Searched through all files in `src/` directory to verify no missed references:
+
 - Confirmed only 3 files directly access config: `constants.ts`, `theme-constants-to-css.ts`, `astro.config.ts`
 - All other files import from `constants.ts` and use exported constants
 - No files will break from the restructuring
@@ -164,30 +171,31 @@ Users upgrading from version 1.x to 2.0.0 must:
 
 ## Config Structure Mapping (Old → New)
 
-| Old Path | New Path | Notes |
-|----------|----------|-------|
-| `database-id` | `notion.database-id` | |
-| `data-source-id` | `notion.data-source-id` | |
-| `author` | `site-info.author` | |
-| `custom-domain` | `site-info.custom-domain` | Moved from website |
-| `base-path` | `site-info.base-path` | Moved from website |
-| `redirects` | `redirects` | Moved to root level |
-| `giscus` | `comments.giscus` | |
-| `bluesky-comments` | `comments.bluesky-comments` | |
-| `webmention` | `comments.webmention` | |
-| `google-search-console-html-tag` | `tracking.google-search-console-html-tag` | Moved from root |
-| `recent-posts-on-home-page` | `collections-and-listings.recent-posts-on-home-page` | |
-| `number-of-posts-per-page` | `collections-and-listings.number-of-posts-per-page` | |
-| `menu-pages-collection` | `collections-and-listings.menu-pages-collection` | |
-| `full-preview-collections` | `collections-and-listings.full-preview-collections` | |
-| `hide-underscore-slugs-in-lists` | `collections-and-listings.hide-underscore-slugs-in-lists` | |
-| `home-page-slug` | `collections-and-listings.home-page-slug` | |
-| `enable-lightbox` | `block-rendering.enable-lightbox` | |
-| `full-width-social-embeds` | `block-rendering.full-width-social-embeds` | |
-| `heading-blocks` | `block-rendering.heading-blocks` | |
-| `optimize-images` | `block-rendering.optimize-images` | |
+| Old Path                         | New Path                                                  | Notes               |
+| -------------------------------- | --------------------------------------------------------- | ------------------- |
+| `database-id`                    | `notion.database-id`                                      |                     |
+| `data-source-id`                 | `notion.data-source-id`                                   |                     |
+| `author`                         | `site-info.author`                                        |                     |
+| `custom-domain`                  | `site-info.custom-domain`                                 | Moved from website  |
+| `base-path`                      | `site-info.base-path`                                     | Moved from website  |
+| `redirects`                      | `redirects`                                               | Moved to root level |
+| `giscus`                         | `comments.giscus`                                         |                     |
+| `bluesky-comments`               | `comments.bluesky-comments`                               |                     |
+| `webmention`                     | `comments.webmention`                                     |                     |
+| `google-search-console-html-tag` | `tracking.google-search-console-html-tag`                 | Moved from root     |
+| `recent-posts-on-home-page`      | `collections-and-listings.recent-posts-on-home-page`      |                     |
+| `number-of-posts-per-page`       | `collections-and-listings.number-of-posts-per-page`       |                     |
+| `menu-pages-collection`          | `collections-and-listings.menu-pages-collection`          |                     |
+| `full-preview-collections`       | `collections-and-listings.full-preview-collections`       |                     |
+| `hide-underscore-slugs-in-lists` | `collections-and-listings.hide-underscore-slugs-in-lists` |                     |
+| `home-page-slug`                 | `collections-and-listings.home-page-slug`                 |                     |
+| `enable-lightbox`                | `block-rendering.enable-lightbox`                         |                     |
+| `full-width-social-embeds`       | `block-rendering.full-width-social-embeds`                |                     |
+| `heading-blocks`                 | `block-rendering.heading-blocks`                          |                     |
+| `optimize-images`                | `block-rendering.optimize-images`                         |                     |
 
 **Unchanged (still at root):**
+
 - `tracking`
 - `socials`
 - `theme`
@@ -201,17 +209,21 @@ Users upgrading from version 1.x to 2.0.0 must:
 ## Files Modified
 
 ### Configuration Files
+
 - `constants-config.json5` - Restructured with nested groups and inline comments
 - `package.json` - Version bumped to 2.0.0
 
 ### Source Files
+
 - `src/constants.ts` - Updated all 20 config access paths with optional chaining
 - `astro.config.ts` - Updated redirects access (now root level)
 
 ### Documentation
+
 - `.agents/feature_initial_docs.md/json5_for_constants_config.md` - Updated with Phase 2 details
 
 ### Workflow Files (Previously in Phase 1)
+
 - `.github/workflows/astro.yml`
 - `.github/workflows/astro_no_cache.yml`
 - `.github/workflows/recover-cache.yml`
@@ -221,12 +233,14 @@ Users upgrading from version 1.x to 2.0.0 must:
 ## Benefits Achieved
 
 ### Phase 1 Benefits:
+
 1. ✅ **Inline Comments** - Users can now document their config directly in the file
 2. ✅ **Better DX** - Easier for people who fork the repository to understand options
 3. ✅ **Reduced External Docs** - Less need to reference separate documentation
 4. ✅ **Modern Format** - JSON5 is more flexible and user-friendly
 
 ### Phase 2 Benefits:
+
 1. ✅ **Logical Grouping** - Related settings are now grouped together
 2. ✅ **Better Organization** - Clear sections for different concerns (notion, site-info, tracking, etc.)
 3. ✅ **Improved Readability** - Nested structure makes it easier to understand relationships
@@ -249,7 +263,9 @@ Users upgrading from version 1.x to 2.0.0 must:
 ## Recovery & Backward Compatibility
 
 ### Manual Recovery Workflow
+
 The `.github/workflows/recover-cache.yml` supports both formats:
+
 - If cache key contains `.json5`, recovers `.json5` file
 - If cache key contains `.json`, recovers `.json` file
 - Otherwise, prefers `.json5` if exists, falls back to `.json`
@@ -257,6 +273,7 @@ The `.github/workflows/recover-cache.yml` supports both formats:
 This allows users to recover old cached configs if needed.
 
 ### No Automatic Backward Compatibility
+
 The decision was made NOT to support automatic fallback from `.json5` to `.json` in the main workflows. This is a clean breaking change requiring users to upgrade.
 
 ---
@@ -264,7 +281,9 @@ The decision was made NOT to support automatic fallback from `.json5` to `.json`
 ## Architecture Notes
 
 ### Clean Separation of Concerns
+
 The codebase maintains excellent separation:
+
 - **Config Layer**: 3 files read `constants-config.json5` directly
   - `src/constants.ts` - Exports all constants
   - `src/integrations/theme-constants-to-css.ts` - Only reads `theme`
@@ -274,7 +293,9 @@ The codebase maintains excellent separation:
 This architecture made the restructuring safe - only 3 files needed updates, and all consuming code is automatically compatible.
 
 ### Optional Chaining for Safety
+
 All config access now uses optional chaining (`?.`) to gracefully handle:
+
 - Missing config keys during migration
 - Undefined nested objects
 - User configuration errors
@@ -284,13 +305,16 @@ All config access now uses optional chaining (`?.`) to gracefully handle:
 ## Future Considerations
 
 ### Potential Enhancements
+
 1. **Config Validation** - Add JSON5 schema validation to catch errors early
 2. **Migration Script** - Create automated migration tool for users upgrading from 1.x
 3. **Config Documentation Generator** - Auto-generate docs from inline comments
 4. **Type Safety** - Add TypeScript interfaces for the config structure
 
 ### Maintenance Notes
+
 When adding new config options:
+
 1. Consider which logical group they belong to
 2. Add inline comments explaining the option
 3. Update `src/constants.ts` to export the new constant
@@ -302,6 +326,7 @@ When adding new config options:
 ## Conclusion
 
 Successfully completed a major refactoring of the configuration system:
+
 - ✅ Migrated from JSON to JSON5 format
 - ✅ Restructured config with logical nested groupings
 - ✅ Added comprehensive inline documentation

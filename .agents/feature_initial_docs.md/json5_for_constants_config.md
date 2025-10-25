@@ -1,12 +1,15 @@
 # Migration from JSON to JSON5 for constants-config
 
 ## Overview
+
 Migrate `constants-config.json` to JSON5 format to enable inline comments for better documentation, making it easier for users who fork the repository to understand what each configuration option does.
 
 **⚠️ BREAKING CHANGE:** This will be released as a new version. Users must rename their `constants-config.json` to `constants-config.json5` when upgrading.
 
 ## Package Selection
+
 **Recommended package: `json5` (https://www.npmjs.com/package/json5)**
+
 - Official JSON5 parser
 - Most popular (20M+ downloads/week)
 - Zero dependencies
@@ -17,45 +20,56 @@ Migrate `constants-config.json` to JSON5 format to enable inline comments for be
 ## Changes Required
 
 ### 1. Install json5 package
+
 ```bash
 npm install json5
 ```
 
 ### 2. Rename config file
+
 - Rename: `constants-config.json` → `constants-config.json5`
 - Add a single comment line at the top promoting the benefits of JSON5 comments
 
 ### 3. Update imports in source files
+
 Three files need to be updated to use JSON5 parser instead of direct JSON import:
 
 **File: `src/constants.ts:1`**
+
 - Change from: `import config from "../constants-config.json"`
 - To: Read file with fs and parse with JSON5.parse()
 
 **File: `src/integrations/theme-constants-to-css.ts:3`**
+
 - Change from: `import config from "../../constants-config.json"`
 - To: Read file with fs and parse with JSON5.parse()
 
 **File: `astro.config.ts:37`**
+
 - Change from: `import config from "./constants-config.json"`
 - To: Read file with fs and parse with JSON5.parse()
 
 ### 4. Update GitHub workflows
+
 Update workflow files to reference the new `.json5` filename:
 
 **Files:**
+
 - `.github/workflows/astro.yml` (lines 86-91, 93-99, 198-203, 236-241)
   - Change all references from `constants-config.json` to `constants-config.json5`
 - `.github/workflows/astro_no_cache.yml` (if present)
 - `.github/workflows/recover-cache.yml` (if present)
 
 ### 5. Update package.json version
+
 - Bump version to indicate breaking change (follow semver)
 
 ### 6. Update .gitignore (if needed)
+
 Ensure the new `.json5` file is NOT ignored and will be committed
 
 ## Benefits
+
 - Users can add inline comments directly in the config file
 - Reduces need to reference external documentation
 - Makes forking and customization easier
@@ -66,11 +80,13 @@ Ensure the new `.json5` file is NOT ignored and will be committed
 # Phase 2: Update All References to Reorganized Structure
 
 ## Overview
+
 The constants-config.json5 file has been reorganized with nested structures. All code that references these values needs to be updated to use the new paths.
 
 ## Key Changes Mapping
 
 ### Old → New Structure:
+
 1. `database-id` → `notion.database-id`
 2. `data-source-id` → `notion.data-source-id`
 3. `author` → `site-info.author`
@@ -93,6 +109,7 @@ The constants-config.json5 file has been reorganized with nested structures. All
 20. `optimize-images` → `block-rendering.optimize-images`
 
 ### Unchanged (still at root level):
+
 - `tracking`
 - `socials`
 - `theme`
@@ -105,9 +122,11 @@ The constants-config.json5 file has been reorganized with nested structures. All
 ## Files to Update
 
 ### 1. **src/constants.ts** (PRIMARY FILE - 20+ references)
+
 Update all `key_value_from_json["..."]` references to use new nested paths:
 
 **Lines to change:**
+
 - Line 36: `key_value_from_json["database-id"]` → `key_value_from_json?.notion?.["database-id"]`
 - Line 38: `key_value_from_json["data-source-id"]` → `key_value_from_json?.notion?.["data-source-id"]`
 - Line 39: `key_value_from_json["author"]` → `key_value_from_json?.["site-info"]?.author`
@@ -130,12 +149,15 @@ Update all `key_value_from_json["..."]` references to use new nested paths:
 - Line 135: `key_value_from_json["full-width-social-embeds"]` → `key_value_from_json?.["block-rendering"]?.["full-width-social-embeds"]`
 
 ### 2. **astro.config.ts**
+
 - Line 77: `key_value_from_json["redirects"]` → `key_value_from_json?.redirects` (now at root level)
 
 ### 3. **src/integrations/theme-constants-to-css.ts**
+
 - Verify `key_value_from_json["theme"]` reference (should still work as theme is at root level)
 
 ### 4. **All 46 files that import from constants.ts**
+
 - Review to ensure exported constants are used correctly
 - No changes likely needed if they only import from constants.ts (constants.ts handles the mapping)
 

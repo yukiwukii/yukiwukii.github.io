@@ -9,7 +9,9 @@ export interface Props {
 const { richText } = Astro.props;
 
 const colorAnnotation = richText.Annotation.Color;
-const isDefaultColor = !colorAnnotation || ["default", "default_background", "default-background"].includes(colorAnnotation);
+const isDefaultColor =
+	!colorAnnotation ||
+	["default", "default_background", "default-background"].includes(colorAnnotation);
 const isBackgroundColor = !isDefaultColor && colorAnnotation.includes("_background");
 const isTextColor = !isDefaultColor && !colorAnnotation.includes("_background");
 ---
@@ -19,8 +21,8 @@ const isTextColor = !isDefaultColor && !colorAnnotation.includes("_background");
 		<code
 			class:list={[
 				"rounded-sm border-none px-1 font-mono",
-                { 'bg-gray-100 dark:bg-gray-800': !isBackgroundColor },
-                { 'text-rose-800 dark:text-rose-300': !isTextColor },
+				{ "bg-gray-100 dark:bg-gray-800": !isBackgroundColor },
+				{ "text-rose-800 dark:text-rose-300": !isTextColor },
 			]}
 		>
 			<slot />

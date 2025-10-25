@@ -139,19 +139,27 @@ if (postFound) {
 
 {
 	postFound && resetFirstImage() && setTrackCurrentPageId(post.PageId) && (
-		<PostLayout post={post} headings={headings} shouldUseCache={shouldUseCache} footnotesInPage={footnotesInPage}>
-			<div class="post-body max-w-[708px] print:max-w-full" data-html-type={shouldUseCache && cachedHtml ? "cached" : "new"}>
+		<PostLayout
+			post={post}
+			headings={headings}
+			shouldUseCache={shouldUseCache}
+			footnotesInPage={footnotesInPage}
+		>
+			<div
+				class="post-body max-w-[708px] print:max-w-full"
+				data-html-type={shouldUseCache && cachedHtml ? "cached" : "new"}
+			>
 				{shouldUseCache && cachedHtml ? (
 					<div set:html={cachedHtml} />
 				) : (
 					<>
 						<NotionBlocks blocks={blocks} />
 						{/* Footnotes section - only render when NOT using cache (cached HTML already includes it) */}
-						{adjustedFootnotesConfig?.['in-page-footnotes-settings']?.enabled &&
-						 adjustedFootnotesConfig?.['in-page-footnotes-settings']?.['generate-footnotes-section'] &&
-						 footnotesInPage && (
-							<FootnotesSection footnotes={footnotesInPage} />
-						)}
+						{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
+							adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.[
+								"generate-footnotes-section"
+							] &&
+							footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
 					</>
 				)}
 			</div>

@@ -36,7 +36,7 @@ import { OPTIMIZE_IMAGES } from "../constants";
  * Determines which source type is active (only one can be active at a time)
  */
 function getActiveSource(
-	config: FootnotesConfig
+	config: FootnotesConfig,
 ): "end-of-block" | "start-of-child-blocks" | "block-comments" | null {
 	const source = config["in-page-footnotes-settings"].source;
 	if (source["end-of-block"]) return "end-of-block";
@@ -66,7 +66,9 @@ export function joinPlainText(richTexts: RichText[]): string {
 export function cloneRichText(richText: RichText): RichText {
 	return {
 		...richText,
-		Text: richText.Text ? { ...richText.Text, Link: richText.Text.Link ? { ...richText.Text.Link } : undefined } : undefined,
+		Text: richText.Text
+			? { ...richText.Text, Link: richText.Text.Link ? { ...richText.Text.Link } : undefined }
+			: undefined,
 		Annotation: { ...richText.Annotation },
 		Equation: richText.Equation ? { ...richText.Equation } : undefined,
 		Mention: richText.Mention ? { ...richText.Mention } : undefined,
@@ -84,7 +86,7 @@ export function cloneRichText(richText: RichText): RichText {
  */
 function splitRichTextsAtCharPosition(
 	richTexts: RichText[],
-	splitCharPos: number
+	splitCharPos: number,
 ): { before: RichText[]; after: RichText[] } {
 	const before: RichText[] = [];
 	const after: RichText[] = [];
@@ -144,7 +146,7 @@ function splitRichTextsAtCharPosition(
 export function extractRichTextRange(
 	richTexts: RichText[],
 	startChar: number,
-	endChar: number
+	endChar: number,
 ): RichText[] {
 	const result: RichText[] = [];
 	let currentPos = 0;
@@ -200,7 +202,7 @@ export function extractRichTextRange(
  */
 export function findAllFootnoteMarkers(
 	locations: RichTextLocation[],
-	markerPrefix: string
+	markerPrefix: string,
 ): FootnoteMarkerInfo[] {
 	const markers: FootnoteMarkerInfo[] = [];
 	// Negative lookahead (?!:) ensures we don't match [^ft_a]: (content markers in child blocks)
@@ -258,7 +260,7 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 	const addLocation = (
 		property: string,
 		richTexts: RichText[],
-		setter: (newRichTexts: RichText[]) => void
+		setter: (newRichTexts: RichText[]) => void,
 	) => {
 		if (richTexts && richTexts.length > 0) {
 			locations.push({ property, richTexts, setter });
@@ -270,7 +272,7 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 		addLocation(
 			"Paragraph.RichTexts",
 			block.Paragraph.RichTexts,
-			(rt) => (block.Paragraph!.RichTexts = rt)
+			(rt) => (block.Paragraph!.RichTexts = rt),
 		);
 	}
 
@@ -279,21 +281,21 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 		addLocation(
 			"Heading1.RichTexts",
 			block.Heading1.RichTexts,
-			(rt) => (block.Heading1!.RichTexts = rt)
+			(rt) => (block.Heading1!.RichTexts = rt),
 		);
 	}
 	if (block.Heading2) {
 		addLocation(
 			"Heading2.RichTexts",
 			block.Heading2.RichTexts,
-			(rt) => (block.Heading2!.RichTexts = rt)
+			(rt) => (block.Heading2!.RichTexts = rt),
 		);
 	}
 	if (block.Heading3) {
 		addLocation(
 			"Heading3.RichTexts",
 			block.Heading3.RichTexts,
-			(rt) => (block.Heading3!.RichTexts = rt)
+			(rt) => (block.Heading3!.RichTexts = rt),
 		);
 	}
 
@@ -302,14 +304,14 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 		addLocation(
 			"BulletedListItem.RichTexts",
 			block.BulletedListItem.RichTexts,
-			(rt) => (block.BulletedListItem!.RichTexts = rt)
+			(rt) => (block.BulletedListItem!.RichTexts = rt),
 		);
 	}
 	if (block.NumberedListItem) {
 		addLocation(
 			"NumberedListItem.RichTexts",
 			block.NumberedListItem.RichTexts,
-			(rt) => (block.NumberedListItem!.RichTexts = rt)
+			(rt) => (block.NumberedListItem!.RichTexts = rt),
 		);
 	}
 
@@ -320,11 +322,7 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 
 	// Quote
 	if (block.Quote) {
-		addLocation(
-			"Quote.RichTexts",
-			block.Quote.RichTexts,
-			(rt) => (block.Quote!.RichTexts = rt)
-		);
+		addLocation("Quote.RichTexts", block.Quote.RichTexts, (rt) => (block.Quote!.RichTexts = rt));
 	}
 
 	// Callout
@@ -332,78 +330,46 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 		addLocation(
 			"Callout.RichTexts",
 			block.Callout.RichTexts,
-			(rt) => (block.Callout!.RichTexts = rt)
+			(rt) => (block.Callout!.RichTexts = rt),
 		);
 	}
 
 	// Toggle
 	if (block.Toggle) {
-		addLocation(
-			"Toggle.RichTexts",
-			block.Toggle.RichTexts,
-			(rt) => (block.Toggle!.RichTexts = rt)
-		);
+		addLocation("Toggle.RichTexts", block.Toggle.RichTexts, (rt) => (block.Toggle!.RichTexts = rt));
 	}
 
 	// Code caption (but NOT Code.RichTexts - code content is excluded)
 	if (block.Code?.Caption) {
-		addLocation(
-			"Code.Caption",
-			block.Code.Caption,
-			(rt) => (block.Code!.Caption = rt)
-		);
+		addLocation("Code.Caption", block.Code.Caption, (rt) => (block.Code!.Caption = rt));
 	}
 
 	// Media captions
 	if (block.NImage?.Caption) {
-		addLocation(
-			"NImage.Caption",
-			block.NImage.Caption,
-			(rt) => (block.NImage!.Caption = rt)
-		);
+		addLocation("NImage.Caption", block.NImage.Caption, (rt) => (block.NImage!.Caption = rt));
 	}
 	if (block.Video?.Caption) {
-		addLocation(
-			"Video.Caption",
-			block.Video.Caption,
-			(rt) => (block.Video!.Caption = rt)
-		);
+		addLocation("Video.Caption", block.Video.Caption, (rt) => (block.Video!.Caption = rt));
 	}
 	if (block.NAudio?.Caption) {
-		addLocation(
-			"NAudio.Caption",
-			block.NAudio.Caption,
-			(rt) => (block.NAudio!.Caption = rt)
-		);
+		addLocation("NAudio.Caption", block.NAudio.Caption, (rt) => (block.NAudio!.Caption = rt));
 	}
 	if (block.File?.Caption) {
-		addLocation(
-			"File.Caption",
-			block.File.Caption,
-			(rt) => (block.File!.Caption = rt)
-		);
+		addLocation("File.Caption", block.File.Caption, (rt) => (block.File!.Caption = rt));
 	}
 
 	// Embed and bookmark captions
 	if (block.Embed?.Caption) {
-		addLocation(
-			"Embed.Caption",
-			block.Embed.Caption,
-			(rt) => (block.Embed!.Caption = rt)
-		);
+		addLocation("Embed.Caption", block.Embed.Caption, (rt) => (block.Embed!.Caption = rt));
 	}
 	if (block.Bookmark?.Caption) {
-		addLocation(
-			"Bookmark.Caption",
-			block.Bookmark.Caption,
-			(rt) => (block.Bookmark!.Caption = rt)
-		);
+		addLocation("Bookmark.Caption", block.Bookmark.Caption, (rt) => (block.Bookmark!.Caption = rt));
 	}
 	if (block.LinkPreview?.Caption) {
 		addLocation(
 			"LinkPreview.Caption",
 			block.LinkPreview.Caption,
-			(rt) => (block.LinkPreview!.Caption = rt)
+			(rt) => (block.LinkPreview!.Caption = rt),
 		);
 	}
 
@@ -414,7 +380,7 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 				addLocation(
 					`Table.Rows[${rowIndex}].Cells[${cellIndex}]`,
 					cell.RichTexts,
-					(rt) => (block.Table!.Rows![rowIndex].Cells[cellIndex].RichTexts = rt)
+					(rt) => (block.Table!.Rows![rowIndex].Cells[cellIndex].RichTexts = rt),
 				);
 			});
 		});
@@ -430,7 +396,7 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 export function splitRichTextWithMarkers(
 	location: RichTextLocation,
 	markers: FootnoteMarkerInfo[],
-	markerPrefix: string
+	markerPrefix: string,
 ): RichText[] {
 	// Get markers for this specific location, sorted by position (descending for safe splitting)
 	const locationMarkers = markers
@@ -445,13 +411,10 @@ export function splitRichTextWithMarkers(
 
 	// Split from right to left to avoid position shift issues
 	for (const marker of locationMarkers) {
-		const { before, after } = splitRichTextsAtCharPosition(
-			result,
-			marker.Location.CharStart
-		);
+		const { before, after } = splitRichTextsAtCharPosition(result, marker.Location.CharStart);
 		const { before: markerPart, after: afterMarker } = splitRichTextsAtCharPosition(
 			after,
-			marker.FullMarker.length
+			marker.FullMarker.length,
 		);
 
 		// Create footnote marker RichText element
@@ -483,7 +446,7 @@ export function splitRichTextWithMarkers(
 export function extractFootnoteDefinitionsFromRichText(
 	richTexts: RichText[],
 	markerPrefix: string,
-	cachedFullText?: string
+	cachedFullText?: string,
 ): {
 	cleanedRichTexts: RichText[];
 	footnoteDefinitions: Map<string, RichText[]>;
@@ -501,15 +464,17 @@ export function extractFootnoteDefinitionsFromRichText(
 	const splitPoint = firstDefMatch.index;
 
 	// Split at the first definition
-	const { before: mainContent, after: definitionsSection } =
-		splitRichTextsAtCharPosition(richTexts, splitPoint);
+	const { before: mainContent, after: definitionsSection } = splitRichTextsAtCharPosition(
+		richTexts,
+		splitPoint,
+	);
 
 	// Parse individual footnote definitions from the definitions section
 	const definitionsText = fullText.substring(splitPoint);
 	const footnoteDefinitions = parseFootnoteDefinitionsFromRichText(
 		definitionsSection,
 		markerPrefix,
-		definitionsText
+		definitionsText,
 	);
 
 	return { cleanedRichTexts: mainContent, footnoteDefinitions };
@@ -522,13 +487,10 @@ export function extractFootnoteDefinitionsFromRichText(
 function parseFootnoteDefinitionsFromRichText(
 	definitionsRichTexts: RichText[],
 	markerPrefix: string,
-	definitionsText: string
+	definitionsText: string,
 ): Map<string, RichText[]> {
 	const definitions = new Map<string, RichText[]>();
-	const pattern = new RegExp(
-		`\\n\\n\\[\\^${markerPrefix}([a-zA-Z0-9_]+)\\]:\\s*`,
-		"g"
-	);
+	const pattern = new RegExp(`\\n\\n\\[\\^${markerPrefix}([a-zA-Z0-9_]+)\\]:\\s*`, "g");
 
 	const matches: Array<{ marker: string; start: number; end: number; matchIndex: number }> = [];
 	let match: RegExpExecArray | null;
@@ -555,17 +517,10 @@ function parseFootnoteDefinitionsFromRichText(
 
 	// Extract RichText ranges for each definition
 	matches.forEach((m) => {
-		const contentRichTexts = extractRichTextRange(
-			definitionsRichTexts,
-			m.start,
-			m.end
-		);
+		const contentRichTexts = extractRichTextRange(definitionsRichTexts, m.start, m.end);
 
 		// Skip empty content (edge case handling - silent skip)
-		if (
-			contentRichTexts.length === 0 ||
-			joinPlainText(contentRichTexts).trim() === ""
-		) {
+		if (contentRichTexts.length === 0 || joinPlainText(contentRichTexts).trim() === "") {
 			return;
 		}
 
@@ -581,7 +536,7 @@ function parseFootnoteDefinitionsFromRichText(
  */
 function extractEndOfBlockFootnotes(
 	block: Block,
-	config: FootnotesConfig
+	config: FootnotesConfig,
 ): FootnoteExtractionResult {
 	const locations = getAllRichTextLocations(block);
 	const footnotes: Footnote[] = [];
@@ -608,12 +563,11 @@ function extractEndOfBlockFootnotes(
 		const cachedText = fullTextCache.get(location.property);
 
 		// Extract footnote definitions as RichText arrays (not strings!)
-		const { cleanedRichTexts, footnoteDefinitions } =
-			extractFootnoteDefinitionsFromRichText(
-				location.richTexts,
-				markerPrefix,
-				cachedText
-			);
+		const { cleanedRichTexts, footnoteDefinitions } = extractFootnoteDefinitionsFromRichText(
+			location.richTexts,
+			markerPrefix,
+			cachedText,
+		);
 
 		// Create Footnote objects from extracted definitions
 		footnoteDefinitions.forEach((contentRichTexts, marker) => {
@@ -643,7 +597,7 @@ function extractEndOfBlockFootnotes(
 		const splitRichTexts = splitRichTextWithMarkers(
 			{ ...location, richTexts: cleanedRichTexts },
 			markers,
-			markerPrefix
+			markerPrefix,
 		);
 		location.setter(splitRichTexts);
 	});
@@ -703,10 +657,7 @@ function setChildrenInBlock(block: Block, children: Block[]): void {
  * Removes marker prefix from start of RichText array
  * Used to clean [^ft_a]: prefix from child block content
  */
-function removeMarkerPrefix(
-	richTexts: RichText[],
-	prefixLength: number
-): RichText[] {
+function removeMarkerPrefix(richTexts: RichText[], prefixLength: number): RichText[] {
 	if (richTexts.length === 0 || prefixLength === 0) {
 		return richTexts;
 	}
@@ -750,7 +701,7 @@ function removeMarkerPrefix(
  */
 function extractStartOfChildBlocksFootnotes(
 	block: Block,
-	config: FootnotesConfig
+	config: FootnotesConfig,
 ): FootnoteExtractionResult {
 	const locations = getAllRichTextLocations(block);
 	const footnotes: Footnote[] = [];
@@ -802,10 +753,7 @@ function extractStartOfChildBlocksFootnotes(
 		const marker = match[1];
 
 		// Remove the [^marker]: prefix from the block
-		const cleanedRichTexts = removeMarkerPrefix(
-			blockLocations[0].richTexts,
-			match[0].length
-		);
+		const cleanedRichTexts = removeMarkerPrefix(blockLocations[0].richTexts, match[0].length);
 		blockLocations[0].setter(cleanedRichTexts);
 
 		// Create footnote with the entire block (and its descendants) as content
@@ -832,11 +780,7 @@ function extractStartOfChildBlocksFootnotes(
 
 	// Split markers in RichTexts
 	locations.forEach((location) => {
-		const splitRichTexts = splitRichTextWithMarkers(
-			location,
-			markers,
-			markerPrefix
-		);
+		const splitRichTexts = splitRichTextWithMarkers(location, markers, markerPrefix);
 		location.setter(splitRichTexts);
 	});
 
@@ -904,10 +848,7 @@ function convertNotionRichTextToOurFormat(notionRichTexts: any[]): RichText[] {
 					formatted_date += " to " + nrt.mention.date.end;
 				}
 				mention.DateStr = formatted_date;
-			} else if (
-				nrt.mention.type === "link_mention" &&
-				nrt.mention.link_mention
-			) {
+			} else if (nrt.mention.type === "link_mention" && nrt.mention.link_mention) {
 				const linkMention = nrt.mention.link_mention;
 				mention.LinkMention = {
 					Href: linkMention.href,
@@ -920,10 +861,7 @@ function convertNotionRichTextToOurFormat(notionRichTexts: any[]): RichText[] {
 					IframeUrl: linkMention.iframe_url,
 					LinkProvider: linkMention.link_provider,
 				};
-			} else if (
-				nrt.mention.type === "custom_emoji" &&
-				nrt.mention.custom_emoji
-			) {
+			} else if (nrt.mention.type === "custom_emoji" && nrt.mention.custom_emoji) {
 				mention.CustomEmoji = {
 					Name: nrt.mention.custom_emoji.name,
 					Url: nrt.mention.custom_emoji.url,
@@ -946,7 +884,7 @@ function convertNotionRichTextToOurFormat(notionRichTexts: any[]): RichText[] {
 async function extractBlockCommentsFootnotes(
 	block: Block,
 	config: FootnotesConfig,
-	notionClient?: any
+	notionClient?: any,
 ): Promise<FootnoteExtractionResult> {
 	const locations = getAllRichTextLocations(block);
 	const footnotes: Footnote[] = [];
@@ -966,9 +904,7 @@ async function extractBlockCommentsFootnotes(
 
 	// Ensure we have a Notion client
 	if (!notionClient || !notionClient.comments) {
-		console.warn(
-			"Footnotes: Comments API requested but Notion client not available"
-		);
+		console.warn("Footnotes: Comments API requested but Notion client not available");
 		return {
 			footnotes: [],
 			hasProcessedRichTexts: false,
@@ -1008,10 +944,7 @@ async function extractBlockCommentsFootnotes(
 			const contentRichTexts = convertNotionRichTextToOurFormat(richTextArray);
 
 			// Remove the [^marker]: prefix from first RichText
-			const cleanedRichTexts = removeMarkerPrefix(
-				contentRichTexts,
-				match[0].length
-			);
+			const cleanedRichTexts = removeMarkerPrefix(contentRichTexts, match[0].length);
 
 			// Handle attachments (images) - download and convert to local paths
 			const attachments: CommentAttachment[] = [];
@@ -1027,10 +960,8 @@ async function extractBlockCommentsFootnotes(
 						// Convert URL to webp if optimizing images (same as client.ts does for NImage)
 						let optimizedUrl = attachment.file.url;
 						if (isConvImageType(attachment.file.url) && OPTIMIZE_IMAGES) {
-							optimizedUrl = attachment.file.url.substring(
-								0,
-								attachment.file.url.lastIndexOf(".")
-							) + ".webp";
+							optimizedUrl =
+								attachment.file.url.substring(0, attachment.file.url.lastIndexOf(".")) + ".webp";
 						}
 
 						// Convert to local path for display
@@ -1059,11 +990,7 @@ async function extractBlockCommentsFootnotes(
 
 		// Split markers in RichTexts
 		locations.forEach((location) => {
-			const splitRichTexts = splitRichTextWithMarkers(
-				location,
-				markers,
-				markerPrefix
-			);
+			const splitRichTexts = splitRichTextWithMarkers(location, markers, markerPrefix);
 			location.setter(splitRichTexts);
 		});
 
@@ -1074,16 +1001,13 @@ async function extractBlockCommentsFootnotes(
 		};
 	} catch (error: any) {
 		// Check if this is a permission error (403)
-		if (error?.status === 403 || error?.code === 'restricted_resource') {
+		if (error?.status === 403 || error?.code === "restricted_resource") {
 			console.warn(
-				'Footnotes: block-comments source is enabled but Comments API permission is not available. ' +
-				'Please grant comment permissions to your Notion integration, or switch to end-of-block or start-of-child-blocks source.'
+				"Footnotes: block-comments source is enabled but Comments API permission is not available. " +
+					"Please grant comment permissions to your Notion integration, or switch to end-of-block or start-of-child-blocks source.",
 			);
 		} else {
-			console.error(
-				`Footnotes: Error fetching comments for block ${block.Id}:`,
-				error
-			);
+			console.error(`Footnotes: Error fetching comments for block ${block.Id}:`, error);
 		}
 		// Continue without footnotes rather than failing
 		return {
@@ -1108,7 +1032,7 @@ async function extractBlockCommentsFootnotes(
  */
 export function extractFootnotesFromBlock(
 	block: Block,
-	config: FootnotesConfig
+	config: FootnotesConfig,
 ): FootnoteExtractionResult {
 	const source = getActiveSource(config);
 
@@ -1119,9 +1043,7 @@ export function extractFootnotesFromBlock(
 			return extractStartOfChildBlocksFootnotes(block, config);
 		case "block-comments":
 			// Block comments require async API calls, not supported in synchronous build
-			console.warn(
-				"block-comments source requires async processing and is not yet implemented"
-			);
+			console.warn("block-comments source requires async processing and is not yet implemented");
 			return {
 				footnotes: [],
 				hasProcessedRichTexts: false,
@@ -1149,7 +1071,7 @@ export function extractFootnotesFromBlock(
 export async function extractFootnotesFromBlockAsync(
 	block: Block,
 	config: FootnotesConfig,
-	notionClient?: any
+	notionClient?: any,
 ): Promise<FootnoteExtractionResult> {
 	const source = getActiveSource(config);
 
@@ -1181,7 +1103,7 @@ export function extractFootnotesInPage(blocks: Block[]): Footnote[] {
 	function collectFromBlock(block: Block): void {
 		// Collect footnotes from this block
 		if (block.Footnotes && block.Footnotes.length > 0) {
-			block.Footnotes.forEach(footnote => {
+			block.Footnotes.forEach((footnote) => {
 				// Assign sequential index if not already assigned
 				if (!footnote.Index) {
 					footnote.Index = ++footnoteIndex;
@@ -1202,7 +1124,7 @@ export function extractFootnotesInPage(blocks: Block[]): Footnote[] {
 
 		// Collect from column lists
 		if (block.ColumnList?.Columns) {
-			block.ColumnList.Columns.forEach(column => {
+			block.ColumnList.Columns.forEach((column) => {
 				if (column.Children) {
 					column.Children.forEach(collectFromBlock);
 				}
@@ -1229,9 +1151,7 @@ export function extractFootnotesInPage(blocks: Block[]): Footnote[] {
 	blocks.forEach(collectFromBlock);
 
 	// Remove duplicates based on Marker
-	const uniqueFootnotes = Array.from(
-		new Map(allFootnotes.map(fn => [fn.Marker, fn])).values()
-	);
+	const uniqueFootnotes = Array.from(new Map(allFootnotes.map((fn) => [fn.Marker, fn])).values());
 
 	// Sort by Index
 	uniqueFootnotes.sort((a, b) => {

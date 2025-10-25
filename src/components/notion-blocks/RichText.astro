@@ -23,12 +23,12 @@ export interface Props {
 const { richText, blockID, block } = Astro.props;
 ---
 
-{richText.IsFootnoteMarker && block ? (
-	<FootnoteMarker richText={richText} block={block} />
-) : (
-	<Anchor richText={richText} blockID={blockID}>
-		{
-			(
+{
+	richText.IsFootnoteMarker && block ? (
+		<FootnoteMarker richText={richText} block={block} />
+	) : (
+		<Anchor richText={richText} blockID={blockID}>
+			{
 				<Code richText={richText}>
 					{
 						<Color richText={richText}>
@@ -84,7 +84,7 @@ const { richText, blockID, block } = Astro.props;
 						</Color>
 					}
 				</Code>
-			)
-		}
-	</Anchor>
-)}
+			}
+		</Anchor>
+	)
+}

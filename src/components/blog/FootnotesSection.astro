@@ -10,9 +10,7 @@ export interface Props {
 const { footnotes } = Astro.props;
 
 // Remove duplicates based on Marker (in case same footnote appears multiple times)
-const uniqueFootnotes = Array.from(
-	new Map(footnotes.map((fn) => [fn.Marker, fn])).values()
-);
+const uniqueFootnotes = Array.from(new Map(footnotes.map((fn) => [fn.Marker, fn])).values());
 
 // Sort by Index (sequential numbering) if available, otherwise by Marker
 uniqueFootnotes.sort((a, b) => {
@@ -23,7 +21,9 @@ uniqueFootnotes.sort((a, b) => {
 });
 
 // Check if start-of-child-blocks is enabled (no spacing needed for block-type footnotes)
-const isStartOfChildBlocks = adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.source?.["start-of-child-blocks"] === true;
+const isStartOfChildBlocks =
+	adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.source?.["start-of-child-blocks"] ===
+	true;
 
 // Define styles matching Interlinked Content section
 const footnotesHeaderStyles = `
@@ -71,138 +71,110 @@ const footnotesHeaderStyles = `
 			<style set:html={footnotesHeaderStyles} />
 			<ol class={isStartOfChildBlocks ? "text-sm" : "space-y-2 text-sm"}>
 				{uniqueFootnotes.map((footnote) => (
-					<li
-						id={`footnote-def-${footnote.Marker}`}
-						class="flex gap-2 items-baseline"
-					>
+					<li id={`footnote-def-${footnote.Marker}`} class="flex items-baseline gap-2">
 						{footnote.SourceBlockId ? (
 							<a
 								href={`#${footnote.SourceBlockId}`}
-								class="font-mono text-sm text-link hover:underline shrink-0 no-underline"
+								class="text-link shrink-0 font-mono text-sm no-underline hover:underline"
 								aria-label={`Jump back to footnote ${footnote.Index || footnote.Marker} in text`}
 							>
 								[{footnote.Index || footnote.Marker}]
 							</a>
 						) : (
-							<span class="font-mono text-sm text-accent-2/70 shrink-0">
+							<span class="text-accent-2/70 shrink-0 font-mono text-sm">
 								[{footnote.Index || footnote.Marker}]
 							</span>
 						)}
 						<div class="footnote-content flex-1">
-							{footnote.Content.Type === "rich_text" &&
-								footnote.Content.RichTexts && (
-									<div>
-										{footnote.Content.RichTexts.map((rt) => (
-											<>
-												{rt.Text && (
-													<span
-														class={
-															(rt.Annotation.Bold
-																? "font-bold "
-																: "") +
-															(rt.Annotation.Italic ? "italic " : "") +
-															(rt.Annotation.Strikethrough
-																? "line-through "
-																: "") +
-															(rt.Annotation.Underline ? "underline " : "") +
-															(rt.Annotation.Code
-																? "font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded "
-																: "")
-														}
-														style={
-															rt.Annotation.Color &&
-															rt.Annotation.Color !== "default"
-																? `color: ${rt.Annotation.Color}`
-																: ""
-														}
-													>
-														{rt.Href ? (
-															<a
-																href={rt.Href}
-																class="text-link hover:underline"
-															>
-																{rt.Text.Content}
-															</a>
-														) : (
-															rt.Text.Content
-														)}
-													</span>
-												)}
-												{rt.Equation && (
-													<span class="inline-block">{rt.Equation.Expression}</span>
-												)}
-											</>
-										))}
-									</div>
-								)}
-							{footnote.Content.Type === "blocks" &&
-								footnote.Content.Blocks && (
-									<div class="prose prose-sm max-w-none dark:prose-invert">
-										<NotionBlocks
-											blocks={footnote.Content.Blocks}
-											renderChildren={true}
-											setId={false}
-										/>
-									</div>
-								)}
-							{footnote.Content.Type === "comment" &&
-								footnote.Content.RichTexts && (
-									<div>
-										{footnote.Content.RichTexts.map((rt) => (
-											<>
-												{rt.Text && (
-													<span
-														class={
-															(rt.Annotation.Bold
-																? "font-bold "
-																: "") +
-															(rt.Annotation.Italic ? "italic " : "") +
-															(rt.Annotation.Strikethrough
-																? "line-through "
-																: "") +
-															(rt.Annotation.Underline ? "underline " : "") +
-															(rt.Annotation.Code
-																? "font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded "
-																: "")
-														}
-														style={
-															rt.Annotation.Color &&
-															rt.Annotation.Color !== "default"
-																? `color: ${rt.Annotation.Color}`
-																: ""
-														}
-													>
-														{rt.Href ? (
-															<a
-																href={rt.Href}
-																class="text-link hover:underline"
-															>
-																{rt.Text.Content}
-															</a>
-														) : (
-															rt.Text.Content
-														)}
-													</span>
-												)}
-											</>
-										))}
-										{footnote.Content.CommentAttachments &&
-											footnote.Content.CommentAttachments.length > 0 && (
-												<div class="mt-2 space-y-1">
-													{footnote.Content.CommentAttachments.map(
-														(attachment) =>
-															attachment.Category === "image" && (
-																<img
-																	src={attachment.Url}
-																	alt=""
-																	class="max-w-full rounded"
-																/>
-															)
+							{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
+								<div>
+									{footnote.Content.RichTexts.map((rt) => (
+										<>
+											{rt.Text && (
+												<span
+													class={
+														(rt.Annotation.Bold ? "font-bold " : "") +
+														(rt.Annotation.Italic ? "italic" : "") +
+														(rt.Annotation.Strikethrough ? "line-through" : "") +
+														(rt.Annotation.Underline ? "underline" : "") +
+														(rt.Annotation.Code
+															? "rounded bg-gray-100 px-1 py-0.5 font-mono text-xs dark:bg-gray-800"
+															: "")
+													}
+													style={
+														rt.Annotation.Color && rt.Annotation.Color !== "default"
+															? `color: ${rt.Annotation.Color}`
+															: ""
+													}
+												>
+													{rt.Href ? (
+														<a href={rt.Href} class="text-link hover:underline">
+															{rt.Text.Content}
+														</a>
+													) : (
+														rt.Text.Content
 													)}
-												</div>
+												</span>
 											)}
-									</div>
-								)}
+											{rt.Equation && <span class="inline-block">{rt.Equation.Expression}</span>}
+										</>
+									))}
+								</div>
+							)}
+							{footnote.Content.Type === "blocks" && footnote.Content.Blocks && (
+								<div class="prose prose-sm dark:prose-invert max-w-none">
+									<NotionBlocks
+										blocks={footnote.Content.Blocks}
+										renderChildren={true}
+										setId={false}
+									/>
+								</div>
+							)}
+							{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
+								<div>
+									{footnote.Content.RichTexts.map((rt) => (
+										<>
+											{rt.Text && (
+												<span
+													class={
+														(rt.Annotation.Bold ? "font-bold " : "") +
+														(rt.Annotation.Italic ? "italic" : "") +
+														(rt.Annotation.Strikethrough ? "line-through" : "") +
+														(rt.Annotation.Underline ? "underline" : "") +
+														(rt.Annotation.Code
+															? "rounded bg-gray-100 px-1 py-0.5 font-mono text-xs dark:bg-gray-800"
+															: "")
+													}
+													style={
+														rt.Annotation.Color && rt.Annotation.Color !== "default"
+															? `color: ${rt.Annotation.Color}`
+															: ""
+													}
+												>
+													{rt.Href ? (
+														<a href={rt.Href} class="text-link hover:underline">
+															{rt.Text.Content}
+														</a>
+													) : (
+														rt.Text.Content
+													)}
+												</span>
+											)}
+										</>
+									))}
+									{footnote.Content.CommentAttachments &&
+										footnote.Content.CommentAttachments.length > 0 && (
+											<div class="mt-2 space-y-1">
+												{footnote.Content.CommentAttachments.map(
+													(attachment) =>
+														attachment.Category === "image" && (
+															<img src={attachment.Url} alt="" class="max-w-full rounded" />
+														),
+												)}
+											</div>
+										)}
+								</div>
+							)}
 						</div>
 					</li>
 				))}

@@ -35,7 +35,8 @@ const {
 	as: Tag = "div",
 	withDesc = false,
 } = Astro.props;
-const { blocks, referencesInPage, footnotesInPage } = await getPostContentByPostId(post_full_preview);
+const { blocks, referencesInPage, footnotesInPage } =
+	await getPostContentByPostId(post_full_preview);
 
 // --- Headings Cache Handling ---
 let headings = null;
@@ -154,18 +155,21 @@ const postLink = getPostLink(
 	)
 }
 
-<section class="post-body post-preview-full-container" data-html-type={shouldUseCache && cachedHtml ? "cached" : "new"}>
-	{shouldUseCache && cachedHtml ? (
-		<div set:html={cachedHtml} />
-	) : (
-		<>
-			<NotionBlocks blocks={blocks} />
-			{/* Footnotes section - only render when NOT using cache (cached HTML already includes it) */}
-			{adjustedFootnotesConfig?.['in-page-footnotes-settings']?.enabled &&
-			 adjustedFootnotesConfig?.['in-page-footnotes-settings']?.['generate-footnotes-section'] &&
-			 footnotesInPage && (
-				<FootnotesSection footnotes={footnotesInPage} />
-			)}
-		</>
-	)}
+<section
+	class="post-body post-preview-full-container"
+	data-html-type={shouldUseCache && cachedHtml ? "cached" : "new"}
+>
+	{
+		shouldUseCache && cachedHtml ? (
+			<div set:html={cachedHtml} />
+		) : (
+			<>
+				<NotionBlocks blocks={blocks} />
+				{/* Footnotes section - only render when NOT using cache (cached HTML already includes it) */}
+				{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
+					adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.["generate-footnotes-section"] &&
+					footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
+			</>
+		)
+	}
 </section>

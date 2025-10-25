@@ -97,28 +97,19 @@ export const getIconTailwindFilterStyle = (url: string): string => {
 	return "";
 };
 
-export const LINKED_CONTENT_SYMBOLS = [
-  '‡',
-  '§',
-  'Δ',
-  '◊',
-  '☞',
-  '♠',
-  '♦',
-  '♣',
-];
+export const LINKED_CONTENT_SYMBOLS = ["‡", "§", "Δ", "◊", "☞", "♠", "♦", "♣"];
 
 export const getSymbolForLinkedContent = (index) => {
-  const base = LINKED_CONTENT_SYMBOLS.length;
-  let result = '';
+	const base = LINKED_CONTENT_SYMBOLS.length;
+	let result = "";
 
-  // Base-N encoding (like converting to base 8)
-  do {
-    result = LINKED_CONTENT_SYMBOLS[index % base] + result;
-    index = Math.floor(index / base) - 1; // subtract 1 to make sequence continuous (like Excel columns)
-  } while (index >= 0);
+	// Base-N encoding (like converting to base 8)
+	do {
+		result = LINKED_CONTENT_SYMBOLS[index % base] + result;
+		index = Math.floor(index / base) - 1; // subtract 1 to make sequence continuous (like Excel columns)
+	} while (index >= 0);
 
-  return result;
+	return result;
 };
 
 export const getTextToAstroIcon = (text: string) => {
