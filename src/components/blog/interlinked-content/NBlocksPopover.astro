@@ -8,7 +8,7 @@ interface Props {
 	popoverSpanText: string;
 	popoverTitle?: string;
 	linkText?: string;
-  isInterlinkedBack?: boolean;
+	isInterlinkedBack?: boolean;
 }
 const {
 	block,
@@ -16,7 +16,7 @@ const {
 	popoverSpanText,
 	popoverTitle = "",
 	linkText = "Read more",
-  isInterlinkedBack = false,
+	isInterlinkedBack = false,
 } = Astro.props;
 let id = "id" + Math.random().toString(16).slice(2) + "---" + block.Id;
 let isFootnote = false;
@@ -26,36 +26,40 @@ if (linkedTo && (linkedTo.includes(footnotePattern + "/") || linkedTo.endsWith(f
 }
 ---
 
-{isFootnote ? (
-  <span
-    class="text-link underline decoration-dotted decoration-accent-2/40 underline-offset-2"
-    ><span
-      data-popover-target=`popover-description-${id}`
-      data-popover-placement="bottom-end"
-      class={`cursor-pointer`}
-      aria-label="Show information for the linked content"
-      >{popoverSpanText ? popoverSpanText : <slot />}</span
-    ></span
-  >
-) : (
-  <span
-    class={`text-link ${isInterlinkedBack ? 'no-underline hover:underline hover:decoration-dashed hover:decoration-accent-2/40 hover:underline-offset-2' : 'underline decoration-dashed decoration-accent-2/40 underline-offset-2'}`}
-    ><span
-      data-popover-target=`popover-description-${id}`
-      data-popover-placement="bottom-end"
-      class={`cursor-pointer ${isInterlinkedBack ? 'text-sm font-mono' : ''}`}
-      data-href={linkedTo}
-      aria-label="Show information for the linked content"
-      >{popoverSpanText ? popoverSpanText : <slot />}</span
-    ></span
-  >
-)}
-<template id=`template-popover-description-${id}`>
+{
+	isFootnote ? (
+		<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
+			<span
+				data-popover-target={`popover-description-${id}`}
+				data-popover-placement="bottom-end"
+				class={`cursor-pointer`}
+				aria-label="Show information for the linked content"
+			>
+				{popoverSpanText ? popoverSpanText : <slot />}
+			</span>
+		</span>
+	) : (
+		<span
+			class={`text-link ${isInterlinkedBack ? "hover:decoration-accent-2/40 no-underline hover:underline hover:decoration-dashed hover:underline-offset-2" : "decoration-accent-2/40 underline decoration-dashed underline-offset-2"}`}
+		>
+			<span
+				data-popover-target={`popover-description-${id}`}
+				data-popover-placement="bottom-end"
+				class={`cursor-pointer ${isInterlinkedBack ? "font-mono text-sm" : ""}`}
+				data-href={linkedTo}
+				aria-label="Show information for the linked content"
+			>
+				{popoverSpanText ? popoverSpanText : <slot />}
+			</span>
+		</span>
+	)
+}
+<template id={`template-popover-description-${id}`}>
 	<div
 		data-popover
-		id=`popover-description-${id}`
+		id={`popover-description-${id}`}
 		role="tooltip"
-		class="popoverEl invisible absolute z-40 inline-block hidden w-72 rounded-lg border border-accent-2/20 bg-popover-bg/95 text-sm text-textColor/80 opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
+		class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-72 rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
 	>
 		{
 			isFootnote ? (
@@ -67,7 +71,7 @@ if (linkedTo && (linkedTo.includes(footnotePattern + "/") || linkedTo.endsWith(f
 				<a href={linkedTo}>
 					<div class="space-y-2 p-3">
 						{popoverTitle && (
-							<h3 class="font-semibold text-accent underline decoration-accent-2/20 decoration-wavy">
+							<h3 class="text-accent decoration-accent-2/20 font-semibold underline decoration-wavy">
 								{popoverTitle}
 							</h3>
 						)}
@@ -75,7 +79,7 @@ if (linkedTo && (linkedTo.includes(footnotePattern + "/") || linkedTo.endsWith(f
 						<a
 							href={linkedTo}
 							data-popover-link
-							class="flex max-w-full items-center font-medium text-link/90 hover:underline"
+							class="text-link/90 flex max-w-full items-center font-medium hover:underline"
 						>
 							{linkText}
 							<svg
