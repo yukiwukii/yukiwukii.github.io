@@ -31,6 +31,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	let cleanupAutoUpdate = new Map();
 	let hoverTimeouts = new Map();
 
+	const getPopoverLevel = (el) => {
+		let level = 0;
+		while (el && el.closest("[data-popover-target]")) {
+			level++;
+			el = el.parentElement;
+		}
+		return level - 1;
+	};
 
 	const hideAllPopovers = (level = 0) => {
 		openPopovers.forEach((popoverEl) => {
@@ -89,19 +97,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		const template = document.getElementById(`template-${popoverID}`);
 		if (!template) return null;
 		const popoverEl = template.content.firstElementChild.cloneNode(true);
-		document.body.appendChild(popoverEl);
+		triggerEl.parentNode.insertBefore(popoverEl, triggerEl.nextSibling);
 		addLeaveListeners(triggerEl, popoverEl);
 		return popoverEl;
 	};
 
 	const showPopover = (triggerEl) => {
-		const parentPopover = triggerEl.closest('div[data-popover]');
-
-		openPopovers.forEach((popover) => {
-			if (popover !== parentPopover) {
-				hidePopover(popover);
-			}
-		});
+		const level = getPopoverLevel(triggerEl);
+		hideAllPopovers(level);
 
 		let popoverEl = document.getElementById(triggerEl.dataset.popoverTarget);
 
