@@ -5,7 +5,7 @@ import { parseDocument } from "htmlparser2";
 import { DomUtils } from "htmlparser2";
 import { render } from "dom-serializer";
 import { getAllPosts, getAllPages } from "../lib/notion/client";
-import { getReferencesInPage } from "../lib/blog-helpers";
+import { getInterlinkedContentInPage } from "../lib/blog-helpers";
 import { LAST_BUILD_TIME, HOME_PAGE_SLUG, BUILD_FOLDER_PATHS } from "../constants";
 
 const blocksHtmlCacher = (): AstroIntegration => {
@@ -15,9 +15,9 @@ const blocksHtmlCacher = (): AstroIntegration => {
 			"astro:build:done": async () => {
 				const distDir = "dist";
 				const tmpBlocksCacheDir = BUILD_FOLDER_PATHS["blocksHtmlCache"];
-				const tmpReferencesCacheDir = BUILD_FOLDER_PATHS["referencesHtmlCache"];
+				const tmpInterlinkedContentCacheDir = BUILD_FOLDER_PATHS["interlinkedContentHtmlCache"];
 
-				// console.log("Starting blocks-html-cache and references-html-cache");
+				// console.log("Starting blocks-html-cache and interlinked-content-html-cache");
 				const posts = await getAllPosts();
 				const pages = await getAllPages();
 				const allEntries = [...posts, ...pages];
@@ -39,8 +39,8 @@ const blocksHtmlCacher = (): AstroIntegration => {
 					}
 
 					const blocksCacheFilePath = path.join(tmpBlocksCacheDir, `${slug}.html`);
-					const staticReferencesCacheFilePath = path.join(
-						tmpReferencesCacheDir,
+					const staticInterlinkedContentCacheFilePath = path.join(
+						tmpInterlinkedContentCacheDir,
 						`${slug}-static.html`,
 					);
 					const postLastUpdatedBeforeLastBuild = LAST_BUILD_TIME
@@ -48,10 +48,10 @@ const blocksHtmlCacher = (): AstroIntegration => {
 						: false;
 
 					// Check linked pages' timestamps
-					const referencesInPage = getReferencesInPage(entry.PageId);
+					const interlinkedContentInPage = getInterlinkedContentInPage(entry.PageId);
 					const linkedPageIdsSet = new Set<string>();
-					if (referencesInPage) {
-						referencesInPage.forEach((ref) => {
+					if (interlinkedContentInPage) {
+						interlinkedContentInPage.forEach((ref) => {
 							if (ref.link_to_pageid) linkedPageIdsSet.add(ref.link_to_pageid);
 							if (ref.other_pages) {
 								ref.other_pages.forEach((richText) => {
@@ -75,7 +75,7 @@ const blocksHtmlCacher = (): AstroIntegration => {
 
 					// Skip caching if shouldUseCache would be false
 					let blocksNeedsUpdate = true;
-					let staticReferencesNeedsUpdate = true;
+					let staticInterlinkedContentNeedsUpdate = true;
 					if (shouldUseCache) {
 						try {
 							await fs.access(blocksCacheFilePath);
@@ -83,13 +83,13 @@ const blocksHtmlCacher = (): AstroIntegration => {
 							blocksNeedsUpdate = false;
 						} catch {}
 						try {
-							await fs.access(staticReferencesCacheFilePath);
-							// console.log(`Skipping static references for ${slug} (no update and cache exists)`);
-							staticReferencesNeedsUpdate = false;
+							await fs.access(staticInterlinkedContentCacheFilePath);
+							// console.log(`Skipping static interlinked content for ${slug} (no update and cache exists)`);
+							staticInterlinkedContentNeedsUpdate = false;
 						} catch {}
 					}
 
-					if (!blocksNeedsUpdate && !staticReferencesNeedsUpdate) continue;
+					if (!blocksNeedsUpdate && !staticInterlinkedContentNeedsUpdate) continue;
 
 					try {
 						const htmlContent = await fs.readFile(filePath, "utf-8");
@@ -115,25 +115,24 @@ const blocksHtmlCacher = (): AstroIntegration => {
 							}
 						}
 
-						// Extract static references HTML
-						if (staticReferencesNeedsUpdate) {
-							const divStaticReferences = DomUtils.findOne(
+						// Extract static interlinked content HTML
+						if (staticInterlinkedContentNeedsUpdate) {
+							const divStaticInterlinkedContent = DomUtils.findOne(
 								(elem) =>
 									elem.type === "tag" &&
 									elem.name === "div" &&
 									!!elem.attribs?.class &&
-									elem.attribs.class.split(" ").includes("static-references"),
+									elem.attribs.class.split(" ").includes("static-interlinked-content"),
 								document.children,
 								true,
 							);
-							if (divStaticReferences) {
-								const staticHtml = render(divStaticReferences.children);
-								await fs.writeFile(staticReferencesCacheFilePath, staticHtml, "utf-8");
-								// console.log(
-								// 	`Cached static references for ${slug} to ${staticReferencesCacheFilePath}`,
-								// );
-							} else {
-								console.warn(`No <div class="static-references"> found for ${slug}`);
+							if (divStaticInterlinkedContent) {
+								const staticHtml = render(divStaticInterlinkedContent.children);
+								await fs.writeFile(staticInterlinkedContentCacheFilePath, staticHtml, "utf-8");
+								                                // console.log(
+								                                // 	`Cached static interlinked content for ${slug} to ${staticInterlinkedContentCacheFilePath}`,
+								                                // );							} else {
+								console.warn(`No <div class="static-interlinked-content"> found for ${slug}`);
 							}
 						}
 					} catch (error) {

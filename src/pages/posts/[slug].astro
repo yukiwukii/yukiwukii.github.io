@@ -7,7 +7,7 @@ import {
 	resetFirstImage,
 	setCurrentHeadings,
 	setTrackCurrentPageId,
-	getReferencesInPage,
+	getInterlinkedContentInPage,
 	loadCachedHtml,
 	loadCachedHeadings,
 	saveCachedHeadings,
@@ -25,12 +25,12 @@ export async function getStaticPaths() {
 	const allPostsMap: Record<string, Post> = Object.fromEntries(posts.map((p) => [p.PageId, p])); // Map of PageId to Post
 
 	return posts.map((post) => {
-		const referencesInPage = getReferencesInPage(post.PageId);
+		const interlinkedContentInPage = getInterlinkedContentInPage(post.PageId);
 		const linkedPageIdsSet = new Set<string>(); // Use a Set to collect unique PageIds
 
 		// Collect linked PageIds, automatically deduplicating
-		if (referencesInPage) {
-			referencesInPage.forEach((ref) => {
+		if (interlinkedContentInPage) {
+			interlinkedContentInPage.forEach((ref) => {
 				if (ref.link_to_pageid) {
 					linkedPageIdsSet.add(ref.link_to_pageid);
 				}
@@ -82,7 +82,7 @@ resetCurrentHeadings();
 let postFound = true;
 let headings = null;
 let blocks = null;
-let referencesInPage = null;
+let interlinkedContentInPage = null;
 
 if (!post) {
 	console.log("Post not found. slug: ${slug}");
@@ -103,12 +103,11 @@ if (postFound) {
 
 let footnotesInPage = null;
 
-if (postFound) {
+	if (postFound) {
 	const result = await getPostContentByPostId(post);
 	blocks = result.blocks;
-	referencesInPage = result.referencesInPage;
+	interlinkedContentInPage = result.interlinkedContentInPage;
 	footnotesInPage = result.footnotesInPage;
-
 	// Use cached headings if available, otherwise build and save them
 	if (cachedHeadings) {
 		headings = cachedHeadings;

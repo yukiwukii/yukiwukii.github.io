@@ -20,13 +20,13 @@ export const BUILD_FOLDER_PATHS = {
 	styles: path.join("src", "styles"),
 	blocksJson: path.join("./tmp", "blocks-json-cache"),
 	headingsCache: path.join("./tmp", "blocks-json-cache", "headings"),
-	referencesInPage: path.join("./tmp", "blocks-json-cache", "references-in-page"),
-	referencesToPage: path.join("./tmp", "blocks-json-cache", "references-to-page"),
+	interlinkedContentInPage: path.join("./tmp", "blocks-json-cache", "interlinked-content-in-page"),
+	interlinkedContentToPage: path.join("./tmp", "blocks-json-cache", "interlinked-content-to-page"),
 	footnotesInPage: path.join("./tmp", "blocks-json-cache", "footnotes-in-page"),
 	ogImages: path.join("./tmp", "og-images"),
 	rssCache: path.join("./tmp", "rss-cache"),
 	blocksHtmlCache: path.join("./tmp", "blocks-html-cache"),
-	referencesHtmlCache: path.join("./tmp", "blocks-html-cache", "references"),
+	interlinkedContentHtmlCache: path.join("./tmp", "blocks-html-cache", "interlinked-content"),
 	public: path.join("./public"),
 	publicNotion: path.join("./public", "notion/"),
 };
@@ -128,7 +128,7 @@ const readBuildStartTime = () => {
 export const LAST_BUILD_TIME = readBuildStartTime();
 console.log("Last Build Start Time:", LAST_BUILD_TIME);
 
-export const REFERENCES = key_value_from_json["references"] || null;
+export const INTERLINKED_CONTENT = key_value_from_json["interlinked-content"] || null;
 
 export const RECENT_POSTS_ON_HOME_PAGE =
 	key_value_from_json?.["collections-and-listings"]?.["recent-posts-on-home-page"] || false;

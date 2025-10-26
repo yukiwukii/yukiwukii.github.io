@@ -1,7 +1,7 @@
 ---
 import PageLayout from "@/layouts/Base.astro";
 import { getAllPages, getAllPosts, getPostContentByPostId, processFileBlocks } from "@/lib/notion/client";
-import { extractTargetBlocks, getNavLink, getReferencesInPage, resetCurrentHeadings, resetFirstImage, setCurrentHeadings, setTrackCurrentPageId } from "@/lib/blog-helpers";
+import { extractTargetBlocks, getNavLink, getInterlinkedContentInPage, resetCurrentHeadings, resetFirstImage, setCurrentHeadings, setTrackCurrentPageId } from "@/lib/blog-helpers";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import type { Post, Block } from "@/lib/interfaces";
 import { siteInfo } from "@/siteInfo";
@@ -21,10 +21,10 @@ export async function getStaticPaths() {
 		const allItemsMap = Object.fromEntries(allItems.map(item => [item.PageId, item]));
 
 		return pages.map((page) => {
-				const referencesInPage = getReferencesInPage(page.PageId);
+				const interlinkedContentInPage = getInterlinkedContentInPage(page.PageId);
 				const linkedPageIdsSet = new Set<string>();
-				if (referencesInPage) {
-						referencesInPage.forEach(ref => {
+				if (interlinkedContentInPage) {
+						interlinkedContentInPage.forEach(ref => {
 								if (ref.link_to_pageid) {
 										linkedPageIdsSet.add(ref.link_to_pageid);
 								}
@@ -75,7 +75,7 @@ resetCurrentHeadings();
 
 let pageFound = true;
 let blocks = null;
-let referencesInPage = null;
+let interlinkedContentInPage = null;
 let headings = null;
 
 if (!page) {
@@ -154,7 +154,7 @@ function assignFootnoteIndices(blocks: Block[], footnoteNumber: { value: number 
 if (pageFound) {
 		const result = await getPostContentByPostId(page);
 		blocks = result.blocks;
-		referencesInPage = result.referencesInPage;
+		interlinkedContentInPage = result.interlinkedContentInPage;
 
 		// Assign footnote indices if generate-footnotes-section is enabled
 		const generateSection = FOOTNOTES?.['in-page-footnotes-settings']?.['generate-footnotes-section'];

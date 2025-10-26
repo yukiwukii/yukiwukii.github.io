@@ -1,9 +1,9 @@
 ---
-import { REFERENCES } from "@/constants";
+import { INTERLINKED_CONTENT } from "@/constants";
 import { getAnchorLinkAndBlock } from "@/lib/blog-helpers.ts";
 import type { RichText } from "@/lib/interfaces.ts";
-import NPagePopover from "@/components/blog/references/NPagePopover.astro";
-import NBlocksPopover from "@/components/blog/references/NBlocksPopover.astro";
+import NPagePopover from "@/components/blog/interlinked-content/NPagePopover.astro";
+import NBlocksPopover from "@/components/blog/interlinked-content/NBlocksPopover.astro";
 
 export interface Props {
 	richText: RichText;
@@ -17,9 +17,9 @@ const { hreflink, blocklinked, conditionmatch, post, isBlockLinkedHeading } =
 
 {
 	hreflink &&
-	REFERENCES &&
-	Object.keys(REFERENCES).length > 0 &&
-	REFERENCES["popovers"] &&
+	INTERLINKED_CONTENT &&
+	Object.keys(INTERLINKED_CONTENT).length > 0 &&
+	INTERLINKED_CONTENT["popovers"] &&
 	conditionmatch &&
 	["block_other_page", "other_page"].includes(conditionmatch) &&
 	post &&

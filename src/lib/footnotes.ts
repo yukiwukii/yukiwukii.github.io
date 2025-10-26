@@ -23,7 +23,7 @@ import type {
 	FootnoteMarkerInfo,
 	RichTextLocation,
 	Mention,
-	Reference,
+	InterlinkedContent,
 } from "./interfaces";
 import { downloadFile, isConvImageType } from "./notion/client";
 import { buildTimeFilePath } from "./blog-helpers";
@@ -835,11 +835,11 @@ function convertNotionRichTextToOurFormat(notionRichTexts: any[]): RichText[] {
 			};
 
 			if (nrt.mention.type === "page" && nrt.mention.page) {
-				const reference: Reference = {
+				const interlinkedContent: InterlinkedContent = {
 					PageId: nrt.mention.page.id,
 					Type: nrt.mention.type,
 				};
-				mention.Page = reference;
+				mention.Page = interlinkedContent;
 			} else if (nrt.mention.type === "date") {
 				// For dates, we need to format them
 				// Using simple ISO format since we don't have getFormattedDateWithTime here

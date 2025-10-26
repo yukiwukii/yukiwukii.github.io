@@ -9,7 +9,7 @@ import type { Post, SelectProperty } from "@/lib/interfaces";
 import { getCollectionsWDesc, slugify } from "@/utils";
 import { getNotionColorToTailwindColor } from "@/lib/style-helpers";
 import { FULL_PREVIEW_COLLECTIONS, HIDE_UNDERSCORE_SLUGS_IN_LISTS, NUMBER_OF_POSTS_PER_PAGE, LAST_BUILD_TIME } from "@/constants";
-import { getNavLink, resetCurrentHeadings, resetFirstImage, getReferencesInPage } from "@/lib/blog-helpers";
+import { getNavLink, resetCurrentHeadings, resetFirstImage, getInterlinkedContentInPage } from "@/lib/blog-helpers";
 import Icon from '@/components/Icon.astro';
 
 export const getStaticPaths = (async ({ paginate }) => {
@@ -57,11 +57,11 @@ const allPosts = await getAllPosts();
 const allPostsMap: Record<string, Post> = Object.fromEntries(allPosts.map(p => [p.PageId, p]));
 
 const postsWithCacheInfo = page.data.map(post => {
-		const referencesInPage = getReferencesInPage(post.PageId);
+		const interlinkedContentInPage = getInterlinkedContentInPage(post.PageId);
 		const linkedPageIdsSet = new Set<string>();
 
-		if (referencesInPage) {
-				referencesInPage.forEach(ref => {
+		if (interlinkedContentInPage) {
+				interlinkedContentInPage.forEach(ref => {
 						if (ref.link_to_pageid) {
 								linkedPageIdsSet.add(ref.link_to_pageid);
 						}

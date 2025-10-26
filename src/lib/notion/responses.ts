@@ -102,8 +102,8 @@ interface Link {
 interface Mention {
 	type: string;
 	user?: UserObject | undefined;
-	page?: Reference | undefined;
-	database?: Reference | undefined;
+	page?: InterlinkedContent | undefined;
+	database?: InterlinkedContent | undefined;
 	date?: DateProperty | undefined;
 	link_preview?: LinkPreview | undefined;
 	link_mention?: LinkMention | undefined;
@@ -128,7 +128,7 @@ interface LinkMention {
 	link_provider?: string | undefined;
 }
 
-interface Reference {
+interface InterlinkedContent {
 	id: string;
 }
 

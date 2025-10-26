@@ -263,9 +263,10 @@
 		},
 	},
 
-	// === References Configuration ===
+	// === Interlinked Content Configuration ===
 	// Controls the "Interlinked Content" section that appears at the bottom of posts.
-	references: {
+	// This functionality was previously controlled by a key named 'references'.
+	"interlinked-content": {
 		// If true, displays a list of links to other pages on your site that are mentioned in the current page.
 		"site-links-in-page": true,
 		// If true, displays a list of external websites linked from the current page.
