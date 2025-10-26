@@ -1,7 +1,8 @@
 name: Deploy to GitHub Pages
 
 on:
-  create: # Triggers on new repo creation from template
+  create:
+    types: [repository] # Triggers on new repo creation from template
   push:
     branches: [main]
   schedule:
