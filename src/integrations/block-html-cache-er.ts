@@ -81,12 +81,12 @@ const blocksHtmlCacher = (): AstroIntegration => {
 							await fs.access(blocksCacheFilePath);
 							// console.log(`Skipping blocks for ${slug} (no update and cache exists)`);
 							blocksNeedsUpdate = false;
-						} catch { }
+						} catch {}
 						try {
 							await fs.access(staticInterlinkedContentCacheFilePath);
 							// console.log(`Skipping static interlinked content for ${slug} (no update and cache exists)`);
 							staticInterlinkedContentNeedsUpdate = false;
-						} catch { }
+						} catch {}
 					}
 
 					if (!blocksNeedsUpdate && !staticInterlinkedContentNeedsUpdate) continue;

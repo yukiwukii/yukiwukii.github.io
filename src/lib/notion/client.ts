@@ -367,9 +367,7 @@ export async function getPostByPageId(pageId: string): Promise<Post | null> {
 	return allPosts.find((post) => post.PageId === pageId) || null;
 }
 
-export async function getPostContentByPostId(
-	post: Post,
-): Promise<{
+export async function getPostContentByPostId(post: Post): Promise<{
 	blocks: Block[];
 	interlinkedContentInPage: InterlinkedContentInPage[] | null;
 	footnotesInPage: Footnote[] | null;
@@ -397,7 +395,9 @@ export async function getPostContentByPostId(
 		console.log("\nHit cache for", post.Slug);
 		blocks = superjson.parse(fs.readFileSync(cacheFilePath, "utf-8"));
 		if (fs.existsSync(cacheInterlinkedContentInPageFilePath)) {
-			interlinkedContentInPage = superjson.parse(fs.readFileSync(cacheInterlinkedContentInPageFilePath, "utf-8"));
+			interlinkedContentInPage = superjson.parse(
+				fs.readFileSync(cacheInterlinkedContentInPageFilePath, "utf-8"),
+			);
 		} else {
 			interlinkedContentInPage = extractInterlinkedContentInPage(post.PageId, blocks);
 			fs.writeFileSync(
@@ -438,7 +438,11 @@ export async function getPostContentByPostId(
 
 		// Extract and save interlinked content
 		interlinkedContentInPage = extractInterlinkedContentInPage(post.PageId, blocks);
-		fs.writeFileSync(cacheInterlinkedContentInPageFilePath, superjson.stringify(interlinkedContentInPage), "utf-8");
+		fs.writeFileSync(
+			cacheInterlinkedContentInPageFilePath,
+			superjson.stringify(interlinkedContentInPage),
+			"utf-8",
+		);
 
 		// Save footnotes cache (only if footnotes are enabled)
 		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled && footnotesInPage) {
@@ -477,7 +481,10 @@ export function getBlockIdPostIdMap(): { [key: string]: string } {
 }
 
 export function createInterlinkedContentToThisEntry(
-	interlinkedContentInEntries: { interlinkedContentInPage: InterlinkedContentInPage[] | null; entryId: string }[],
+	interlinkedContentInEntries: {
+		interlinkedContentInPage: InterlinkedContentInPage[] | null;
+		entryId: string;
+	}[],
 ) {
 	const entryInterlinkedContentMap: { [entryId: string]: { entryId: string; block: Block }[] } = {};
 
@@ -492,7 +499,10 @@ export function createInterlinkedContentToThisEntry(
 			interlinkedContentInPage.forEach((interlinkedContent) => {
 				// Check and collect blocks where InternalHref.PageId matches an entryId in the map
 				interlinkedContent.other_pages.forEach((richText) => {
-					if (richText.InternalHref?.PageId && entryInterlinkedContentMap[richText.InternalHref.PageId]) {
+					if (
+						richText.InternalHref?.PageId &&
+						entryInterlinkedContentMap[richText.InternalHref.PageId]
+					) {
 						entryInterlinkedContentMap[richText.InternalHref.PageId].push({
 							entryId: entryId,
 							block: interlinkedContent.block,
@@ -509,7 +519,10 @@ export function createInterlinkedContentToThisEntry(
 				});
 
 				// Check and collect blocks where link_to_pageid matches an entryId in the map
-				if (interlinkedContent.link_to_pageid && entryInterlinkedContentMap[interlinkedContent.link_to_pageid]) {
+				if (
+					interlinkedContent.link_to_pageid &&
+					entryInterlinkedContentMap[interlinkedContent.link_to_pageid]
+				) {
 					entryInterlinkedContentMap[interlinkedContent.link_to_pageid].push({
 						entryId: entryId,
 						block: interlinkedContent.block,

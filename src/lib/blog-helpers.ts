@@ -17,7 +17,9 @@ import superjson from "superjson";
 
 const BASE_PATH = import.meta.env.BASE_URL;
 let interlinkedContentInPageCache: { [entryId: string]: InterlinkedContentInPage[] } | null = null;
-let interlinkedContentToPageCache: { [entryId: string]: { entryId: string; block: Block }[] } | null = null;
+let interlinkedContentToPageCache: {
+	[entryId: string]: { entryId: string; block: Block }[];
+} | null = null;
 let firstImage = true;
 let track_current_page_id: string | null = null;
 let current_headings = null;
@@ -76,7 +78,10 @@ export function getInterlinkedContentInPage(entryId: string) {
 				return [
 					pageId,
 					superjson.parse(
-						fs.readFileSync(path.join(BUILD_FOLDER_PATHS["interlinkedContentInPage"], file), "utf-8"),
+						fs.readFileSync(
+							path.join(BUILD_FOLDER_PATHS["interlinkedContentInPage"], file),
+							"utf-8",
+						),
 					),
 				];
 			}),
@@ -97,7 +102,10 @@ export function getInterlinkedContentToPage(entryId: string) {
 				return [
 					pageId,
 					superjson.parse(
-						fs.readFileSync(path.join(BUILD_FOLDER_PATHS["interlinkedContentToPage"], file), "utf-8"),
+						fs.readFileSync(
+							path.join(BUILD_FOLDER_PATHS["interlinkedContentToPage"], file),
+							"utf-8",
+						),
 					),
 				];
 			}),
@@ -197,8 +205,10 @@ const _filterRichTexts = (
 	direct_nonmedia_link: null,
 });
 
-const _extractInterlinkedContentInBlock = (postId: string, block: Block): InterlinkedContentInPage => {
-
+const _extractInterlinkedContentInBlock = (
+	postId: string,
+	block: Block,
+): InterlinkedContentInPage => {
 	let rich_texts =
 		block.Bookmark?.Caption ||
 		block.BulletedListItem?.RichTexts ||
@@ -261,7 +271,10 @@ const _extractInterlinkedContentInBlock = (postId: string, block: Block): Interl
 	return filteredRichText;
 };
 
-export const extractInterlinkedContentInPage = (postId: string, blocks: Block[]): InterlinkedContentInPage[] => {
+export const extractInterlinkedContentInPage = (
+	postId: string,
+	blocks: Block[],
+): InterlinkedContentInPage[] => {
 	// console.debug("here in extractInterlinkedContentInPage");
 	return blocks
 		.reduce((acc: InterlinkedContentInPage[], block) => {
@@ -298,7 +311,10 @@ export const extractInterlinkedContentInPage = (postId: string, blocks: Block[])
 		.flat();
 };
 
-const _extractInterlinkedContentFromColumns = (postId: string, columns: Column[]): InterlinkedContentInPage[] => {
+const _extractInterlinkedContentFromColumns = (
+	postId: string,
+	columns: Column[],
+): InterlinkedContentInPage[] => {
 	return columns
 		.reduce((acc: InterlinkedContentInPage[], column) => {
 			if (column.Children) {

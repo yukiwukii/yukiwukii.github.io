@@ -51,18 +51,18 @@ if (groupedInterlinkedContent) {
 				{Object.entries(groupedInterlinkedContent).map(([dmltype, blockdmls]) => (
 					<div class="ml-2">
 						<div class="inline-block">
-									<span class="italic">{dmltype}</span> {" at "}
-									{blockdmls.map((blockdml, index) => (
-										<>
-											<NBlocksPopover
-												block={blockdml.block}
-												linkedTo={blockIdLinks[blockdml.block.Id]}
-												popoverSpanText={`[${getSymbolForLinkedContent(index)}]`}
-												isInterlinkedBack={true}
-												linkText="Jump to"
-											/>
-										</>
-									))}
+							<span class="italic">{dmltype}</span> {" at "}
+							{blockdmls.map((blockdml, index) => (
+								<>
+									<NBlocksPopover
+										block={blockdml.block}
+										linkedTo={blockIdLinks[blockdml.block.Id]}
+										popoverSpanText={`[${getSymbolForLinkedContent(index)}]`}
+										isInterlinkedBack={true}
+										linkText="Jump to"
+									/>
+								</>
+							))}
 						</div>
 					</div>
 				))}

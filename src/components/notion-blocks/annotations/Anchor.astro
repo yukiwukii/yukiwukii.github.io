@@ -15,71 +15,73 @@ const { hreflink, blocklinked, conditionmatch, post, isBlockLinkedHeading } =
 	await getAnchorLinkAndBlock(richText);
 ---
 
-{hreflink ? (
-  conditionmatch &&
-  ["block_other_page", "other_page"].includes(conditionmatch) &&
-  post &&
-  post.Title ? (
-    <>
-      {/* ✅ Case 1: Link to another page or another page’s block */}
-      {conditionmatch === "block_other_page" ? (
-        <NBlocksPopover
-          block={blocklinked}
-          linkedTo={hreflink}
-          popoverSpanText=""
-          popoverTitle={post.Title}
-        >
-          <slot />
-        </NBlocksPopover>
-      ) : (
-        <NPagePopover
-          linkedTo={hreflink}
-          popoverSpanText=""
-          popoverTitle={post.Title}
-          postId={post.PageId}
-          excerpt={post.Excerpt}
-        >
-          <slot />
-        </NPagePopover>
-      )}
-    </>
-  ) : conditionmatch === "block_current_page" ? (
-    <>
-      {/* ✅ Case 2: Link to a block on the current page */}
-      {!isBlockLinkedHeading && post && post.Title ? (
-        <NBlocksPopover
-          block={blocklinked}
-          linkedTo={hreflink}
-          popoverSpanText=""
-          popoverTitle=""
-        >
-          <slot />
-        </NBlocksPopover>
-      ) : (
-        <a
-          href={hreflink}
-          class="text-link decoration-accent-2/40 underline decoration-dashed underline-offset-2"
-        >
-          <slot />
-        </a>
-      )}
-    </>
-  ) : (
-    <>
-      {/* ✅ Case 3: Normal/external link */}
-      <a
-        href={hreflink}
-        class="site-page-link text-link decoration-solid"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <slot />
-      </a>
-    </>
-  )
-) : (
-  <>
-    {/* ✅ Case 4: No link — just render the content */}
-    <slot />
-  </>
-)}
+{
+	hreflink ? (
+		conditionmatch &&
+		["block_other_page", "other_page"].includes(conditionmatch) &&
+		post &&
+		post.Title ? (
+			<>
+				{/* ✅ Case 1: Link to another page or another page’s block */}
+				{conditionmatch === "block_other_page" ? (
+					<NBlocksPopover
+						block={blocklinked}
+						linkedTo={hreflink}
+						popoverSpanText=""
+						popoverTitle={post.Title}
+					>
+						<slot />
+					</NBlocksPopover>
+				) : (
+					<NPagePopover
+						linkedTo={hreflink}
+						popoverSpanText=""
+						popoverTitle={post.Title}
+						postId={post.PageId}
+						excerpt={post.Excerpt}
+					>
+						<slot />
+					</NPagePopover>
+				)}
+			</>
+		) : conditionmatch === "block_current_page" ? (
+			<>
+				{/* ✅ Case 2: Link to a block on the current page */}
+				{!isBlockLinkedHeading && post && post.Title ? (
+					<NBlocksPopover
+						block={blocklinked}
+						linkedTo={hreflink}
+						popoverSpanText=""
+						popoverTitle=""
+					>
+						<slot />
+					</NBlocksPopover>
+				) : (
+					<a
+						href={hreflink}
+						class="text-link decoration-accent-2/40 underline decoration-dashed underline-offset-2"
+					>
+						<slot />
+					</a>
+				)}
+			</>
+		) : (
+			<>
+				{/* ✅ Case 3: Normal/external link */}
+				<a
+					href={hreflink}
+					class="site-page-link text-link decoration-solid"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<slot />
+				</a>
+			</>
+		)
+	) : (
+		<>
+			{/* ✅ Case 4: No link — just render the content */}
+			<slot />
+		</>
+	)
+}

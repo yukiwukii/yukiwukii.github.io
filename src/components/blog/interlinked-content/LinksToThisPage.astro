@@ -45,16 +45,15 @@ if (groupedInterlinkedContent) {
 							</a>
 							{" at "}
 
-									{blocks.map((block, index) => (
-										<NBlocksPopover
-											block={block}
-											linkedTo={blockIdLinks[block.Id]}
-											popoverSpanText={`[${getSymbolForLinkedContent(index)}]`}
-											popoverTitle={entryIdLinksEntry[entryId][1].Title}
-											isInterlinkedBack={true}
-										/>
-									))}
-
+							{blocks.map((block, index) => (
+								<NBlocksPopover
+									block={block}
+									linkedTo={blockIdLinks[block.Id]}
+									popoverSpanText={`[${getSymbolForLinkedContent(index)}]`}
+									popoverTitle={entryIdLinksEntry[entryId][1].Title}
+									isInterlinkedBack={true}
+								/>
+							))}
 						</div>
 					</div>
 				))}

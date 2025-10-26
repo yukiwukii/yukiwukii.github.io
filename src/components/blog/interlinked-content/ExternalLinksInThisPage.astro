@@ -6,7 +6,6 @@ import metascraperImage from "metascraper-image";
 import metascraperTitle from "metascraper-title";
 import NBlocksPopover from "@/components/blog/interlinked-content/NBlocksPopover.astro";
 import { buildURLToHTMLMap, getInterlinkedContentLink } from "@/lib/blog-helpers";
-import { INTERLINKED_CONTENT } from "@/constants";
 import Icon from "@/components/Icon.astro";
 import { getSymbolForLinkedContent } from "@/lib/style-helpers";
 
@@ -15,8 +14,8 @@ interface Props {
 	filteredInterlinkedContentInPage: InterlinkedContentInPage[];
 }
 const { post, filteredInterlinkedContentInPage } = Astro.props;
-const groupedInterlinkedContent: { [key: string]: Block[] } = filteredInterlinkedContentInPage.reduce(
-	(acc, ref) => {
+const groupedInterlinkedContent: { [key: string]: Block[] } =
+	filteredInterlinkedContentInPage.reduce((acc, ref) => {
 		// Group by direct_nonmedia_link and collect Block objects
 		if (ref.direct_nonmedia_link && !ref.direct_nonmedia_link.includes("tiktok.com")) {
 			const key = ref.direct_nonmedia_link;
@@ -34,9 +33,7 @@ const groupedInterlinkedContent: { [key: string]: Block[] } = filteredInterlinke
 		});
 
 		return acc;
-	},
-	{},
-);
+	}, {});
 
 const blockIdLinks = {};
 const urlList: URL[] = [];
@@ -129,15 +126,15 @@ if (groupedInterlinkedContent && Object.keys(groupedInterlinkedContent).length >
 								</a>
 								{" at "}
 
-										{blocks.map((block, index) => (
-											<NBlocksPopover
-												block={block}
-												linkedTo={blockIdLinks[block.Id]}
-												popoverSpanText={`[${getSymbolForLinkedContent(index)}]`}
-												isInterlinkedBack={true}
-												linkText="Jump to"
-											/>
-										))}
+								{blocks.map((block, index) => (
+									<NBlocksPopover
+										block={block}
+										linkedTo={blockIdLinks[block.Id]}
+										popoverSpanText={`[${getSymbolForLinkedContent(index)}]`}
+										isInterlinkedBack={true}
+										linkText="Jump to"
+									/>
+								))}
 							</div>
 						</div>
 					))}

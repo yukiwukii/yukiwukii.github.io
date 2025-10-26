@@ -21,7 +21,9 @@ const allInterlinkedContentInPage = getInterlinkedContentInPage(post.PageId);
 
 // Filter interlinked content for each component
 const filteredExternalNonMediaInterlinkedContent = allInterlinkedContentInPage
-	? allInterlinkedContentInPage.filter((ref) => ref.external_hrefs.length > 0 || ref.direct_nonmedia_link)
+	? allInterlinkedContentInPage.filter(
+			(ref) => ref.external_hrefs.length > 0 || ref.direct_nonmedia_link,
+		)
 	: null;
 const filteredSitePages = allInterlinkedContentInPage
 	? allInterlinkedContentInPage.filter((ref) => ref.other_pages.length > 0 || ref.link_to_pageid)
@@ -127,23 +129,33 @@ const interlinkedContentStyles = `
 			(INTERLINKED_CONTENT["site-links-in-page"] ||
 				INTERLINKED_CONTENT["media-and-file-links-in-this-page"] ||
 				INTERLINKED_CONTENT["external-links-in-page"]) &&
-			(filteredSitePages || filteredMediaInterlinkedContent || filteredExternalNonMediaInterlinkedContent) &&
+			(filteredSitePages ||
+				filteredMediaInterlinkedContent ||
+				filteredExternalNonMediaInterlinkedContent) &&
 			(cachedStaticInterlinkedContentHtml ? (
 				<div class="static-interlinked-content" set:html={cachedStaticInterlinkedContentHtml} />
 			) : (
 				<div class="static-interlinked-content">
 					{INTERLINKED_CONTENT["site-links-in-page"] && filteredSitePages && (
-						<InternalLinksInThisPage post={post} filteredInterlinkedContentInPage={filteredSitePages} />
-					)}
-					{INTERLINKED_CONTENT["media-and-file-links-in-this-page"] && filteredMediaInterlinkedContent && (
-						<MediaLinksInThisPage post={post} filteredInterlinkedContentInPage={filteredMediaInterlinkedContent} />
-					)}
-					{INTERLINKED_CONTENT["external-links-in-page"] && filteredExternalNonMediaInterlinkedContent && (
-						<ExternalLinksInThisPage
+						<InternalLinksInThisPage
 							post={post}
-							filteredInterlinkedContentInPage={filteredExternalNonMediaInterlinkedContent}
+							filteredInterlinkedContentInPage={filteredSitePages}
 						/>
 					)}
+					{INTERLINKED_CONTENT["media-and-file-links-in-this-page"] &&
+						filteredMediaInterlinkedContent && (
+							<MediaLinksInThisPage
+								post={post}
+								filteredInterlinkedContentInPage={filteredMediaInterlinkedContent}
+							/>
+						)}
+					{INTERLINKED_CONTENT["external-links-in-page"] &&
+						filteredExternalNonMediaInterlinkedContent && (
+							<ExternalLinksInThisPage
+								post={post}
+								filteredInterlinkedContentInPage={filteredExternalNonMediaInterlinkedContent}
+							/>
+						)}
 				</div>
 			))
 	}
