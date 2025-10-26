@@ -80,7 +80,7 @@ export const HOME_PAGE_SLUG =
  * - "sitewide-footnotes-page-slug": Legacy manual footnotes page (already works via NBlocksPopover)
  * - "in-page-footnotes-settings": Automatic in-page footnotes with markers (new feature)
  */
-export const FOOTNOTES = key_value_from_json["footnotes"] || null;
+export const FOOTNOTES = key_value_from_json?.["auto-extracted-sections"]?.footnotes || null;
 
 // Legacy manual footnotes page slug (used by NBlocksPopover)
 export const SITEWIDE_FOOTNOTES_PAGE_SLUG =
@@ -122,7 +122,8 @@ const readBuildStartTime = () => {
 export const LAST_BUILD_TIME = readBuildStartTime();
 console.log("Last Build Start Time:", LAST_BUILD_TIME);
 
-export const INTERLINKED_CONTENT = key_value_from_json["interlinked-content"] || null;
+export const INTERLINKED_CONTENT =
+	key_value_from_json?.["auto-extracted-sections"]?.["interlinked-content"] || null;
 
 export const RECENT_POSTS_ON_HOME_PAGE =
 	key_value_from_json?.["collections-and-listings"]?.["recent-posts-on-home-page"] || false;

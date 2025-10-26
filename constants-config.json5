@@ -220,60 +220,65 @@
 		table: "<<🗂️>>",
 	},
 
-	// === Footnotes Configuration ===
-	// Settings for both manual (sitewide) and automatic (in-page) footnotes.
-	footnotes: {
-		// The slug for a single, dedicated page that contains all footnotes for the entire site.
-		// This is a legacy method for manual footnote management.
-		"sitewide-footnotes-page-slug": "_all-footnotes",
+	// === Auto-Extracted Sections ===
+	// Configure sections that are automatically extracted from your Notion content,
+	// such as footnotes and interlinked content.
+	"auto-extracted-sections": {
+		// === Footnotes Configuration ===
+		// Settings for both manual (sitewide) and automatic (in-page) footnotes.
+		footnotes: {
+			// The slug for a single, dedicated page that contains all footnotes for the entire site.
+			// This is a legacy method for manual footnote management.
+			"sitewide-footnotes-page-slug": "_all-footnotes",
 
-		// Settings for the modern, automatic in-page footnote system.
-		"in-page-footnotes-settings": {
-			enabled: true,
+			// Settings for the modern, automatic in-page footnote system.
+			"in-page-footnotes-settings": {
+				enabled: true,
 
-			// Defines where the system should look for footnote content.
-			// Important: Only ONE of these source options can be 'true' at a time.
-			source: {
-				// Looks for definitions at the end of a text block, like `[^ft_1]: My footnote content.`Sepearate it by two soft new lines (using shift+enter). This is the method that will work when you export Notion content to Markdown.
-				"end-of-block": true,
-				// Treats the first n set of child block(s) indented under a parent block as the footnote content. (n = number of footnote markers in the parent block)
-				"start-of-child-blocks": false,
-				// Uses Notion comments on a block as footnote content.
-				// Requires granting "Read comments" permission to your Notion integration. Else falls back to 'end-of-block' method.
-				"block-comments": false,
-				// Not yet implemented.
-				"block-inline-text-comments": false,
-			},
+				// Defines where the system should look for footnote content.
+				// Important: Only ONE of these source options can be 'true' at a time.
+				source: {
+					// Looks for definitions at the end of a text block, like `[^ft_1]: My footnote content.`Sepearate it by two soft new lines (using shift+enter). This is the method that will work when you export Notion content to Markdown.
+					"end-of-block": true,
+					// Treats the first n set of child block(s) indented under a parent block as the footnote content. (n = number of footnote markers in the parent block)
+					"start-of-child-blocks": false,
+					// Uses Notion comments on a block as footnote content.
+					// Requires granting "Read comments" permission to your Notion integration. Else falls back to 'end-of-block' method.
+					"block-comments": false,
+					// Not yet implemented.
+					"block-inline-text-comments": false,
+				},
 
-			// The prefix for footnote markers in your Notion text. e.g., `[^ft_1]` for a prefix of `ft_`.
-			"marker-prefix": "ft_",
+				// The prefix for footnote markers in your Notion text. e.g., `[^ft_1]` for a prefix of `ft_`.
+				"marker-prefix": "ft_",
 
-			// If true, a collated list of all footnotes will be automatically generated at the bottom of the page.
-			"generate-footnotes-section": true,
+				// If true, a collated list of all footnotes will be automatically generated at the bottom of the page.
+				"generate-footnotes-section": true,
 
-			// Defines how footnote markers are displayed within the text.
-			"intext-display": {
-				// If true, footnotes will always appear as a popup on click.
-				"always-popup": false,
-				// (Recommended) On large screens, displays footnotes in the margin. On smaller screens, it falls back to a popup.
-				"small-popup-large-margin": true,
+				// Defines how footnote markers are displayed within the text.
+				"intext-display": {
+					// If true, footnotes will always appear as a popup on click.
+					"always-popup": false,
+					// (Recommended) On large screens, displays footnotes in the margin. On smaller screens, it falls back to a popup.
+					"small-popup-large-margin": true,
+				},
 			},
 		},
-	},
 
-	// === Interlinked Content Configuration ===
-	// Controls the "Interlinked Content" section that appears at the bottom of posts.
-	// This functionality was previously controlled by a key named 'references'.
-	"interlinked-content": {
-		// If true, displays a list of links to other pages on your site that are mentioned in the current page.
-		"site-links-in-page": true,
-		// If true, displays a list of external websites linked from the current page.
-		"external-links-in-page": true,
-		// If true, displays a list of media files (images, videos, audio) embedded in the current page.
-		"media-and-file-links-in-this-page": true,
-		// If true, displays a list of "backlinks" - other pages on your site that link to the current page.
-		"links-to-this-page": true,
-		// NOTE: The 'popovers' feature is now enabled by default and its configuration key has been removed.
+		// === Interlinked Content Configuration ===
+		// Controls the "Interlinked Content" section that appears at the bottom of posts.
+		// This functionality was previously controlled by a key named 'references'.
+		"interlinked-content": {
+			// If true, displays a list of links to other pages on your site that are mentioned in the current page.
+			"site-links-in-page": true,
+			// If true, displays a list of external websites linked from the current page.
+			"external-links-in-page": true,
+			// If true, displays a list of media files (images, videos, audio) embedded in the current page.
+			"media-and-file-links-in-this-page": true,
+			// If true, displays a list of "backlinks" - other pages on your site that link to the current page.
+			"links-to-this-page": true,
+			// NOTE: The 'popovers' feature is now enabled by default and its configuration key has been removed.
+		},
 	},
 
 	// === URL Redirects ===
