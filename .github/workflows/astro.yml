@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: write # 'write' is needed for the cleanup job's commit
-  pages: write    # 'write' is needed for the build/deploy jobs
+  pages: write # 'write' is needed for the build/deploy jobs
   id-token: write # 'write' is needed for OIDC in the deploy job
 
 concurrency:
