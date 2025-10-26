@@ -169,7 +169,7 @@ export default (): AstroIntegration => ({
       const popoverHex = `#${mix(bgHex.slice(1, 3), refHex.slice(1, 3))}${mix(bgHex.slice(3, 5), refHex.slice(3, 5))}${mix(bgHex.slice(5, 7), refHex.slice(5, 7))}`;
       cssContent += `    --theme-popover-bg: ${popoverHex};`;
 
-      	return cssContent;
+        return cssContent;
       };
 
       const cssContent = `@import "tailwindcss";
@@ -315,6 +315,209 @@ ${createCssVariables("dark")}
 
 @utility transition-height {
   transition-property: height;
+}
+
+
+
+.popoverEl {
+  left: 0;
+  top: 0;
+  max-width: calc(100vw - 10px);
+}
+
+.footnote-margin-note.highlighted {
+  opacity: 1;
+  color: var(--color-textColor);
+}
+
+[data-margin-note].highlighted {
+  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0 -2px;
+  /* This prevents the padding from shifting surrounding text */
+}
+
+.footnote-margin-note.highlighted sup {
+  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0 -2px;
+  /* Prevents padding from shifting text */
+  color: var(--color-quote);
+  /* Keep the quote color for the number */
+}
+
+.footnote-margin-blocks> :nth-child(2) {
+  display: inline !important;
+  margin-top: 0 !important;
+}
+
+@media (max-width: 1023px) {
+  .footnote-margin-note {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footnote-margin-note {
+    display: block;
+  }
+
+  .post-body {
+    position: relative;
+  }
+}
+
+.post-preview-full-container .footnote-margin-note {
+  display: none !important;
+}
+
+.datatable-input {
+  padding: 3px 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.datatable-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+.filter-toggle {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: all 0.3s ease;
+}
+
+.filter-toggle:hover {
+  opacity: 0.7;
+}
+
+.filter-row,
+.search-inputs {
+  transition: all 0.3s ease;
+  max-height: 50px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.filter-row.hide,
+.search-inputs.hide {
+  max-height: 0;
+  display: none;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.datatable-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px;
+  margin-bottom: 10px;
+}
+
+.datatable-top-left {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.datatable-info {
+  font-size: small;
+  font-family: monospace;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.datatable-sorter {
+  background-color: transparent !important;
+  position: relative;
+  padding-right: 1rem;
+  /* Reserve enough space for the sort icons */
+}
+
+.datatable-sorter::after {
+  border-bottom-color: var(--color-accent) !important;
+  top: -2px !important;
+}
+
+.datatable-sorter::before {
+  border-top-color: var(--color-accent) !important;
+}
+
+.datatable-table>tbody>tr>td,
+.datatable-table>tbody>tr>th,
+.datatable-table>tfoot>tr>td,
+.datatable-table>tfoot>tr>th,
+.datatable-table>thead>tr>td,
+.datatable-table>thead>tr>th {
+  padding: calc(var(--spacing) * 2);
+}
+
+html.dark :not(.datatable-ascending):not(.datatable-descending)>.datatable-sorter::after,
+html.dark :not(.datatable-ascending):not(.datatable-descending)>.datatable-sorter::before {
+  opacity: 0.3 !important;
+}
+
+.datatable-wrapper .datatable-container {
+  border: none !important;
+}
+
+.datatable-table>thead>tr>th {
+  border-bottom-color: rgba(229, 231, 235, 0.9);
+}
+
+.dark .datatable-table>thead>tr>th {
+  border-bottom-color: rgba(55, 65, 81, 0.9);
+}
+
+@media (max-width: 640px) {
+  .datatable-top {
+    flex-wrap: nowrap;
+  }
+
+  .datatable-top-left {
+    width: auto;
+    margin-bottom: 0;
+  }
+
+  .datatable-info {
+    padding-left: 8px;
+  }
+
+  .datatable-top.filter-active {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .datatable-top.filter-active .datatable-top-left {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .datatable-top.filter-active .datatable-info {
+    width: 100%;
+    padding-right: 8px;
+    text-align: right;
+  }
+}
+
+.glightbox-clean .gslide-description {
+  background: var(--color-bgColor);
 }`;
 
       const cssOutputPath = "src/styles/global.css";

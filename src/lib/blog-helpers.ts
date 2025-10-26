@@ -6,7 +6,7 @@ import type {
 	Heading3,
 	RichText,
 	Column,
-	ReferencesInPage,
+	InterlinkedContentInPage,
 	Post,
 } from "@/lib/interfaces";
 import { slugify } from "../utils/slugify";
@@ -16,8 +16,10 @@ import { getBlock, getPostByPageId } from "../lib/notion/client";
 import superjson from "superjson";
 
 const BASE_PATH = import.meta.env.BASE_URL;
-let referencesInPageCache: { [entryId: string]: ReferencesInPage[] } | null = null;
-let referencesToPageCache: { [entryId: string]: { entryId: string; block: Block }[] } | null = null;
+let interlinkedContentInPageCache: { [entryId: string]: InterlinkedContentInPage[] } | null = null;
+let interlinkedContentToPageCache: {
+	[entryId: string]: { entryId: string; block: Block }[];
+} | null = null;
 let firstImage = true;
 let track_current_page_id: string | null = null;
 let current_headings = null;
@@ -67,45 +69,50 @@ export const buildTimeFilePath = (url: URL): string => {
 	// return path.join(BASE_PATH, `./src/notion-assets/${dir}/${filename}`);
 };
 
-export function getReferencesInPage(entryId: string) {
-	// Load and aggregate data if referencesInPageCache is null
-	if (referencesInPageCache === null) {
-		referencesInPageCache = Object.fromEntries(
-			fs.readdirSync(BUILD_FOLDER_PATHS["referencesInPage"]).map((file) => {
+export function getInterlinkedContentInPage(entryId: string) {
+	// Load and aggregate data if interlinkedContentInPageCache is null
+	if (interlinkedContentInPageCache === null) {
+		interlinkedContentInPageCache = Object.fromEntries(
+			fs.readdirSync(BUILD_FOLDER_PATHS["interlinkedContentInPage"]).map((file) => {
 				const pageId = file.replace(".json", "");
 				return [
 					pageId,
 					superjson.parse(
-						fs.readFileSync(path.join(BUILD_FOLDER_PATHS["referencesInPage"], file), "utf-8"),
+						fs.readFileSync(
+							path.join(BUILD_FOLDER_PATHS["interlinkedContentInPage"], file),
+							"utf-8",
+						),
 					),
 				];
 			}),
 		);
 	}
-
-	// Return the references for the given entryId, or null if not found
-	return referencesInPageCache ? referencesInPageCache[entryId] : null;
+	// Return the interlinked content for the given entryId, or null if not found
+	return interlinkedContentInPageCache ? interlinkedContentInPageCache[entryId] : null;
 }
 
-export function getReferencesToPage(entryId: string) {
-	// Load and aggregate data if referencesInPageCache is null
-	if (referencesToPageCache === null) {
-		referencesToPageCache = {};
+export function getInterlinkedContentToPage(entryId: string) {
+	// Load and aggregate data if interlinkedContentToPageCache is null
+	if (interlinkedContentToPageCache === null) {
+		interlinkedContentToPageCache = {};
 
-		referencesToPageCache = Object.fromEntries(
-			fs.readdirSync(BUILD_FOLDER_PATHS["referencesToPage"]).map((file) => {
+		interlinkedContentToPageCache = Object.fromEntries(
+			fs.readdirSync(BUILD_FOLDER_PATHS["interlinkedContentToPage"]).map((file) => {
 				const pageId = file.replace(".json", "");
 				return [
 					pageId,
 					superjson.parse(
-						fs.readFileSync(path.join(BUILD_FOLDER_PATHS["referencesToPage"], file), "utf-8"),
+						fs.readFileSync(
+							path.join(BUILD_FOLDER_PATHS["interlinkedContentToPage"], file),
+							"utf-8",
+						),
 					),
 				];
 			}),
 		);
 	}
-	// Return the references for the given entryId, or null if not found
-	return referencesToPageCache ? referencesToPageCache[entryId] : null;
+	// Return the interlinked content for the given entryId, or null if not found
+	return interlinkedContentToPageCache ? interlinkedContentToPageCache[entryId] : null;
 }
 
 export const extractTargetBlocks = (blockTypes: string[], blocks: Block[]): Block[] => {
@@ -161,7 +168,7 @@ const _filterRichTexts = (
 	postId: string,
 	block: Block,
 	rich_texts: RichText[],
-): ReferencesInPage => ({
+): InterlinkedContentInPage => ({
 	block,
 	other_pages:
 		rich_texts.reduce((acc, richText) => {
@@ -198,8 +205,10 @@ const _filterRichTexts = (
 	direct_nonmedia_link: null,
 });
 
-const _extractReferencesInBlock = (postId: string, block: Block): ReferencesInPage => {
-	// console.debug("here in _extractReferencesInBlock");
+const _extractInterlinkedContentInBlock = (
+	postId: string,
+	block: Block,
+): InterlinkedContentInPage => {
 	let rich_texts =
 		block.Bookmark?.Caption ||
 		block.BulletedListItem?.RichTexts ||
@@ -262,36 +271,39 @@ const _extractReferencesInBlock = (postId: string, block: Block): ReferencesInPa
 	return filteredRichText;
 };
 
-export const extractReferencesInPage = (postId: string, blocks: Block[]): ReferencesInPage[] => {
-	// console.debug("here in extractReferencesInPage");
+export const extractInterlinkedContentInPage = (
+	postId: string,
+	blocks: Block[],
+): InterlinkedContentInPage[] => {
+	// console.debug("here in extractInterlinkedContentInPage");
 	return blocks
-		.reduce((acc: ReferencesInPage[], block) => {
-			acc.push(_extractReferencesInBlock(postId, block));
+		.reduce((acc: InterlinkedContentInPage[], block) => {
+			acc.push(_extractInterlinkedContentInBlock(postId, block));
 
 			if (block.ColumnList && block.ColumnList.Columns) {
-				acc = acc.concat(_extractReferencesFromColumns(postId, block.ColumnList.Columns));
+				acc = acc.concat(_extractInterlinkedContentFromColumns(postId, block.ColumnList.Columns));
 			} else if (block.BulletedListItem && block.BulletedListItem.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.BulletedListItem.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.BulletedListItem.Children));
 			} else if (block.NumberedListItem && block.NumberedListItem.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.NumberedListItem.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.NumberedListItem.Children));
 			} else if (block.ToDo && block.ToDo.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.ToDo.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.ToDo.Children));
 			} else if (block.SyncedBlock && block.SyncedBlock.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.SyncedBlock.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.SyncedBlock.Children));
 			} else if (block.Toggle && block.Toggle.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Toggle.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Toggle.Children));
 			} else if (block.Paragraph && block.Paragraph.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Paragraph.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Paragraph.Children));
 			} else if (block.Heading1 && block.Heading1.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Heading1.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Heading1.Children));
 			} else if (block.Heading2 && block.Heading2.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Heading2.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Heading2.Children));
 			} else if (block.Heading3 && block.Heading3.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Heading3.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Heading3.Children));
 			} else if (block.Quote && block.Quote.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Quote.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Quote.Children));
 			} else if (block.Callout && block.Callout.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, block.Callout.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Callout.Children));
 			}
 
 			return acc;
@@ -299,11 +311,14 @@ export const extractReferencesInPage = (postId: string, blocks: Block[]): Refere
 		.flat();
 };
 
-const _extractReferencesFromColumns = (postId: string, columns: Column[]): ReferencesInPage[] => {
+const _extractInterlinkedContentFromColumns = (
+	postId: string,
+	columns: Column[],
+): InterlinkedContentInPage[] => {
 	return columns
-		.reduce((acc: ReferencesInPage[], column) => {
+		.reduce((acc: InterlinkedContentInPage[], column) => {
 			if (column.Children) {
-				acc = acc.concat(extractReferencesInPage(postId, column.Children));
+				acc = acc.concat(extractInterlinkedContentInPage(postId, column.Children));
 			}
 			return acc;
 		}, [])
@@ -420,7 +435,7 @@ export const getAnchorLinkAndBlock = async (
 	};
 };
 
-export const getReferenceLink = async (
+export const getInterlinkedContentLink = async (
 	current_page_id: string,
 	linkedPageId?: string,
 	block_linked?: Block,

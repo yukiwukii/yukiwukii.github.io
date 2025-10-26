@@ -59,16 +59,16 @@ import type {
 	FileObject,
 	LinkToPage,
 	Mention,
-	Reference,
+	InterlinkedContent,
 	NAudio,
-	ReferencesInPage,
+	InterlinkedContentInPage,
 	Footnote,
 } from "@/lib/interfaces";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Client, APIResponseError } from "@notionhq/client";
 import { getFormattedDateWithTime } from "../../utils/date";
 import { slugify } from "../../utils/slugify";
-import { extractReferencesInPage } from "../../lib/blog-helpers";
+import { extractInterlinkedContentInPage } from "../../lib/blog-helpers";
 import superjson from "superjson";
 
 const client = new Client({
@@ -367,17 +367,15 @@ export async function getPostByPageId(pageId: string): Promise<Post | null> {
 	return allPosts.find((post) => post.PageId === pageId) || null;
 }
 
-export async function getPostContentByPostId(
-	post: Post,
-): Promise<{
+export async function getPostContentByPostId(post: Post): Promise<{
 	blocks: Block[];
-	referencesInPage: ReferencesInPage[] | null;
+	interlinkedContentInPage: InterlinkedContentInPage[] | null;
 	footnotesInPage: Footnote[] | null;
 }> {
 	const tmpDir = BUILD_FOLDER_PATHS["blocksJson"];
 	const cacheFilePath = path.join(tmpDir, `${post.PageId}.json`);
-	const cacheReferencesInPageFilePath = path.join(
-		BUILD_FOLDER_PATHS["referencesInPage"],
+	const cacheInterlinkedContentInPageFilePath = path.join(
+		BUILD_FOLDER_PATHS["interlinkedContentInPage"],
 		`${post.PageId}.json`,
 	);
 	const cacheFootnotesInPageFilePath = path.join(
@@ -389,20 +387,22 @@ export async function getPostContentByPostId(
 		: true;
 
 	let blocks: Block[];
-	let referencesInPage: ReferencesInPage[] | null;
+	let interlinkedContentInPage: InterlinkedContentInPage[] | null;
 	let footnotesInPage: Footnote[] | null = null;
 
 	if (!isPostUpdatedAfterLastBuild && fs.existsSync(cacheFilePath)) {
 		// If the post was not updated after the last build and cache file exists, return the cached data
 		console.log("\nHit cache for", post.Slug);
 		blocks = superjson.parse(fs.readFileSync(cacheFilePath, "utf-8"));
-		if (fs.existsSync(cacheReferencesInPageFilePath)) {
-			referencesInPage = superjson.parse(fs.readFileSync(cacheReferencesInPageFilePath, "utf-8"));
+		if (fs.existsSync(cacheInterlinkedContentInPageFilePath)) {
+			interlinkedContentInPage = superjson.parse(
+				fs.readFileSync(cacheInterlinkedContentInPageFilePath, "utf-8"),
+			);
 		} else {
-			referencesInPage = extractReferencesInPage(post.PageId, blocks);
+			interlinkedContentInPage = extractInterlinkedContentInPage(post.PageId, blocks);
 			fs.writeFileSync(
-				cacheReferencesInPageFilePath,
-				superjson.stringify(referencesInPage),
+				cacheInterlinkedContentInPageFilePath,
+				superjson.stringify(interlinkedContentInPage),
 				"utf-8",
 			);
 		}
@@ -436,9 +436,13 @@ export async function getPostContentByPostId(
 		// Now write blocks to cache (with updated footnote indices)
 		fs.writeFileSync(cacheFilePath, superjson.stringify(blocks), "utf-8");
 
-		// Extract and save references
-		referencesInPage = extractReferencesInPage(post.PageId, blocks);
-		fs.writeFileSync(cacheReferencesInPageFilePath, superjson.stringify(referencesInPage), "utf-8");
+		// Extract and save interlinked content
+		interlinkedContentInPage = extractInterlinkedContentInPage(post.PageId, blocks);
+		fs.writeFileSync(
+			cacheInterlinkedContentInPageFilePath,
+			superjson.stringify(interlinkedContentInPage),
+			"utf-8",
+		);
 
 		// Save footnotes cache (only if footnotes are enabled)
 		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled && footnotesInPage) {
@@ -449,7 +453,7 @@ export async function getPostContentByPostId(
 	// Update the blockIdPostIdMap
 	updateBlockIdPostIdMap(post.PageId, blocks);
 
-	return { blocks, referencesInPage, footnotesInPage };
+	return { blocks, interlinkedContentInPage, footnotesInPage };
 }
 
 function formatUUID(id: string): string {
@@ -476,53 +480,62 @@ export function getBlockIdPostIdMap(): { [key: string]: string } {
 	return blockIdPostIdMap;
 }
 
-export function createReferencesToThisEntry(
-	referencesInEntries: { referencesInPage: ReferencesInPage[] | null; entryId: string }[],
+export function createInterlinkedContentToThisEntry(
+	interlinkedContentInEntries: {
+		interlinkedContentInPage: InterlinkedContentInPage[] | null;
+		entryId: string;
+	}[],
 ) {
-	const entryReferencesMap: { [entryId: string]: { entryId: string; block: Block }[] } = {};
+	const entryInterlinkedContentMap: { [entryId: string]: { entryId: string; block: Block }[] } = {};
 
-	// Initialize entryReferencesMap with empty arrays for each entry
-	referencesInEntries.forEach(({ entryId }) => {
-		entryReferencesMap[entryId] = [];
+	// Initialize entryInterlinkedContentMap with empty arrays for each entry
+	interlinkedContentInEntries.forEach(({ entryId }) => {
+		entryInterlinkedContentMap[entryId] = [];
 	});
 
 	// Collect blocks for each entry if there's a match in other_pages
-	referencesInEntries.forEach(({ referencesInPage, entryId }) => {
-		if (referencesInPage) {
-			referencesInPage.forEach((reference) => {
+	interlinkedContentInEntries.forEach(({ interlinkedContentInPage, entryId }) => {
+		if (interlinkedContentInPage) {
+			interlinkedContentInPage.forEach((interlinkedContent) => {
 				// Check and collect blocks where InternalHref.PageId matches an entryId in the map
-				reference.other_pages.forEach((richText) => {
-					if (richText.InternalHref?.PageId && entryReferencesMap[richText.InternalHref.PageId]) {
-						entryReferencesMap[richText.InternalHref.PageId].push({
+				interlinkedContent.other_pages.forEach((richText) => {
+					if (
+						richText.InternalHref?.PageId &&
+						entryInterlinkedContentMap[richText.InternalHref.PageId]
+					) {
+						entryInterlinkedContentMap[richText.InternalHref.PageId].push({
 							entryId: entryId,
-							block: reference.block,
+							block: interlinkedContent.block,
 						});
 					} else if (
 						richText.Mention?.Page?.PageId &&
-						entryReferencesMap[richText.Mention?.Page?.PageId]
+						entryInterlinkedContentMap[richText.Mention?.Page?.PageId]
 					) {
-						entryReferencesMap[richText.Mention.Page.PageId].push({
+						entryInterlinkedContentMap[richText.Mention.Page.PageId].push({
 							entryId: entryId,
-							block: reference.block,
+							block: interlinkedContent.block,
 						});
 					}
 				});
 
 				// Check and collect blocks where link_to_pageid matches an entryId in the map
-				if (reference.link_to_pageid && entryReferencesMap[reference.link_to_pageid]) {
-					entryReferencesMap[reference.link_to_pageid].push({
+				if (
+					interlinkedContent.link_to_pageid &&
+					entryInterlinkedContentMap[interlinkedContent.link_to_pageid]
+				) {
+					entryInterlinkedContentMap[interlinkedContent.link_to_pageid].push({
 						entryId: entryId,
-						block: reference.block,
+						block: interlinkedContent.block,
 					});
 				}
 			});
 		}
 	});
 
-	// Write each entry's references to a file
-	Object.entries(entryReferencesMap).forEach(([entryId, references]) => {
-		const filePath = path.join(BUILD_FOLDER_PATHS["referencesToPage"], `${entryId}.json`);
-		fs.writeFileSync(filePath, superjson.stringify(references), "utf-8");
+	// Write each entry's interlinked content to a file
+	Object.entries(entryInterlinkedContentMap).forEach(([entryId, interlinkedContent]) => {
+		const filePath = path.join(BUILD_FOLDER_PATHS["interlinkedContentToPage"], `${entryId}.json`);
+		fs.writeFileSync(filePath, superjson.stringify(interlinkedContent), "utf-8");
 	});
 }
 
@@ -1557,7 +1570,7 @@ function _buildRichText(richTextObject: responses.RichTextObject): RichText {
 
 	if (richTextObject.href?.startsWith("/")) {
 		if (richTextObject.href?.includes("#")) {
-			const reference: Reference = {
+			const interlinkedContent: InterlinkedContent = {
 				PageId: richTextObject.href
 					.split("#")[0]
 					.substring(1)
@@ -1565,15 +1578,15 @@ function _buildRichText(richTextObject: responses.RichTextObject): RichText {
 				BlockId: richTextObject.href.split("#")[1],
 				Type: "block",
 			};
-			richText.InternalHref = reference;
+			richText.InternalHref = interlinkedContent;
 		} else {
-			const reference: Reference = {
+			const interlinkedContent: InterlinkedContent = {
 				PageId: richTextObject.href
 					.substring(1)
 					.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5"),
 				Type: "page",
 			};
-			richText.InternalHref = reference;
+			richText.InternalHref = interlinkedContent;
 		}
 	}
 
@@ -1600,11 +1613,11 @@ function _buildRichText(richTextObject: responses.RichTextObject): RichText {
 		};
 
 		if (richTextObject.mention.type === "page" && richTextObject.mention.page) {
-			const reference: Reference = {
+			const interlinkedContent: InterlinkedContent = {
 				PageId: richTextObject.mention.page.id,
 				Type: richTextObject.mention.type,
 			};
-			mention.Page = reference;
+			mention.Page = interlinkedContent;
 		} else if (richTextObject.mention.type === "date") {
 			let formatted_date = richTextObject.mention.date?.start
 				? richTextObject.mention.date?.end

@@ -20,13 +20,13 @@ export const BUILD_FOLDER_PATHS = {
 	styles: path.join("src", "styles"),
 	blocksJson: path.join("./tmp", "blocks-json-cache"),
 	headingsCache: path.join("./tmp", "blocks-json-cache", "headings"),
-	referencesInPage: path.join("./tmp", "blocks-json-cache", "references-in-page"),
-	referencesToPage: path.join("./tmp", "blocks-json-cache", "references-to-page"),
+	interlinkedContentInPage: path.join("./tmp", "blocks-json-cache", "interlinked-content-in-page"),
+	interlinkedContentToPage: path.join("./tmp", "blocks-json-cache", "interlinked-content-to-page"),
 	footnotesInPage: path.join("./tmp", "blocks-json-cache", "footnotes-in-page"),
 	ogImages: path.join("./tmp", "og-images"),
 	rssCache: path.join("./tmp", "rss-cache"),
 	blocksHtmlCache: path.join("./tmp", "blocks-html-cache"),
-	referencesHtmlCache: path.join("./tmp", "blocks-html-cache", "references"),
+	interlinkedContentHtmlCache: path.join("./tmp", "blocks-html-cache", "interlinked-content"),
 	public: path.join("./public"),
 	publicNotion: path.join("./public", "notion/"),
 };
@@ -66,12 +66,6 @@ export const ENABLE_LIGHTBOX =
 export const MENU_PAGES_COLLECTION =
 	key_value_from_json?.["collections-and-listings"]?.["menu-pages-collection"] || "main";
 
-export const HEADING_BLOCKS = key_value_from_json?.["block-rendering"]?.["heading-blocks"] || [
-	"heading_11",
-	"heading_2",
-	"heading_3",
-];
-
 export const FULL_PREVIEW_COLLECTIONS =
 	key_value_from_json?.["collections-and-listings"]?.["full-preview-collections"] || [];
 
@@ -86,7 +80,7 @@ export const HOME_PAGE_SLUG =
  * - "sitewide-footnotes-page-slug": Legacy manual footnotes page (already works via NBlocksPopover)
  * - "in-page-footnotes-settings": Automatic in-page footnotes with markers (new feature)
  */
-export const FOOTNOTES = key_value_from_json["footnotes"] || null;
+export const FOOTNOTES = key_value_from_json?.["auto-extracted-sections"]?.footnotes || null;
 
 // Legacy manual footnotes page slug (used by NBlocksPopover)
 export const SITEWIDE_FOOTNOTES_PAGE_SLUG =
@@ -128,7 +122,8 @@ const readBuildStartTime = () => {
 export const LAST_BUILD_TIME = readBuildStartTime();
 console.log("Last Build Start Time:", LAST_BUILD_TIME);
 
-export const REFERENCES = key_value_from_json["references"] || null;
+export const INTERLINKED_CONTENT =
+	key_value_from_json?.["auto-extracted-sections"]?.["interlinked-content"] || null;
 
 export const RECENT_POSTS_ON_HOME_PAGE =
 	key_value_from_json?.["collections-and-listings"]?.["recent-posts-on-home-page"] || false;

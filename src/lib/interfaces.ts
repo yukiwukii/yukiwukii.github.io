@@ -63,7 +63,7 @@ export interface Block {
 	Footnotes?: Footnote[];
 }
 
-export interface ReferencesInPage {
+export interface InterlinkedContentInPage {
 	block: Block;
 	other_pages: RichText[];
 	external_hrefs: RichText[];
@@ -262,7 +262,7 @@ export interface RichText {
 	Href?: string;
 	Equation?: Equation;
 	Mention?: Mention;
-	InternalHref?: Reference;
+	InternalHref?: InterlinkedContent;
 
 	// Footnote marker (set by extractFootnotes during build)
 	FootnoteRef?: string; // e.g., "ft_a" (without [^] wrapper)
@@ -306,7 +306,7 @@ export interface LinkToPage {
 
 export interface Mention {
 	Type: string;
-	Page?: Reference;
+	Page?: InterlinkedContent;
 	DateStr?: string;
 	LinkMention?: LinkMention | undefined;
 	CustomEmoji?: CustomEmojiMention | undefined;
@@ -329,7 +329,7 @@ export interface CustomEmojiMention {
 	Url?: string;
 }
 
-export interface Reference {
+export interface InterlinkedContent {
 	PageId: string;
 	Type: string;
 	BlockId?: string;

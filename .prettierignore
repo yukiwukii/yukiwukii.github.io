@@ -9,3 +9,6 @@ dist
 
 # because i want global css output to look good
 src/integrations/theme-constants-to-css.ts
+
+#because these are just conversation logs
+.agents

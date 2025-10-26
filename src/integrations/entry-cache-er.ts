@@ -4,7 +4,7 @@ import {
 	getAllEntries,
 	generateFilePath,
 	getPostContentByPostId,
-	createReferencesToThisEntry,
+	createInterlinkedContentToThisEntry,
 } from "../lib/notion/client";
 import { LAST_BUILD_TIME } from "../constants";
 import fs from "node:fs";
@@ -15,7 +15,7 @@ export default (): AstroIntegration => ({
 		"astro:build:start": async () => {
 			const entries = await getAllEntries();
 
-			const referencesInEntries = await Promise.all(
+			const interlinkedContentInEntries = await Promise.all(
 				entries.map(async (entry) => {
 					let tasks = [];
 
@@ -40,7 +40,7 @@ export default (): AstroIntegration => ({
 
 					// Add the getPostContentByPostId task
 					const postContentPromise = getPostContentByPostId(entry).then((result) => ({
-						referencesInPage: result.referencesInPage,
+						interlinkedContentInPage: result.interlinkedContentInPage,
 						entryId: entry.PageId,
 					}));
 					tasks.push(postContentPromise);
@@ -48,13 +48,13 @@ export default (): AstroIntegration => ({
 					// Wait for all tasks for this entry to complete
 					await Promise.all(tasks);
 
-					// Return only the referencesInPage
+					// Return only the interlinkedContentInPage
 					return postContentPromise;
 				}),
 			);
 
-			// Once all entries are processed, call createBlockIdPostIdMap with the referencesInPages
-			createReferencesToThisEntry(referencesInEntries);
+			// Once all entries are processed, call createBlockIdPostIdMap with the interlinkedContentInPages
+			createInterlinkedContentToThisEntry(interlinkedContentInEntries);
 		},
 	},
 });

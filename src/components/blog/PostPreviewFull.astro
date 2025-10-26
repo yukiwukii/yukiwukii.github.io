@@ -35,7 +35,7 @@ const {
 	as: Tag = "div",
 	withDesc = false,
 } = Astro.props;
-const { blocks, referencesInPage, footnotesInPage } =
+const { blocks, interlinkedContentInPage, footnotesInPage } =
 	await getPostContentByPostId(post_full_preview);
 
 // --- Headings Cache Handling ---
