@@ -279,6 +279,26 @@
 			"links-to-this-page": true,
 			// NOTE: The 'popovers' feature is now enabled by default and its configuration key has been removed.
 		},
+
+		// === Citations Configuration ===
+		// This feature is currently unsupported and may change.
+		citations: {
+			// If true, a "Cite this page" section will be added to each page.
+			"add-cite-this-post-section": false,
+			// Configure how BibTeX citations are extracted and processed.
+			"extract-and-process-bibtex-citations": {
+				// If true, enables BibTeX citation processing.
+				enabled: false,
+				// Supported .bib file sources: GitHub Gist, GitHub repo file, Dropbox, and Google Drive.
+				// Publicly shared links are required and must be accessible without authentication.
+				// Provided links will be automatically transformed into direct-download URLs for processing.
+				"bibtex-file-url-list": [],
+				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text.
+				"in-text-citation-format": "#cite({key})",
+				// The citation style for the bibliography (e.g., "apa", "mla", "chicago").
+				"bibliography-format": "apa",
+			},
+		},
 	},
 
 	// === URL Redirects ===
