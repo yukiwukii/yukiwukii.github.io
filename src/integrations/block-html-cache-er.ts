@@ -81,12 +81,12 @@ const blocksHtmlCacher = (): AstroIntegration => {
 							await fs.access(blocksCacheFilePath);
 							// console.log(`Skipping blocks for ${slug} (no update and cache exists)`);
 							blocksNeedsUpdate = false;
-						} catch {}
+						} catch { }
 						try {
 							await fs.access(staticInterlinkedContentCacheFilePath);
 							// console.log(`Skipping static interlinked content for ${slug} (no update and cache exists)`);
 							staticInterlinkedContentNeedsUpdate = false;
-						} catch {}
+						} catch { }
 					}
 
 					if (!blocksNeedsUpdate && !staticInterlinkedContentNeedsUpdate) continue;
@@ -129,9 +129,10 @@ const blocksHtmlCacher = (): AstroIntegration => {
 							if (divStaticInterlinkedContent) {
 								const staticHtml = render(divStaticInterlinkedContent.children);
 								await fs.writeFile(staticInterlinkedContentCacheFilePath, staticHtml, "utf-8");
-								                                // console.log(
-								                                // 	`Cached static interlinked content for ${slug} to ${staticInterlinkedContentCacheFilePath}`,
-								                                // );							} else {
+								// console.log(
+								// 	`Cached static interlinked content for ${slug} to ${staticInterlinkedContentCacheFilePath}`,
+								// );
+							} else {
 								console.warn(`No <div class="static-interlinked-content"> found for ${slug}`);
 							}
 						}
