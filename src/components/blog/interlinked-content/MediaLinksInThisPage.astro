@@ -51,8 +51,6 @@ if (groupedInterlinkedContent) {
 				{Object.entries(groupedInterlinkedContent).map(([dmltype, blockdmls]) => (
 					<div class="ml-2">
 						<div class="inline-block">
-							{INTERLINKED_CONTENT && Object.keys(INTERLINKED_CONTENT).length > 0 && INTERLINKED_CONTENT["popovers"] ? (
-								<>
 									<span class="italic">{dmltype}</span> {" at "}
 									{blockdmls.map((blockdml, index) => (
 										<>
@@ -65,17 +63,6 @@ if (groupedInterlinkedContent) {
 											/>
 										</>
 									))}
-								</>
-							) : (
-								<>
-									<span class="italic">{dmltype}</span> {" at "}
-									{blockdmls.map((blockdml, index) => (
-										<a href={blockIdLinks[blockdml.block.Id]} class="text-link font-mono text-xs">
-											{`[${getSymbolForLinkedContent(index)}]`}
-										</a>
-									))}
-								</>
-							)}
 						</div>
 					</div>
 				))}

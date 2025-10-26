@@ -69,8 +69,7 @@ entryIdsToDel.forEach((entryId) => {
 				{Object.entries(groupedInterlinkedContent).map(([entryId, blocks]) => (
 					<div class="ml-2">
 						<div class="inline-block">
-							{INTERLINKED_CONTENT && Object.keys(INTERLINKED_CONTENT).length > 0 && INTERLINKED_CONTENT["popovers"] ? (
-								<>
+
 									<NPagePopover
 										linkedTo={entryIdLinksEntry[entryId][0]}
 										popoverSpanText={entryIdLinksEntry[entryId][1].Title}
@@ -88,20 +87,6 @@ entryIdsToDel.forEach((entryId) => {
 											linkText="Jump to"
 										/>
 									))}
-								</>
-							) : (
-								<>
-									<a href={entryIdLinksEntry[entryId][0]} class="text-link">
-										{entryIdLinksEntry[entryId][1].Title}{" "}
-									</a>
-									{" at "}
-									{blocks.map((block, index) => (
-										<a href={blockIdLinks[block.Id]} class="text-link font-mono">
-											{`[${getSymbolForLinkedContent(index)}]`}{" "}
-										</a>
-									))}
-								</>
-							)}
 						</div>
 					</div>
 				))}

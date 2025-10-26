@@ -5,7 +5,7 @@ import Header from "@/components/layout/Header.astro";
 import Footer from "@/components/layout/Footer.astro";
 import SkipLink from "@/components/SkipLink.astro";
 import { siteInfo } from "@/siteInfo";
-import { ENABLE_LIGHTBOX, INTERLINKED_CONTENT } from "@/constants";
+import { ENABLE_LIGHTBOX } from "@/constants";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 interface Props {
 meta: SiteMeta;
@@ -60,8 +60,6 @@ window.addEventListener('afterprint', function () {
       )
       }
       {
-      INTERLINKED_CONTENT && INTERLINKED_CONTENT["popovers"] && (
-
   <style>
     .popoverEl{
       left:0;
@@ -308,7 +306,6 @@ const popoverTriggers = document.querySelectorAll(getPopoverSelector());
 
 
 
-      )
       }
 {/* Margin Notes Script (for small-popup-large-margin display mode) */}
 {adjustedFootnotesConfig && adjustedFootnotesConfig["in-page-footnotes-settings"]?.["intext-display"]?.["small-popup-large-margin"] && (

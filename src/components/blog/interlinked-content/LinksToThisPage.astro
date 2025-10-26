@@ -44,8 +44,7 @@ if (groupedInterlinkedContent) {
 								{entryIdLinksEntry[entryId][1].Title}
 							</a>
 							{" at "}
-							{INTERLINKED_CONTENT && Object.keys(INTERLINKED_CONTENT).length > 0 && INTERLINKED_CONTENT["popovers"] ? (
-								<>
+
 									{blocks.map((block, index) => (
 										<NBlocksPopover
 											block={block}
@@ -55,16 +54,7 @@ if (groupedInterlinkedContent) {
 											isInterlinkedBack={true}
 										/>
 									))}
-								</>
-							) : (
-								<>
-									{blocks.map((block, index) => (
-										<a href={blockIdLinks[block.Id]} class="text-link font-mono text-xs">
-											{`[${getSymbolForLinkedContent(index)}]`}
-										</a>
-									))}
-								</>
-							)}
+
 						</div>
 					</div>
 				))}

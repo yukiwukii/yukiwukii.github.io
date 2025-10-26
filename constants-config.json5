@@ -275,8 +275,7 @@
 		"media-and-file-links-in-this-page": true,
 		// If true, displays a list of "backlinks" - other pages on your site that link to the current page.
 		"links-to-this-page": true,
-		// If true, enables hover-previews for internal links.
-		popovers: true,
+		// NOTE: The 'popovers' feature is now enabled by default and its configuration key has been removed.
 	},
 
 	// === URL Redirects ===

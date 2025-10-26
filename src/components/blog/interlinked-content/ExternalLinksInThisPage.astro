@@ -128,8 +128,7 @@ if (groupedInterlinkedContent && Object.keys(groupedInterlinkedContent).length >
 										: hrefMetaData[hrefLink].title}
 								</a>
 								{" at "}
-								{INTERLINKED_CONTENT && Object.keys(INTERLINKED_CONTENT).length > 0 && INTERLINKED_CONTENT["popovers"] ? (
-									<>
+
 										{blocks.map((block, index) => (
 											<NBlocksPopover
 												block={block}
@@ -139,16 +138,6 @@ if (groupedInterlinkedContent && Object.keys(groupedInterlinkedContent).length >
 												linkText="Jump to"
 											/>
 										))}
-									</>
-								) : (
-									<>
-										{blocks.map((block, index) => (
-											<a href={blockIdLinks[block.Id]} class="text-link font-mono text-xs">
-												{`[${getSymbolForLinkedContent(index)}]`}
-											</a>
-										))}
-									</>
-								)}
 							</div>
 						</div>
 					))}
