@@ -66,12 +66,6 @@ export const ENABLE_LIGHTBOX =
 export const MENU_PAGES_COLLECTION =
 	key_value_from_json?.["collections-and-listings"]?.["menu-pages-collection"] || "main";
 
-export const HEADING_BLOCKS = key_value_from_json?.["block-rendering"]?.["heading-blocks"] || [
-	"heading_11",
-	"heading_2",
-	"heading_3",
-];
-
 export const FULL_PREVIEW_COLLECTIONS =
 	key_value_from_json?.["collections-and-listings"]?.["full-preview-collections"] || [];
 

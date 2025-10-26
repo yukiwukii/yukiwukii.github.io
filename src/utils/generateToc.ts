@@ -1,9 +1,9 @@
 import type { MarkdownHeading } from "astro";
-//ADDED
-import { HEADING_BLOCKS } from "@/constants";
 import type { Block } from "@/lib/interfaces";
 import type { Heading } from "@/types";
 import { slugify } from "@/utils/slugify";
+
+const HEADING_BLOCKS = ["heading_1", "heading_2", "heading_3"];
 
 export interface TocItem extends MarkdownHeading {
 	subheadings: Array<TocItem>;
@@ -46,8 +46,6 @@ export function generateToc(headings: ReadonlyArray<MarkdownHeading>) {
 	// console.log(toc);
 	return toc;
 }
-
-//ADDED
 
 function cleanHeading(heading: Block): Heading {
 	let text = "";
