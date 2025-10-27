@@ -1,5 +1,6 @@
 ---
 import type { Footnote } from "@/lib/interfaces";
+import { numberToAlphabet } from "@/utils";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 
@@ -69,20 +70,23 @@ const footnotesHeaderStyles = `
 				Footnotes
 			</h2>
 			<style set:html={footnotesHeaderStyles} />
-			<ol class={isStartOfChildBlocks ? "text-sm" : "space-y-2 text-sm"}>
+			<ol
+				class={isStartOfChildBlocks ? "text-sm" : "space-y-2 text-sm"}
+				style="list-style-type: lower-alpha;"
+			>
 				{uniqueFootnotes.map((footnote) => (
 					<li id={`footnote-def-${footnote.Marker}`} class="flex items-baseline gap-2">
 						{footnote.SourceBlockId ? (
 							<a
 								href={`#${footnote.SourceBlockId}`}
 								class="text-link shrink-0 font-mono text-sm no-underline hover:underline"
-								aria-label={`Jump back to footnote ${footnote.Index || footnote.Marker} in text`}
+								aria-label={`Jump back to footnote ${numberToAlphabet(footnote.Index) || footnote.Marker} in text`}
 							>
-								[{footnote.Index || footnote.Marker}]
+								[{numberToAlphabet(footnote.Index) || footnote.Marker}]
 							</a>
 						) : (
 							<span class="text-accent-2/60 shrink-0 font-mono text-sm">
-								[{footnote.Index || footnote.Marker}]
+								[{numberToAlphabet(footnote.Index) || footnote.Marker}]
 							</span>
 						)}
 						<div class="footnote-content flex-1">

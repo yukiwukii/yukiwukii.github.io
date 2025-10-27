@@ -3,6 +3,7 @@ import type { RichText, Block, Footnote } from "@/lib/interfaces";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import RichTextComponent from "@/components/notion-blocks/RichText.astro";
+import { numberToAlphabet } from "@/utils/numbering";
 
 export interface Props {
 	richText: RichText;
@@ -36,7 +37,8 @@ const uniqueId = `footnote-${block.Id}-${footnoteRef}`;
 // - Otherwise use sequential numbers [1], [2], etc.
 const generateSection = config?.["generate-footnotes-section"];
 const useNumbering = generateSection || isMarginMode || !isAlwaysPopup;
-const displaySymbol = useNumbering && footnote?.Index ? `[${footnote.Index}]` : "[†]";
+const displaySymbol =
+	useNumbering && footnote?.Index ? `[${numberToAlphabet(footnote.Index)}]` : "[†]";
 ---
 
 {/* If no footnote content found, render as muted text (broken reference) */}
@@ -149,7 +151,7 @@ const displaySymbol = useNumbering && footnote?.Index ? `[${footnote.Index}]` : 
 					{/* Add sequential number prefix for margin notes as inline superscript */}
 					{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
 						<span class="!text-sm">
-							<sup class="text-xxs text-quote font-mono">[{footnote.Index || footnote.Marker}]</sup>{" "}
+							<sup class="text-xxs text-quote font-mono">{displaySymbol}</sup>{" "}
 							{footnote.Content.RichTexts.map((rt) => (
 								<RichTextComponent richText={rt} blockID={block.Id} block={block} />
 							))}
@@ -157,13 +159,13 @@ const displaySymbol = useNumbering && footnote?.Index ? `[${footnote.Index}]` : 
 					)}
 					{footnote.Content.Type === "blocks" && footnote.Content.Blocks && (
 						<div class="footnote-margin-blocks !text-sm">
-							<sup class="text-xxs text-quote font-mono">[{footnote.Index || footnote.Marker}]</sup>{" "}
+							<sup class="text-xxs text-quote font-mono">{displaySymbol}</sup>{" "}
 							<NotionBlocks blocks={footnote.Content.Blocks} renderChildren={true} setId={false} />
 						</div>
 					)}
 					{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
 						<span class="!text-sm">
-							<sup class="text-xxs text-quote font-mono">[{footnote.Index || footnote.Marker}]</sup>{" "}
+							<sup class="text-xxs text-quote font-mono">{displaySymbol}</sup>{" "}
 							{footnote.Content.RichTexts.map((rt) => (
 								<RichTextComponent richText={rt} blockID={block.Id} block={block} />
 							))}
