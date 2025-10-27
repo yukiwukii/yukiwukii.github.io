@@ -12,11 +12,11 @@
 				// Google drive and dropbox links do not provide public last-updated timestamps; these files will be fetched and processed on every build and increase processing time, but https://retorque.re/zotero-better-bibtex/ can auto-update and auto sync them.
 				//Gitub links will be checked for last-updated timestamps to avoid unnecessary re-processing but will need push or scripted auto-push to keep updated.
 				"bibtex-file-url-list": [],
-				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text. Only one format is supported at a time.
+				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text or [1][2] in text. Only one format is supported at a time.
 				"in-text-citation-format": "#cite({key})",
-				// The citation style for the bibliography (e.g., "apa", "mla", "chicago"). Only one format is supported at a time.
+				// The citation style for the bibliography (e.g., "apa", "simplified-ieee"). Only one format is supported at a time.
 				"bibliography-format":
-					{"apa": true, "mla": false, "chicago": false},
+					"bibliography-format": { "simplified-ieee": true, apa: false},
 				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
 				"generate-bibliography-section": true,
 				// Defines how footnote markers are displayed within the text.
@@ -109,15 +109,18 @@ Helper Function: get_bib_source_info()
   "updated_instructions": "Use `curl -s ... | jq '.[0].commit.committer.date'` to get last modified timestamp."
 }
 
-The downloaded bib file would then be processed into the format decided and stored in json format with key, attribution replacement and the formatted entry. This can also be cached for performance. With github and and gist we can use the updated_url to check if the file has changed since last fetch based on LAST BUILD TIME variable. Otherwise we'll have to fetch and process every time. You'll probably need to store in json in tmp somewhere url, last updated, respective processed entries bib file, as well downladed file name.
+The downloaded bib file would then be processed into the format decided and stored in json format with key, attribution replacement and the formatted entry. This can also be cached for performance. With github and and gist we can use the updated_url to check if the file has changed since last fetch based on LAST BUILD TIME variable. Otherwise we'll have to fetch and process every time. You'll probably need to store in json in tmp somewhere url, last updated, respective processed entries bib file, as well downladed file name. make sure whatever library we use for this, we keep as small as possible, tree-shake it if possible.
 
 3. In-Text Citation Shortcodes
 	*	Recognizes: #cite(key), \cite{key}, [cite:key]
 	*	Renders in-text as [Author et al., Year]. This would have popover that shows the formatted entry on hover/click similar to footnotes (but automatically) which can be mapped based on the processed bibtex entries from the previous step.
+	* We use [Author et al., Year] format for apa and [1][2] format for simplified-ieee.
+	* Remember numbering is difficult because keys can be repeated and we want to number in order of first appearance. We will be populating a dict of number, key anyway, but I wanted to mention this.
 
 4. Bibliography Formatting
-	*	Automatically generates a bibliography section at the end of the post for all keys used in a page ordered alphabetically. Only fitlers to those used on a page.
-	*	Supports APA, MLA, and Chicago styles.
+	*	Automatically generates a bibliography section at the end of the post for all keys used in a page ordered alphabetically for apa. For simplified-ieee ordered by appearance. Only fitlers to those used on a page.
+	*	Supports APA, and Simplified IEEE (used in iclr/neurips etc) styles (uses numbering, same numbering assigned in order).
+	* These days papers sometimes have 500 authors, in which case, let's cap it to max 8 authors then et al.
 	* If section is enabled in config, it would be rendered after interlinked content. Similar to interlinked content, add at [marker] [marker] where each marker is the backlink to the block which used the key for this formatted entry and will behave the same way (hover/click to show popover original block without reference).
 
 5. "intext-display": {
