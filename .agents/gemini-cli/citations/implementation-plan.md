@@ -21,7 +21,7 @@ This document outlines the plan to implement the citations feature based on the 
 
 - **Files to Modify:** `src/pages/posts/[slug].astro`, `src/pages/[...page].astro`
 - **Action:** Before rendering the main content, a new script will perform a pre-pass on the Notion blocks to:
-    1.  Extract all citation keys (e.g., `mykey1` from `#cite({mykey1})`).
+    1.  Extract all citation keys (e.g., `mykey1` from `[@mykey1]`).
     2.  Create an ordered list of these keys based on their **first appearance** in the document. This list is crucial for generating the correct numbers for IEEE-style citations.
     3.  This ordered list of keys will be passed down to the rendering components.
 

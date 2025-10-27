@@ -12,11 +12,15 @@
 				// Google drive and dropbox links do not provide public last-updated timestamps; these files will be fetched and processed on every build and increase processing time, but https://retorque.re/zotero-better-bibtex/ can auto-update and auto sync them.
 				//Gitub links will be checked for last-updated timestamps to avoid unnecessary re-processing but will need push or scripted auto-push to keep updated.
 				"bibtex-file-url-list": [],
-				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text or [1][2] in text. Only one format is supported at a time.
-				"in-text-citation-format": "#cite({key})",
-				// The citation style for the bibliography (e.g., "apa", "simplified-ieee"). Only one format is supported at a time.
-				"bibliography-format":
-					"bibliography-format": { "simplified-ieee": true, apa: false},
+				// The shortcode or pattern for in-text citations. Supports #cite(key) for support with typst, \cite{key} for support with latex, and for support with pandoc [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
+				"in-text-citation-format": "[@key]",
+				// The citation style for the bibliography (e.g., "apa", "ieee", "simplified-ieee"). Only one format is supported at a time.
+				"bibliography-format": {
+					//For ICML/ReNeurIPS style simplified ieee is used.
+					"simplified-ieee": true,
+					//For other academic writing APA (ACL is a pared down version of this) is used.
+					apa: false,
+				},
 				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
 				"generate-bibliography-section": true,
 				// Defines how footnote markers are displayed within the text.
@@ -112,7 +116,7 @@ Helper Function: get_bib_source_info()
 The downloaded bib file would then be processed into the format decided and stored in json format with key, attribution replacement and the formatted entry. This can also be cached for performance. With github and and gist we can use the updated_url to check if the file has changed since last fetch based on LAST BUILD TIME variable. Otherwise we'll have to fetch and process every time. You'll probably need to store in json in tmp somewhere url, last updated, respective processed entries bib file, as well downladed file name. make sure whatever library we use for this, we keep as small as possible, tree-shake it if possible.
 
 3. In-Text Citation Shortcodes
-	*	Recognizes: #cite(key), \cite{key}, [cite:key]
+	*	Recognizes: #cite(key), \cite{key}, [@key]
 	*	Renders in-text as [Author et al., Year]. This would have popover that shows the formatted entry on hover/click similar to footnotes (but automatically) which can be mapped based on the processed bibtex entries from the previous step.
 	* We use [Author et al., Year] format for apa and [1][2] format for simplified-ieee.
 	* Remember numbering is difficult because keys can be repeated and we want to number in order of first appearance. We will be populating a dict of number, key anyway, but I wanted to mention this.

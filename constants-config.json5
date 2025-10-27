@@ -293,10 +293,15 @@
 				// Google drive and dropbox links do not provide public last-updated timestamps; these files will be fetched and processed on every build and increase processing time, but https://retorque.re/zotero-better-bibtex/ can auto-update and auto sync them.
 				//Gitub links will be checked for last-updated timestamps to avoid unnecessary re-processing but will need push or scripted auto-push to keep updated.
 				"bibtex-file-url-list": [],
-				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
-				"in-text-citation-format": "#cite({key})",
+				// The shortcode or pattern for in-text citations. Supports #cite(key) for support with typst, \cite{key} for support with latex, and for support with pandoc [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
+				"in-text-citation-format": "[@key]",
 				// The citation style for the bibliography (e.g., "apa", "ieee", "simplified-ieee"). Only one format is supported at a time.
-				"bibliography-format": { "simplified-ieee": true, apa: false },
+				"bibliography-format": {
+					//For ICML/ReNeurIPS style simplified ieee is used.
+					"simplified-ieee": true,
+					//For other academic writing APA (ACL is a pared down version of this) is used.
+					apa: false,
+				},
 				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
 				"generate-bibliography-section": true,
 				// Defines how footnote markers are displayed within the text.
