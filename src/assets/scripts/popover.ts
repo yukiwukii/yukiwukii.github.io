@@ -8,27 +8,24 @@ import {
 
 document.addEventListener("DOMContentLoaded", () => {
 	// State variables for popovers
-	let popoverTriggersSet = new Set(); // Track which elements have listeners
 
-	// Determine if it's a mobile device
-	let isSmBreakpoint = window.matchMedia("(max-width: 639px)").matches;
-	let isLargeScreen = window.matchMedia("(min-width: 1024px)").matches;
+	const smBreakpointQuery = window.matchMedia("(max-width: 639px)");
+	const lgBreakpointQuery = window.matchMedia("(min-width: 1024px)");
 
 	// Create the selector based on the device type
-	// Exclude footnote markers with data-margin-note on large screens (they use margin notes instead)
 	function getPopoverSelector() {
-		const isSmBreakpoint = window.matchMedia("(max-width: 639px)").matches;
-		const isLargeScreen = window.matchMedia("(min-width: 1024px)").matches;
+		if (lgBreakpointQuery.matches) {
+			// Disable popover on the footnote marker itself when margin note is visible
+			return "[data-popover-target]:not([data-margin-note])";
+		}
 
-		return isSmBreakpoint
-			? '[data-popover-target]:not([data-popover-type-lm="true"])'
-			: isLargeScreen
-				? "[data-popover-target]:not([data-margin-note])"
-				: "[data-popover-target]";
+		if (smBreakpointQuery.matches) {
+			// Disable popovers for link mentions on small screens
+			return '[data-popover-target]:not([data-popover-type-lm="true"])';
+		}
+
+		return "[data-popover-target]";
 	}
-
-	// Select popover triggers based on the device-specific selector
-	const popoverTriggers = document.querySelectorAll(getPopoverSelector());
 
 	let openPopovers = [];
 	let cleanupAutoUpdate = new Map();
@@ -40,13 +37,10 @@ document.addEventListener("DOMContentLoaded", () => {
 			level++;
 			el = el.parentElement;
 		}
-		// console.log(level - 1);
 		return level - 1;
 	};
 
 	const hideAllPopovers = (level = 0) => {
-		// console.log('hideAllPopovers called');
-		// console.log(openPopovers);
 		openPopovers.forEach((popoverEl) => {
 			if (getPopoverLevel(popoverEl) >= level) {
 				hidePopover(popoverEl);
@@ -55,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	};
 
 	const hidePopover = (popoverEl) => {
-		// console.log('hidePopover called for', popoverEl);
 		if (popoverEl) {
 			popoverEl.style.visibility = "hidden";
 			popoverEl.classList.add("hidden");
@@ -75,61 +68,28 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	};
 
-	const addPTEventListeners = (triggerEl, popoverEl) => {
-		const isLinkMention = triggerEl.dataset.popoverTypeLm === "true";
-		if (isLinkMention && isSmBreakpoint) {
-			return;
-		}
-		if (triggerEl && popoverEl) {
-			triggerEl.addEventListener("mouseleave", () => {
-				const timeoutId = setTimeout(() => {
-					hidePopover(popoverEl);
-				}, 100);
-				hoverTimeouts.set(popoverEl, timeoutId);
-			});
-
-			triggerEl.addEventListener("blur-sm", () => {
+	const addLeaveListeners = (triggerEl, popoverEl) => {
+		triggerEl.addEventListener("mouseleave", () => {
+			const timeoutId = setTimeout(() => {
 				hidePopover(popoverEl);
-			});
+			}, 100);
+			hoverTimeouts.set(popoverEl, timeoutId);
+		});
 
-			popoverEl.addEventListener("mouseenter", () => {
-				const timeoutId = hoverTimeouts.get(popoverEl);
-				if (timeoutId) {
-					clearTimeout(timeoutId);
-				}
-			});
-
-			popoverEl.addEventListener("mouseleave", () => {
-				hidePopover(popoverEl);
-			});
-		}
-
-		triggerEl.addEventListener("mouseenter", () => {
-			const timeoutId = popoverEl ? hoverTimeouts.get(popoverEl) : null;
+		popoverEl.addEventListener("mouseenter", () => {
+			const timeoutId = hoverTimeouts.get(popoverEl);
 			if (timeoutId) {
 				clearTimeout(timeoutId);
-				hoverTimeouts.delete(popoverEl);
 			}
-			showPopover(triggerEl);
 		});
 
-		triggerEl.addEventListener("focus", () => {
-			showPopover(triggerEl);
+		popoverEl.addEventListener("mouseleave", () => {
+			hidePopover(popoverEl);
 		});
 
-		// Add click event listener for desktop link behavior (only for non-link-mentions)
-		if (!isLinkMention) {
-			triggerEl.addEventListener("click", (event) => {
-				const href = triggerEl.dataset.href;
-				if (href && !isSmBreakpoint) {
-					// Use !isSmBreakpoint instead of window.matchMedia
-					event.preventDefault();
-					window.location.href = href;
-				} else {
-					showPopover(triggerEl);
-				}
-			});
-		}
+		triggerEl.addEventListener("blur", () => {
+			hidePopover(popoverEl);
+		});
 	};
 
 	const createPopover = (triggerEl) => {
@@ -138,23 +98,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (!template) return null;
 		const popoverEl = template.content.firstElementChild.cloneNode(true);
 		triggerEl.parentNode.insertBefore(popoverEl, triggerEl.nextSibling);
-		addPTEventListeners(triggerEl, popoverEl);
-		// Add event listeners to any new popover triggers within this popover
-		const nestedSelector = isSmBreakpoint
-			? '[data-popover-target]:not([data-popover-type-lm="true"])'
-			: isLargeScreen
-				? "[data-popover-target]:not([data-margin-note])"
-				: "[data-popover-target]";
-		const nestedTriggers = popoverEl.querySelectorAll(nestedSelector);
-		nestedTriggers.forEach((nestedTrigger) => {
-			addPTEventListeners(nestedTrigger, null);
-		});
+		addLeaveListeners(triggerEl, popoverEl);
 		return popoverEl;
 	};
 
 	const showPopover = (triggerEl) => {
 		const level = getPopoverLevel(triggerEl);
 		hideAllPopovers(level);
+
 		let popoverEl = document.getElementById(triggerEl.dataset.popoverTarget);
 
 		if (!popoverEl) {
@@ -164,15 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		const update = () => {
 			computePosition(triggerEl, popoverEl, {
-				middleware: [
-					offset(6),
-					shift({
-						padding: 3,
-					}),
-					flip({
-						padding: 3,
-					}),
-				],
+				middleware: [offset(6), shift({ padding: 3 }), flip({ padding: 3 })],
 			}).then(({ x, y }) => {
 				Object.assign(popoverEl.style, {
 					left: `${x}px`,
@@ -193,34 +136,42 @@ document.addEventListener("DOMContentLoaded", () => {
 		cleanupAutoUpdate.set(popoverEl, autoUpdate(triggerEl, popoverEl, update));
 	};
 
-	// Function to initialize popover triggers for footnote markers only (on resize to small screen)
-	const initializeFootnotePopoverTriggers = () => {
-		// Only add listeners to footnote markers that don't already have them
-		const footnoteMarkers = document.querySelectorAll("[data-margin-note]");
+	const handleHover = (event) => {
+		if (smBreakpointQuery.matches) return; // No hover on small screens
 
-		footnoteMarkers.forEach((triggerEl) => {
-			// Only add listeners if not already added
-			if (!popoverTriggersSet.has(triggerEl)) {
-				addPTEventListeners(triggerEl, null);
-				popoverTriggersSet.add(triggerEl);
-			}
-		});
+		const selector = getPopoverSelector();
+		const triggerEl = event.target.closest(selector);
+		if (triggerEl) {
+			showPopover(triggerEl);
+		}
 	};
 
-	// Initialize popovers for the first time
-	popoverTriggers.forEach((triggerEl) => {
-		addPTEventListeners(triggerEl, null);
-		popoverTriggersSet.add(triggerEl);
-	});
-
-	// Store the initialization function globally so resize handler can access it
-	window.reinitializeFootnotePopovers = initializeFootnotePopoverTriggers;
+	document.addEventListener("mouseover", handleHover);
+	document.addEventListener("focusin", handleHover);
 
 	document.addEventListener("click", (event) => {
+		const selector = getPopoverSelector();
+		const triggerEl = event.target.closest(selector);
+
+		if (triggerEl) {
+			const href = triggerEl.dataset.href;
+
+			if (href && !smBreakpointQuery.matches) {
+				window.location.href = href;
+				return;
+			}
+
+			if (smBreakpointQuery.matches) {
+				event.preventDefault();
+				showPopover(triggerEl);
+				return;
+			}
+		}
+
 		const popoverLink = event.target.closest("[data-popover-link]");
 		if (popoverLink) {
 			hideAllPopovers(-1);
-		} else if (!event.target.closest("[data-popover-target]")) {
+		} else if (!triggerEl) {
 			hideAllPopovers(-1);
 		}
 	});

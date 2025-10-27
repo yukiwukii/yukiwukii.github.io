@@ -57,11 +57,6 @@ window.addEventListener("load", () => {
 						}
 					}
 				});
-
-				// Reinitialize popover listeners only for footnote markers that were previously excluded
-				if (window.reinitializeFootnotePopovers) {
-					window.reinitializeFootnotePopovers();
-				}
 			}
 		}, 250);
 	});
