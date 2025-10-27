@@ -25,7 +25,6 @@ import {
 	RECENT_POSTS_ON_HOME_PAGE,
 	LAST_BUILD_TIME,
 	BUILD_FOLDER_PATHS,
-	FOOTNOTES,
 } from "@/constants";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import Icon from "@/components/Icon.astro";
@@ -34,6 +33,8 @@ import TOC from "@/components/blog/TOC.astro";
 import fs from "fs/promises";
 import path from "path";
 import superjson from "superjson";
+import { adjustedFootnotesConfig } from "@/lib/notion/client";
+import FootnotesSection from "@/components/blog/FootnotesSection.astro";
 
 export async function getStaticPaths() {
 	const pages = await getAllPages();
@@ -99,6 +100,7 @@ let pageFound = true;
 let blocks = null;
 let interlinkedContentInPage = null;
 let headings = null;
+let footnotesInPage = null;
 
 if (!page) {
 	console.log("Page not found");
@@ -131,59 +133,11 @@ if (pageFound && pageLastUpdatedBeforeLastBuild) {
 	}
 }
 
-// Helper function to get children from a block
-function getChildrenFromBlock(block: Block): Block[] | null {
-	if (block.Paragraph?.Children) return block.Paragraph.Children;
-	if (block.Heading1?.Children) return block.Heading1.Children;
-	if (block.Heading2?.Children) return block.Heading2.Children;
-	if (block.Heading3?.Children) return block.Heading3.Children;
-	if (block.Quote?.Children) return block.Quote.Children;
-	if (block.Callout?.Children) return block.Callout.Children;
-	if (block.Toggle?.Children) return block.Toggle.Children;
-	if (block.BulletedListItem?.Children) return block.BulletedListItem.Children;
-	if (block.NumberedListItem?.Children) return block.NumberedListItem.Children;
-	if (block.ToDo?.Children) return block.ToDo.Children;
-	if (block.SyncedBlock?.Children) return block.SyncedBlock.Children;
-	return null;
-}
-
-// Function to assign footnote indices recursively
-function assignFootnoteIndices(blocks: Block[], footnoteNumber: { value: number }): void {
-	blocks.forEach((block) => {
-		if (block.Footnotes && block.Footnotes.length > 0) {
-			block.Footnotes.forEach((footnote) => {
-				footnote.Index = footnoteNumber.value++;
-			});
-		}
-
-		// Recursively process children
-		const children = getChildrenFromBlock(block);
-		if (children && children.length > 0) {
-			assignFootnoteIndices(children, footnoteNumber);
-		}
-
-		// Process column lists
-		if (block.ColumnList?.Columns) {
-			block.ColumnList.Columns.forEach((column) => {
-				if (column.Children) {
-					assignFootnoteIndices(column.Children, footnoteNumber);
-				}
-			});
-		}
-	});
-}
-
 if (pageFound) {
 	const result = await getPostContentByPostId(page);
 	blocks = result.blocks;
 	interlinkedContentInPage = result.interlinkedContentInPage;
-
-	// Assign footnote indices if generate-footnotes-section is enabled
-	const generateSection = FOOTNOTES?.["in-page-footnotes-settings"]?.["generate-footnotes-section"];
-	if (generateSection && blocks) {
-		const footnoteNumber = { value: 1 };
-		assignFootnoteIndices(blocks, footnoteNumber);
-	}
+	footnotesInPage = result.footnotesInPage;
 
 	if (cachedHeadings) {
 		headings = cachedHeadings;
@@ -249,6 +203,11 @@ if (pageFound && page.Slug === HOME_PAGE_SLUG && RECENT_POSTS_ON_HOME_PAGE) {
 						) : (
 							<div class="post-body" data-html-type="new">
 								<NotionBlocks blocks={blocks} />
+								{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
+									adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.[
+										"generate-footnotes-section"
+									] &&
+									footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
 							</div>
 						)}
 						{headings && !!headings.length && <TOC headings={headings} />}
