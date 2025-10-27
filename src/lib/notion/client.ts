@@ -1569,6 +1569,9 @@ function _buildRichText(richTextObject: responses.RichTextObject): RichText {
 	};
 
 	if (richTextObject.href?.startsWith("/")) {
+		// Notion adds a `v=` query parameter to links copied from peek view.
+		// We need to remove it to parse the link correctly.
+		richTextObject.href = richTextObject.href.replace(/([&?])v=[^#]*/, "");
 		if (richTextObject.href?.includes("#")) {
 			const interlinkedContent: InterlinkedContent = {
 				PageId: richTextObject.href
