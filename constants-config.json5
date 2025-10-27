@@ -289,14 +289,23 @@
 			"extract-and-process-bibtex-citations": {
 				// If true, enables BibTeX citation processing.
 				enabled: false,
-				// Supported .bib file sources: GitHub Gist, GitHub repo file, Dropbox, and Google Drive.
-				// Publicly shared links are required and must be accessible without authentication.
-				// Provided links will be automatically transformed into direct-download URLs for processing.
+				// Supported .bib file sources: GitHub Gist, GitHub repo file, Dropbox, and Google Drive public share links.
+				// Google drive and dropbox links do not provide public last-updated timestamps; these files will be fetched and processed on every build and increase processing time, but https://retorque.re/zotero-better-bibtex/ can auto-update and auto sync them.
+				//Gitub links will be checked for last-updated timestamps to avoid unnecessary re-processing but will need push or scripted auto-push to keep updated.
 				"bibtex-file-url-list": [],
-				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text.
+				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text. Only one format is supported at a time.
 				"in-text-citation-format": "#cite({key})",
-				// The citation style for the bibliography (e.g., "apa", "mla", "chicago").
-				"bibliography-format": "apa",
+				// The citation style for the bibliography (e.g., "apa", "mla", "chicago"). Only one format is supported at a time.
+				"bibliography-format": { apa: true, mla: false, chicago: false },
+				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
+				"generate-bibliography-section": true,
+				// Defines how footnote markers are displayed within the text.
+				"intext-display": {
+					// If true, the formatted bibliography entry will always appear as a popup on click.
+					"always-popup": false,
+					// (Recommended) On large screens, displays formatted bibliography entry  in the margin. On smaller screens, it falls back to a popup.
+					"small-popup-large-margin": true,
+				},
 			},
 		},
 	},
