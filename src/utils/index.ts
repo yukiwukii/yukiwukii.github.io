@@ -9,6 +9,11 @@ export { generateToc, buildHeadings } from "@/utils/generateToc";
 export type { TocItem } from "@/utils/generateToc";
 export { getWebmentionsForUrl } from "@/utils/webmentions";
 export { slugify } from "@/utils/slugify";
+export {
+	numberToAlphabet,
+	getSymbolForLinkedContent,
+	LINKED_CONTENT_SYMBOLS,
+} from "@/utils/numbering";
 
 export async function getCollections() {
 	const { propertiesRaw } = await getDataSource();
