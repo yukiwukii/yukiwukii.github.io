@@ -266,7 +266,6 @@
 		},
 
 		// === Citations Configuration ===
-		// This feature is currently unsupported and may change.
 		citations: {
 			// If true, a "Cite this page" section will be added to each page.
 			"add-cite-this-post-section": true,
@@ -283,7 +282,7 @@
 					"https://www.dropbox.com/scl/fi/vrtoh0mi2hsjwybu9s6gb/bibtex-test-webtr-dropbox.bib?rlkey=ry9qucvgh9kjs4nhgqe3jlq03&st=3lco5bnx&dl=0",
 					"https://drive.google.com/file/d/1GC98kFZeR1aUGIK1q8-9RirTTnQHl0KC/view?usp=sharing",
 				],
-				// The shortcode or pattern for in-text citations. Supports #cite(key) for support with typst, \cite{key} for support with latex, and for support with pandoc [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
+				// The pattern for in-text citations. Supports #cite(key) for support with typst, \cite{key} for support with latex, and for support with pandoc [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
 				"in-text-citation-format": "[@key]",
 				// The citation style for the bibliography (e.g., "apa", "ieee", "simplified-ieee"). Only one format is supported at a time.
 				"bibliography-format": {
