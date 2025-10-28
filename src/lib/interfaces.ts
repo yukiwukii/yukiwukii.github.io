@@ -383,12 +383,18 @@ export type BlockTypes =
  * Represents a single footnote extracted from content
  */
 export interface Footnote {
-	Marker: string; // e.g., "ft_a" (without [^] wrapper)
-	FullMarker: string; // e.g., "[^ft_a]" (with wrapper for matching)
-	Content: FootnoteContent;
-	Index?: number; // Sequential index for display (1, 2, 3...)
-	SourceLocation: "content" | "caption" | "table" | "comment"; // Where it came from
-	SourceBlockId?: string; // ID of the block where the marker appears (for back-links)
+	Marker: string;
+	FullMarker: string;
+	Index?: number;
+	Content: {
+		Type: "rich_text" | "blocks" | "comment";
+		RichTexts?: RichText[];
+		Blocks?: Block[];
+		CommentAttachments?: CommentAttachment[];
+	};
+	SourceLocation: "content" | "caption" | "table" | "comment";
+	SourceBlockId?: string;
+	SourceBlock?: Block;
 }
 
 /**

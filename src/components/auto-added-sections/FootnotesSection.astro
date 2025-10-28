@@ -3,6 +3,7 @@ import type { Footnote } from "@/lib/interfaces";
 import { numberToAlphabet } from "@/utils";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import RichTextComponent from "@/components/notion-blocks/RichText.astro";
+import NBlocksPopover from "@/components/popover/NBlocksPopover.astro";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 
 export interface Props {
@@ -78,14 +79,14 @@ const footnotesHeaderStyles = `
 			<ol class:list={["list-none", { "space-y-2": !isStartOfChildBlocks }]}>
 				{uniqueFootnotes.map((footnote) => (
 					<li id={`footnote-def-${footnote.Marker}`} class="flex items-baseline gap-2">
-						{footnote.SourceBlockId ? (
-							<a
-								href={`#${footnote.SourceBlockId}`}
-								class="text-link shrink-0 font-mono text-sm no-underline hover:underline"
-								aria-label={`Jump back to footnote ${numberToAlphabet(footnote.Index) || footnote.Marker} in text`}
-							>
-								[{numberToAlphabet(footnote.Index) || footnote.Marker}]
-							</a>
+						{footnote.SourceBlock ? (
+							<NBlocksPopover
+								block={footnote.SourceBlock}
+								linkedTo={`#${footnote.SourceBlockId}`}
+								popoverSpanText={`[${numberToAlphabet(footnote.Index) || footnote.Marker}]`}
+								linkText="Jump to source"
+								isInterlinkedBack={true}
+							/>
 						) : (
 							<span class="text-accent-2/60 shrink-0 font-mono text-sm">
 								[{numberToAlphabet(footnote.Index) || footnote.Marker}]

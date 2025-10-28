@@ -811,6 +811,7 @@ export function extractPageContent(
 				// Store the block ID where this marker appears (for back-links)
 				if (!footnote.SourceBlockId) {
 					footnote.SourceBlockId = block.Id;
+					footnote.SourceBlock = block;
 				}
 				allFootnotes.push(footnote);
 			});
