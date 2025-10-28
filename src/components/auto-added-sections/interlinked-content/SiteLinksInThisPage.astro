@@ -1,9 +1,9 @@
 ---
 import type { Block, Post, InterlinkedContentInPage } from "@/lib/interfaces";
-import NBlocksPopover from "@/components/blog/interlinked-content/NBlocksPopover.astro";
+import NBlocksPopover from "@/components/popover/NBlocksPopover.astro";
 import { getInterlinkedContentLink } from "@/lib/blog-helpers";
-import NPagePopover from "@/components/blog/interlinked-content/NPagePopover.astro";
-import { INTERLINKED_CONTENT } from "@/constants";
+import NPagePopover from "@/components/popover/NPagePopover.astro";
+
 import { getSymbolForLinkedContent } from "@/utils";
 
 interface Props {

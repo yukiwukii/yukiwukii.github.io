@@ -1,9 +1,9 @@
 ---
 import { INTERLINKED_CONTENT, BUILD_FOLDER_PATHS } from "@/constants";
-import InternalLinksInThisPage from "@/components/blog/interlinked-content/SiteLinksInThisPage.astro";
-import LinksToThisPage from "@/components/blog/interlinked-content/LinksToThisPage.astro";
-import ExternalLinksInThisPage from "@/components/blog/interlinked-content/ExternalLinksInThisPage.astro";
-import MediaLinksInThisPage from "@/components/blog/interlinked-content/MediaLinksInThisPage.astro";
+import InternalLinksInThisPage from "@/components/auto-added-sections/interlinked-content/SiteLinksInThisPage.astro";
+import LinksToThisPage from "@/components/auto-added-sections/interlinked-content/LinksToThisPage.astro";
+import ExternalLinksInThisPage from "@/components/auto-added-sections/interlinked-content/ExternalLinksInThisPage.astro";
+import MediaLinksInThisPage from "@/components/auto-added-sections/interlinked-content/MediaLinksInThisPage.astro";
 import type { Post } from "@/lib/interfaces";
 import { getInterlinkedContentInPage, getInterlinkedContentToPage } from "@/lib/blog-helpers";
 import * as fs from "fs/promises";

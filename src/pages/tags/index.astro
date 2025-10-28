@@ -2,9 +2,9 @@
 import PageLayout from "@/layouts/Base.astro";
 import { getNavLink } from "@/lib/blog-helpers";
 import { getAllTagsWithCounts } from "@/lib/notion/client";
-import { getNotionColorToTailwindColor } from "@/lib/style-helpers";
+import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import { slugify } from "@/utils";
-import TagDescPopover from "@/components/TagDescPopover.astro";
+import TagDescPopover from "@/components/popover/TagDescPopover.astro";
 
 const allTags = await getAllTagsWithCounts();
 

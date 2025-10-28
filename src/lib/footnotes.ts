@@ -17,7 +17,6 @@ import type {
 	Block,
 	RichText,
 	Footnote,
-	FootnoteContent,
 	FootnotesConfig,
 	FootnoteExtractionResult,
 	FootnoteMarkerInfo,
@@ -396,7 +395,6 @@ export function getAllRichTextLocations(block: Block): RichTextLocation[] {
 export function splitRichTextWithMarkers(
 	location: RichTextLocation,
 	markers: FootnoteMarkerInfo[],
-	markerPrefix: string,
 ): RichText[] {
 	// Get markers for this specific location, sorted by position (descending for safe splitting)
 	const locationMarkers = markers
@@ -597,7 +595,6 @@ function extractEndOfBlockFootnotes(
 		const splitRichTexts = splitRichTextWithMarkers(
 			{ ...location, richTexts: cleanedRichTexts },
 			markers,
-			markerPrefix,
 		);
 		location.setter(splitRichTexts);
 	});
@@ -780,7 +777,7 @@ function extractStartOfChildBlocksFootnotes(
 
 	// Split markers in RichTexts
 	locations.forEach((location) => {
-		const splitRichTexts = splitRichTextWithMarkers(location, markers, markerPrefix);
+		const splitRichTexts = splitRichTextWithMarkers(location, markers);
 		location.setter(splitRichTexts);
 	});
 
@@ -990,7 +987,7 @@ async function extractBlockCommentsFootnotes(
 
 		// Split markers in RichTexts
 		locations.forEach((location) => {
-			const splitRichTexts = splitRichTextWithMarkers(location, markers, markerPrefix);
+			const splitRichTexts = splitRichTextWithMarkers(location, markers);
 			location.setter(splitRichTexts);
 		});
 
