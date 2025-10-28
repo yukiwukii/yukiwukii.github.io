@@ -268,19 +268,16 @@
 		// === Citations Configuration ===
 		citations: {
 			// If true, a "Cite this page" section will be added to each page.
-			"add-cite-this-post-section": true,
+			"add-cite-this-post-section": false,
 			// Configure how BibTeX citations are extracted and processed.
 			"extract-and-process-bibtex-citations": {
 				// If true, enables BibTeX citation processing.
-				enabled: true,
+				enabled: false,
 				// Supported .bib file sources: GitHub Gist, GitHub repo file, Dropbox, and Google Drive public share links.
 				// Google drive and dropbox links do not provide public last-updated timestamps; these files will be fetched and processed on every build and increase processing time, but https://retorque.re/zotero-better-bibtex/ can auto-update and auto sync them.
 				//Gitub links will be checked for last-updated timestamps to avoid unnecessary re-processing but will need push or scripted auto-push to keep updated.
 				"bibtex-file-url-list": [
-					"https://gist.github.com/nerdymomocat/dd0ea3c71898e6d7557d0b2a6b0f95f5",
-					"https://github.com/nerdymomocat-templates/bibfile-tester-webtrotion/blob/main/bibtex-test-webtr-github.bib",
-					"https://www.dropbox.com/scl/fi/vrtoh0mi2hsjwybu9s6gb/bibtex-test-webtr-dropbox.bib?rlkey=ry9qucvgh9kjs4nhgqe3jlq03&st=3lco5bnx&dl=0",
-					"https://drive.google.com/file/d/1GC98kFZeR1aUGIK1q8-9RirTTnQHl0KC/view?usp=sharing",
+					// Example: "https://gist.githubusercontent.com/username/gistid/raw/filename.bib",
 				],
 				// The pattern for in-text citations. Supports #cite(key) for support with typst, \cite{key} for support with latex, and for support with pandoc [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
 				"in-text-citation-format": "[@key]",
@@ -292,7 +289,7 @@
 					apa: false,
 				},
 				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
-				"generate-bibliography-section": true,
+				"generate-bibliography-section": false,
 			},
 		},
 	},
