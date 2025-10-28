@@ -1,9 +1,8 @@
 ---
 import type { RichText, Block, Footnote } from "@/lib/interfaces";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
-import NotionBlocks from "@/components/NotionBlocks.astro";
-import RichTextComponent from "@/components/notion-blocks/RichText.astro";
 import { numberToAlphabet } from "@/utils/numbering";
+import FootnoteContent from "@/components/notion-blocks/FootnoteContent.astro";
 
 export interface Props {
 	richText: RichText;
@@ -44,10 +43,7 @@ const displaySymbol =
 {/* If no footnote content found, render as muted text (broken reference) */}
 {
 	!footnote ? (
-		<span
-			class="footnote-marker-broken text-textColor/70"
-			title="Footnote content not found"
-		>
+		<span class="footnote-marker-broken text-textColor/70" title="Footnote content not found">
 			{richText.PlainText}
 		</span>
 	) : (
@@ -58,7 +54,7 @@ const displaySymbol =
 					<span
 						data-popover-target={`popover-description-${uniqueId}`}
 						data-popover-placement="bottom-end"
-						class="cursor-pointer font-mono text-quote align-super text-xs"
+						class="text-quote cursor-pointer align-super font-mono text-xs"
 						aria-label="Show information for the linked content"
 					>
 						{displaySymbol}
@@ -70,7 +66,7 @@ const displaySymbol =
 						data-margin-note={uniqueId}
 						data-popover-target={`popover-description-${uniqueId}`}
 						data-popover-placement="bottom-end"
-						class="cursor-pointer font-mono text-quote align-super text-xs"
+						class="text-quote cursor-pointer align-super font-mono text-xs"
 						aria-label="Show information for the linked content"
 					>
 						{displaySymbol}
@@ -81,7 +77,7 @@ const displaySymbol =
 					<span
 						data-popover-target={`popover-description-${uniqueId}`}
 						data-popover-placement="bottom-end"
-						class="cursor-pointer font-mono text-quote align-super text-xs"
+						class="text-quote cursor-pointer align-super font-mono text-xs"
 						aria-label="Show information for the linked content"
 					>
 						{displaySymbol}
@@ -98,40 +94,7 @@ const displaySymbol =
 					class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-72 rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
 				>
 					<div class="space-y-2 p-3">
-						{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
-							<div class="footnote-content">
-								{footnote.Content.RichTexts.map((rt) => (
-									<RichTextComponent richText={rt} blockID={block.Id} block={block} />
-								))}
-							</div>
-						)}
-						{footnote.Content.Type === "blocks" && footnote.Content.Blocks && (
-							<div class="footnote-content">
-								<NotionBlocks
-									blocks={footnote.Content.Blocks}
-									renderChildren={true}
-									setId={false}
-								/>
-							</div>
-						)}
-						{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
-							<div class="footnote-content">
-								{footnote.Content.RichTexts.map((rt) => (
-									<RichTextComponent richText={rt} blockID={block.Id} block={block} />
-								))}
-								{footnote.Content.CommentAttachments &&
-									footnote.Content.CommentAttachments.length > 0 && (
-										<div class="mt-2 space-y-1">
-											{footnote.Content.CommentAttachments.map(
-												(attachment) =>
-													attachment.Category === "image" && (
-														<img src={attachment.Url} alt="" class="max-w-full rounded" />
-													),
-											)}
-										</div>
-									)}
-							</div>
-						)}
+						<FootnoteContent content={footnote.Content} sourceBlockId={block.Id} />
 						<span data-popover-link>{""}</span>
 					</div>
 				</div>
@@ -140,40 +103,10 @@ const displaySymbol =
 			{/* Template for margin notes content (same structure, used by margin notes script) */}
 			{isMarginMode && (
 				<template id={`template-margin-${uniqueId}`}>
-					{/* Add sequential number prefix for margin notes as inline spanerscript */}
-					{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
-						<span class="text-sm!">
-							<span class="text-xs! text-quote font-mono align-super">{displaySymbol}</span>{" "}
-							{footnote.Content.RichTexts.map((rt) => (
-								<RichTextComponent richText={rt} blockID={block.Id} block={block} />
-							))}
-						</span>
-					)}
-					{footnote.Content.Type === "blocks" && footnote.Content.Blocks && (
-						<div class="footnote-margin-blocks text-sm!">
-							<span class="text-xs! text-quote font-mono align-super">{displaySymbol}</span>{" "}
-							<NotionBlocks blocks={footnote.Content.Blocks} renderChildren={true} setId={false} />
-						</div>
-					)}
-					{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
-						<span class="text-sm!">
-							<span class="text-xs! text-quote font-mono align-super">{displaySymbol}</span>{" "}
-							{footnote.Content.RichTexts.map((rt) => (
-								<RichTextComponent richText={rt} blockID={block.Id} block={block} />
-							))}
-							{footnote.Content.CommentAttachments &&
-								footnote.Content.CommentAttachments.length > 0 && (
-									<div class="mt-2 space-y-1">
-										{footnote.Content.CommentAttachments.map(
-											(attachment) =>
-												attachment.Category === "image" && (
-													<img src={attachment.Url} alt="" class="max-w-full rounded" />
-												),
-										)}
-									</div>
-								)}
-						</span>
-					)}
+					<div class="text-sm!">
+						<span class="text-quote align-super font-mono text-xs!">{displaySymbol}</span>{" "}
+						<FootnoteContent content={footnote.Content} sourceBlockId={block.Id} />
+					</div>
 				</template>
 			)}
 		</>

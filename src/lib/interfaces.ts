@@ -411,9 +411,11 @@ export interface FootnoteContent {
  * Attachment from Notion Comments API
  */
 export interface CommentAttachment {
-	Category: string; // 'image'
+	Category: string;
 	Url: string;
-	ExpiryTime?: string;
+	OptimizedUrl?: string;
+	Name?: string;
+	ExpiryTime: string;
 }
 
 /**

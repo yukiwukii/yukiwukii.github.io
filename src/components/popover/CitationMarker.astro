@@ -48,10 +48,7 @@ const showBibliography =
 {/* If no citation content found, render as muted text (broken reference) */}
 {
 	!citation ? (
-		<span
-			class="citation-marker-broken text-textColor/70"
-			title="Citation not found"
-		>
+		<span class="citation-marker-broken text-textColor/70" title="Citation not found">
 			{richText.PlainText}
 		</span>
 	) : (

@@ -1,9 +1,8 @@
 ---
 import type { Footnote } from "@/lib/interfaces";
 import { numberToAlphabet } from "@/utils";
-import NotionBlocks from "@/components/NotionBlocks.astro";
-import RichTextComponent from "@/components/notion-blocks/RichText.astro";
 import NBlocksPopover from "@/components/popover/NBlocksPopover.astro";
+import FootnoteContent from "@/components/notion-blocks/FootnoteContent.astro";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 
 export interface Props {
@@ -93,40 +92,7 @@ const footnotesHeaderStyles = `
 							</span>
 						)}
 						<div class="flex-1">
-							{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
-								<div>
-									{footnote.Content.RichTexts.map((rt) => (
-										<RichTextComponent richText={rt} blockID={footnote.SourceBlockId} />
-									))}
-								</div>
-							)}
-							{footnote.Content.Type === "blocks" && footnote.Content.Blocks && (
-								<div class="prose prose-sm dark:prose-invert max-w-none">
-									<NotionBlocks
-										blocks={footnote.Content.Blocks}
-										renderChildren={true}
-										setId={false}
-									/>
-								</div>
-							)}
-							{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
-								<div>
-									{footnote.Content.RichTexts.map((rt) => (
-										<RichTextComponent richText={rt} blockID={footnote.SourceBlockId} />
-									))}
-									{footnote.Content.CommentAttachments &&
-										footnote.Content.CommentAttachments.length > 0 && (
-											<div class="mt-2 space-y-1">
-												{footnote.Content.CommentAttachments.map(
-													(attachment) =>
-														attachment.Category === "image" && (
-															<img src={attachment.Url} alt="" class="max-w-full rounded" />
-														),
-												)}
-											</div>
-										)}
-								</div>
-							)}
+							<FootnoteContent content={footnote.Content} sourceBlockId={footnote.SourceBlockId} />
 						</div>
 					</li>
 				))}

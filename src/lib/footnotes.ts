@@ -943,30 +943,38 @@ async function extractBlockCommentsFootnotes(
 			// Remove the [^marker]: prefix from first RichText
 			const cleanedRichTexts = removeMarkerPrefix(contentRichTexts, match[0].length);
 
-			// Handle attachments (images) - download and convert to local paths
+			// Handle attachments (ALL TYPES) - download and convert to local paths
+
 			const attachments: CommentAttachment[] = [];
+
 			if (comment.attachments && comment.attachments.length > 0) {
 				for (const attachment of comment.attachments) {
-					if (attachment.category === "image" && attachment.file?.url) {
-						// Download the image file (same pattern as regular images in client.ts)
-						const imageUrl = new URL(attachment.file.url);
+					if (attachment.file?.url) {
+						const originalUrl = attachment.file.url;
 
-						// Download the file to local storage
-						await downloadFile(imageUrl);
+						const isImage = attachment.category === "image";
 
-						// Convert URL to webp if optimizing images (same as client.ts does for NImage)
-						let optimizedUrl = attachment.file.url;
-						if (isConvImageType(attachment.file.url) && OPTIMIZE_IMAGES) {
-							optimizedUrl =
-								attachment.file.url.substring(0, attachment.file.url.lastIndexOf(".")) + ".webp";
+						// Download the file, with optimization enabled only for images
+
+						await downloadFile(new URL(originalUrl), isImage);
+
+						let optimizedUrl = originalUrl;
+
+						if (isImage && isConvImageType(originalUrl) && OPTIMIZE_IMAGES) {
+							optimizedUrl = originalUrl.substring(0, originalUrl.lastIndexOf(".")) + ".webp";
 						}
 
-						// Convert to local path for display
-						const localPath = buildTimeFilePath(new URL(optimizedUrl));
+						const fileName = new URL(originalUrl).pathname.split("/").pop() || "download";
 
 						attachments.push({
-							Category: "image",
-							Url: localPath, // Store local path, not the remote URL
+							Category: attachment.category,
+
+							Url: originalUrl,
+
+							OptimizedUrl: optimizedUrl,
+
+							Name: fileName,
+
 							ExpiryTime: attachment.file.expiry_time,
 						});
 					}
