@@ -2,6 +2,7 @@
 import type { Footnote } from "@/lib/interfaces";
 import { numberToAlphabet } from "@/utils";
 import NotionBlocks from "@/components/NotionBlocks.astro";
+import RichTextComponent from "@/components/notion-blocks/RichText.astro";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 
 export interface Props {
@@ -94,35 +95,7 @@ const footnotesHeaderStyles = `
 							{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
 								<div>
 									{footnote.Content.RichTexts.map((rt) => (
-										<>
-											{rt.Text && (
-												<span
-													class={
-														(rt.Annotation.Bold ? "font-bold " : "") +
-														(rt.Annotation.Italic ? "italic" : "") +
-														(rt.Annotation.Strikethrough ? "line-through" : "") +
-														(rt.Annotation.Underline ? "underline" : "") +
-														(rt.Annotation.Code
-															? "rounded bg-gray-100 px-1 py-0.5 font-mono text-xs dark:bg-gray-800"
-															: "")
-													}
-													style={
-														rt.Annotation.Color && rt.Annotation.Color !== "default"
-															? `color: ${rt.Annotation.Color}`
-															: ""
-													}
-												>
-													{rt.Href ? (
-														<a href={rt.Href} class="text-link hover:underline">
-															{rt.Text.Content}
-														</a>
-													) : (
-														rt.Text.Content
-													)}
-												</span>
-											)}
-											{rt.Equation && <span class="inline-block">{rt.Equation.Expression}</span>}
-										</>
+										<RichTextComponent richText={rt} blockID={footnote.SourceBlockId} />
 									))}
 								</div>
 							)}
@@ -138,34 +111,7 @@ const footnotesHeaderStyles = `
 							{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
 								<div>
 									{footnote.Content.RichTexts.map((rt) => (
-										<>
-											{rt.Text && (
-												<span
-													class={
-														(rt.Annotation.Bold ? "font-bold " : "") +
-														(rt.Annotation.Italic ? "italic" : "") +
-														(rt.Annotation.Strikethrough ? "line-through" : "") +
-														(rt.Annotation.Underline ? "underline" : "") +
-														(rt.Annotation.Code
-															? "rounded bg-gray-100 px-1 py-0.5 font-mono text-xs dark:bg-gray-800"
-															: "")
-													}
-													style={
-														rt.Annotation.Color && rt.Annotation.Color !== "default"
-															? `color: ${rt.Annotation.Color}`
-															: ""
-													}
-												>
-													{rt.Href ? (
-														<a href={rt.Href} class="text-link hover:underline">
-															{rt.Text.Content}
-														</a>
-													) : (
-														rt.Text.Content
-													)}
-												</span>
-											)}
-										</>
+										<RichTextComponent richText={rt} blockID={footnote.SourceBlockId} />
 									))}
 									{footnote.Content.CommentAttachments &&
 										footnote.Content.CommentAttachments.length > 0 && (
