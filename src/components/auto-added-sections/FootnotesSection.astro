@@ -51,25 +51,6 @@ const footnotesHeaderStyles = `
 		display: inline !important;
 	}
 
-	/* Custom footnote markers with CSS counters */
-	.footnotes-list {
-		counter-reset: footnote-counter;
-	}
-
-	.footnotes-list li {
-		counter-increment: footnote-counter;
-	}
-
-	/* Generate marker content using CSS counter */
-	.footnote-marker-link::before {
-		content: "[" counter(footnote-counter, lower-alpha) "] ";
-	}
-
-	.footnote-marker-link {
-		display: inline;
-		font-weight: 400;
-	}
-
 	.footnote-content {
 		display: inline;
 	}
@@ -93,19 +74,23 @@ const footnotesHeaderStyles = `
 				Footnotes
 			</h2>
 			<style set:html={footnotesHeaderStyles} />
-			<ol class:list={["footnotes-list", { "space-y-2": !isStartOfChildBlocks }]}>
+			<ol class:list={["list-none", { "space-y-2": !isStartOfChildBlocks }]}>
 				{uniqueFootnotes.map((footnote) => (
 					<li id={`footnote-def-${footnote.Marker}`} class="flex items-baseline gap-2">
 						{footnote.SourceBlockId ? (
 							<a
 								href={`#${footnote.SourceBlockId}`}
-								class="footnote-marker-link text-link shrink-0 font-mono text-sm no-underline hover:underline"
+								class="text-link shrink-0 font-mono text-sm no-underline hover:underline"
 								aria-label={`Jump back to footnote ${numberToAlphabet(footnote.Index) || footnote.Marker} in text`}
-							/>
+							>
+								[{numberToAlphabet(footnote.Index) || footnote.Marker}]
+							</a>
 						) : (
-							<span class="footnote-marker-link text-accent-2/60 shrink-0 font-mono text-sm" />
+							<span class="text-accent-2/60 shrink-0 font-mono text-sm">
+								[{numberToAlphabet(footnote.Index) || footnote.Marker}]
+							</span>
 						)}
-						<div class="footnote-content flex-1">
+						<div class="flex-1">
 							{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
 								<div>
 									{footnote.Content.RichTexts.map((rt) => (

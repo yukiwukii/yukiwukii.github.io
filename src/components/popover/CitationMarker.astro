@@ -49,7 +49,7 @@ const showBibliography =
 {
 	!citation ? (
 		<span
-			class="citation-marker-broken text-gray-400 dark:text-gray-600"
+			class="citation-marker-broken text-textColor/70"
 			title="Citation not found"
 		>
 			{richText.PlainText}
@@ -61,7 +61,7 @@ const showBibliography =
 				<span
 					data-popover-target={`popover-description-${uniqueId}`}
 					data-popover-placement="bottom-end"
-					class="cursor-pointer font-mono text-quote text-sm"
+					class="text-quote cursor-pointer font-mono text-xs"
 					aria-label="Show information for the linked content"
 				>
 					{displayText}
@@ -78,14 +78,14 @@ const showBibliography =
 					role="tooltip"
 					class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-72 rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
 				>
-					<div class="space-y-2 p-3">
+					<div class="space-y-2 p-2">
 						<div class="citation-content" set:html={citation.FormattedEntry} />
 						{showBibliography && (
-							<div class="border-accent-2/20 mt-2 border-t pt-2">
+							<div class="pt-2">
 								<a
 									href={`#citation-def-${citation.Key}`}
 									data-popover-link
-									class="text-quote hover:text-quote/80 flex items-center gap-1 text-xs transition-colors"
+									class="text-link/90 flex max-w-full items-center font-medium hover:underline"
 									onclick={`
 										event.preventDefault();
 
@@ -106,12 +106,25 @@ const showBibliography =
 										target?.scrollIntoView({ behavior: 'smooth' });
 									`}
 								>
-									<span>Jump to bibliography</span>
-									<span aria-hidden="true">↓</span>
+									{"Jump to bibliography"}
+									<svg
+										class="ms-1.5 h-2 w-2 rtl:rotate-180"
+										aria-hidden="true"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 6 10"
+									>
+										<path
+											stroke="currentColor"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="m1 9 4-4-4-4"
+										/>
+									</svg>
 								</a>
 							</div>
 						)}
-						<span data-popover-link>{""}</span>
 					</div>
 				</div>
 			</template>
