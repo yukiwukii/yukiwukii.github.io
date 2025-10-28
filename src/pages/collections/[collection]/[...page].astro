@@ -1,13 +1,13 @@
 ---
 import type { GetStaticPaths, Page } from "astro";
 import PageLayout from "@/layouts/Base.astro";
-import PostPreview from "@/components/blog/PostPreview.astro";
-import PostPreviewFull from "@/components/blog/PostPreviewFull.astro";
-import Pagination from "@/components/Paginator.astro";
+import PostPreview from "@/components/listing-layout/PostPreview.astro";
+import PostPreviewFull from "@/components/listing-layout/PostPreviewFull.astro";
+import Pagination from "@/components/listing-layout/Paginator.astro";
 import { getAllPosts, getUniqueTags, getAllTagsWithCounts } from "@/lib/notion/client";
 import type { Post, SelectProperty } from "@/lib/interfaces";
 import { getCollectionsWDesc, slugify } from "@/utils";
-import { getNotionColorToTailwindColor } from "@/lib/style-helpers";
+import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import {
 	FULL_PREVIEW_COLLECTIONS,
 	HIDE_UNDERSCORE_SLUGS_IN_LISTS,
@@ -20,7 +20,7 @@ import {
 	resetFirstImage,
 	getInterlinkedContentInPage,
 } from "@/lib/blog-helpers";
-import Icon from "@/components/Icon.astro";
+import Icon from "@/components/ui/Icon.astro";
 
 export const getStaticPaths = (async ({ paginate }) => {
 	let posts = await getAllPosts();
@@ -214,7 +214,7 @@ const paginationProps = {
 						stroke-linecap="round"
 					/>
 				</button>
-				<script src="../../../assets/scripts/to-top-btn.ts" />
+				<script src="../../../scripts/to-top-btn.ts" />
 			</>
 		)
 	}

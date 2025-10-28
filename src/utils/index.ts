@@ -1,6 +1,5 @@
-//NOTE ADDED
 import { getAllPages, getDataSource } from "@/lib/notion/client";
-import type { Block, BlockTypes } from "@/lib/interfaces";
+
 import { MENU_PAGES_COLLECTION, HOME_PAGE_SLUG } from "@/constants";
 import { slugify } from "@/utils/slugify";
 import { getNavLink } from "@/lib/blog-helpers";

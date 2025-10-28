@@ -2,12 +2,12 @@
 // import type { CollectionEntry } from "astro:content";
 // import type { HTMLTag, Polymorphic } from "astro/types";
 import type { HTMLTag } from "astro/types";
-import FormattedDate from "@/components/FormattedDate.astro";
+import FormattedDate from "@/components/ui/FormattedDate.astro";
 import type { Post } from "@/lib/interfaces";
-import { getNotionColorToTailwindColor } from "@/lib/style-helpers";
+import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import { getNavLink, getPostLink } from "@/lib/blog-helpers";
 import { MENU_PAGES_COLLECTION } from "@/constants";
-import Icon from "@/components/Icon.astro";
+import Icon from "@/components/ui/Icon.astro";
 import { slugify } from "@/utils";
 
 interface Props {

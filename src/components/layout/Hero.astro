@@ -1,10 +1,10 @@
 ---
-import FormattedDate from "@/components/FormattedDate.astro";
+import FormattedDate from "@/components/ui/FormattedDate.astro";
 import type { Post } from "@/lib/interfaces";
-import { getNotionColorToTailwindColor } from "@/lib/style-helpers";
+import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import { areDifferentDates } from "@/utils/date";
 import { getNavLink } from "@/lib/blog-helpers";
-import Icon from "@/components/Icon.astro";
+import Icon from "@/components/ui/Icon.astro";
 import { slugify } from "@/utils";
 
 interface Props {
