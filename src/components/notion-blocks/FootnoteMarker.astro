@@ -54,55 +54,46 @@ const displaySymbol =
 		<>
 			{/* Render footnote marker with appropriate attributes for popup or margin mode */}
 			{isAlwaysPopup ? (
-				<sup class="footnote-marker">
+				<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
 					<span
-						data-footnote-id={uniqueId}
-						data-popover-target={`popover-${uniqueId}`}
-						data-popover-placement="bottom-start"
-						class="text-quote cursor-pointer font-mono text-xs"
-						aria-label={`Show footnote ${displaySymbol}`}
-						role="button"
-						tabindex="0"
+						data-popover-target={`popover-description-${uniqueId}`}
+						data-popover-placement="bottom-end"
+						class="cursor-pointer"
+						aria-label="Show information for the linked content"
 					>
 						{displaySymbol}
 					</span>
-				</sup>
+				</span>
 			) : isMarginMode ? (
-				<sup class="footnote-marker">
+				<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
 					<span
-						data-footnote-id={uniqueId}
 						data-margin-note={uniqueId}
-						data-popover-target={`popover-${uniqueId}`}
-						data-popover-placement="bottom-start"
-						class="text-quote/60 hover:text-quote cursor-pointer font-mono text-xs transition-opacity"
-						aria-label={`Show footnote ${displaySymbol}`}
-						role="button"
-						tabindex="0"
+						data-popover-target={`popover-description-${uniqueId}`}
+						data-popover-placement="bottom-end"
+						class="cursor-pointer"
+						aria-label="Show information for the linked content"
 					>
 						{displaySymbol}
 					</span>
-				</sup>
+				</span>
 			) : (
-				<sup class="footnote-marker">
+				<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
 					<span
-						data-footnote-id={uniqueId}
-						data-popover-target={`popover-${uniqueId}`}
-						data-popover-placement="bottom-start"
-						class="text-quote/60 hover:text-quote cursor-pointer font-mono text-xs transition-opacity"
-						aria-label={`Show footnote ${displaySymbol}`}
-						role="button"
-						tabindex="0"
+						data-popover-target={`popover-description-${uniqueId}`}
+						data-popover-placement="bottom-end"
+						class="cursor-pointer"
+						aria-label="Show information for the linked content"
 					>
 						{displaySymbol}
 					</span>
-				</sup>
+				</span>
 			)}
 
 			{/* Template for popover content */}
-			<template id={`template-popover-${uniqueId}`}>
+			<template id={`template-popover-description-${uniqueId}`}>
 				<div
 					data-popover
-					id={`popover-${uniqueId}`}
+					id={`popover-description-${uniqueId}`}
 					role="tooltip"
 					class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-72 rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
 				>
@@ -149,10 +140,10 @@ const displaySymbol =
 			{/* Template for margin notes content (same structure, used by margin notes script) */}
 			{isMarginMode && (
 				<template id={`template-margin-${uniqueId}`}>
-					{/* Add sequential number prefix for margin notes as inline superscript */}
+					{/* Add sequential number prefix for margin notes as inline spanerscript */}
 					{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
 						<span class="!text-sm">
-							<sup class="text-xxs text-quote font-mono">{displaySymbol}</sup>{" "}
+							<span class="text-xxs text-quote font-mono">{displaySymbol}</span>{" "}
 							{footnote.Content.RichTexts.map((rt) => (
 								<RichTextComponent richText={rt} blockID={block.Id} block={block} />
 							))}
@@ -160,13 +151,13 @@ const displaySymbol =
 					)}
 					{footnote.Content.Type === "blocks" && footnote.Content.Blocks && (
 						<div class="footnote-margin-blocks !text-sm">
-							<sup class="text-xxs text-quote font-mono">{displaySymbol}</sup>{" "}
+							<span class="text-xxs text-quote font-mono">{displaySymbol}</span>{" "}
 							<NotionBlocks blocks={footnote.Content.Blocks} renderChildren={true} setId={false} />
 						</div>
 					)}
 					{footnote.Content.Type === "comment" && footnote.Content.RichTexts && (
 						<span class="!text-sm">
-							<sup class="text-xxs text-quote font-mono">{displaySymbol}</sup>{" "}
+							<span class="text-xxs text-quote font-mono">{displaySymbol}</span>{" "}
 							{footnote.Content.RichTexts.map((rt) => (
 								<RichTextComponent richText={rt} blockID={block.Id} block={block} />
 							))}

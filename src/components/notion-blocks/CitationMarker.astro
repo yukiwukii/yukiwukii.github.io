@@ -57,25 +57,22 @@ const showBibliography =
 	) : (
 		<>
 			{/* Render citation marker with popup on click */}
-			<span class="citation-marker">
+			<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
 				<span
-					data-citation-id={uniqueId}
-					data-popover-target={`popover-${uniqueId}`}
-					data-popover-placement="bottom-start"
-					class="text-quote cursor-pointer font-mono text-xs"
-					aria-label={`Show citation ${displayText}`}
-					role="button"
-					tabindex="0"
+					data-popover-target={`popover-description-${uniqueId}`}
+					data-popover-placement="bottom-end"
+					class="cursor-pointer"
+					aria-label="Show information for the linked content"
 				>
 					{displayText}
 				</span>
 			</span>
 
 			{/* Template for popover content */}
-			<template id={`template-popover-${uniqueId}`}>
+			<template id={`template-popover-description-${uniqueId}`}>
 				<div
 					data-popover
-					id={`popover-${uniqueId}`}
+					id={`popover-description-${uniqueId}`}
 					data-source-block-id={blockID}
 					data-citation-key={citation.Key}
 					role="tooltip"
