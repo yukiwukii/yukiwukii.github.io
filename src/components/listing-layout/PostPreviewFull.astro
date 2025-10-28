@@ -167,6 +167,8 @@ const postLink = getPostLink(
 		) : (
 			<>
 				<NotionBlocks blocks={blocks} />
+				{/* Cite This Page section */}
+				{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post_full_preview} />}
 				{/* Footnotes section - only render when NOT using cache (cached HTML already includes it) */}
 				{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
 					adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.["generate-footnotes-section"] &&
@@ -175,8 +177,6 @@ const postLink = getPostLink(
 				{CITATIONS?.["extract-and-process-bibtex-citations"]?.["generate-bibliography-section"] &&
 					citationsInPage &&
 					citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}
-				{/* Cite This Page section */}
-				{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post_full_preview} />}
 			</>
 		)
 	}
