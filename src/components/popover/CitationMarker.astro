@@ -1,0 +1,130 @@
+---
+import type { RichText, Block, Citation } from "@/lib/interfaces";
+import { BIBLIOGRAPHY_STYLE, CITATIONS } from "@/constants";
+
+export interface Props {
+	richText: RichText;
+	blockID: string;
+	block: Block;
+}
+
+const { richText, blockID, block } = Astro.props;
+
+// Get the citation key reference (e.g., "smith2020")
+const citationRef = richText.CitationRef;
+
+// Find the corresponding citation in block.Citations
+let citation: Citation | undefined = undefined;
+if (block.Citations && citationRef) {
+	citation = block.Citations.find((c) => c.Key === citationRef);
+}
+
+// Generate unique ID for this citation marker
+const uniqueId = `citation-${block.Id}-${citationRef}`;
+
+// Determine what to display:
+// - IEEE: [1], [2], etc. (using Index)
+// - APA: (Author et al, Year)
+const bibliographyStyle = BIBLIOGRAPHY_STYLE || "simplified-ieee";
+let displayText = "";
+
+if (citation) {
+	if (bibliographyStyle === "simplified-ieee" && citation.Index) {
+		// IEEE: Show numbers
+		displayText = `[${citation.Index}]`;
+	} else {
+		// APA style: Show author/year
+		displayText = `(${citation.Authors}, ${citation.Year})`;
+	}
+} else {
+	displayText = `[?]`;
+}
+
+// Check if bibliography section is being generated
+const showBibliography =
+	CITATIONS?.["extract-and-process-bibtex-citations"]?.["generate-bibliography-section"] === true;
+---
+
+{/* If no citation content found, render as muted text (broken reference) */}
+{
+	!citation ? (
+		<span class="citation-marker-broken text-textColor/70" title="Citation not found">
+			{richText.PlainText}
+		</span>
+	) : (
+		<>
+			{/* Render citation marker with popup on click */}
+			<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
+				<span
+					data-popover-target={`popover-description-${uniqueId}`}
+					data-popover-placement="bottom-end"
+					class="text-quote cursor-pointer font-mono text-xs"
+					aria-label="Show information for the linked content"
+				>
+					{displayText}
+				</span>
+			</span>
+
+			{/* Template for popover content */}
+			<template id={`template-popover-description-${uniqueId}`}>
+				<div
+					data-popover
+					id={`popover-description-${uniqueId}`}
+					data-source-block-id={blockID}
+					data-citation-key={citation.Key}
+					role="tooltip"
+					class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-72 rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
+				>
+					<div class="space-y-2 p-2">
+						<div class="citation-content" set:html={citation.FormattedEntry} />
+						{showBibliography && (
+							<div class="pt-2">
+								<a
+									href={`#citation-def-${citation.Key}`}
+									data-popover-link
+									class="text-link/90 flex max-w-full items-center font-medium hover:underline"
+									onclick={`
+										event.preventDefault();
+
+										// Clear any previously active back buttons
+										document.querySelectorAll('li[data-show-back-button]').forEach(li => {
+											delete li.dataset.showBackButton;
+											delete li.dataset.backToBlock;
+										});
+
+										// Set active on target
+										const target = document.getElementById('citation-def-${citation.Key}');
+										if (target) {
+											target.dataset.showBackButton = 'true';
+											target.dataset.backToBlock = '${blockID}';
+										}
+
+										window.location.hash = '#citation-def-${citation.Key}';
+										target?.scrollIntoView({ behavior: 'smooth' });
+									`}
+								>
+									{"Jump to bibliography"}
+									<svg
+										class="ms-1.5 h-2 w-2 rtl:rotate-180"
+										aria-hidden="true"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 6 10"
+									>
+										<path
+											stroke="currentColor"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="m1 9 4-4-4-4"
+										/>
+									</svg>
+								</a>
+							</div>
+						)}
+					</div>
+				</div>
+			</template>
+		</>
+	)
+}

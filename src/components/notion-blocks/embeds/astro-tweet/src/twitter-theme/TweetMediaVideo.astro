@@ -1,11 +1,7 @@
 ---
 import type { MediaAnimatedGif, MediaVideo } from "../api/index.js";
-import {
-	type EnrichedQuotedTweet,
-	type EnrichedTweet,
-	getMediaUrl,
-	getMp4Video,
-} from "../utils.js";
+import { getMediaUrl, getMp4Video } from "../utils.js";
+import type { EnrichedQuotedTweet, EnrichedTweet } from "../utils.js";
 import mediaStyles from "./tweet-media.module.css";
 
 interface Props {

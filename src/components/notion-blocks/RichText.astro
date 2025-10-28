@@ -13,6 +13,7 @@ import MentionDate from "@/components/notion-blocks/MentionDate.astro";
 import MentionLink from "@/components/notion-blocks/MentionLink.astro";
 import MentionCustomEmoji from "@/components/notion-blocks/MentionCustomEmoji.astro";
 import FootnoteMarker from "@/components/popover/FootnoteMarker.astro";
+import CitationMarker from "@/components/popover/CitationMarker.astro";
 
 export interface Props {
 	richText: RichText;
@@ -26,6 +27,8 @@ const { richText, blockID, block } = Astro.props;
 {
 	richText.IsFootnoteMarker && block ? (
 		<FootnoteMarker richText={richText} block={block} />
+	) : richText.IsCitationMarker && richText.CitationRef && block && blockID ? (
+		<CitationMarker richText={richText} blockID={blockID} block={block} />
 	) : (
 		<Anchor richText={richText} blockID={blockID}>
 			{

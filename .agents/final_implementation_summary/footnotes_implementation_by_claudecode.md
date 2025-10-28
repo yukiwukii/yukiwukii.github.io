@@ -1853,7 +1853,168 @@ The iterative problem-solving approach used throughout implementation—identify
 
 ---
 
-**Document Version**: 3.0
-**Last Updated**: 2025-10-25
+## Architecture Deep-Dive: Two-Phase Processing (2025-10-26)
+
+This section provides technical insights into why the footnotes system uses a two-phase architecture and analyzes performance trade-offs.
+
+### Why Two Phases?
+
+The footnotes system extracts and processes footnotes in two distinct phases:
+
+**Phase 1: Per-Block Extraction**
+- Happens during `getAllBlocksByBlockId()` loop in `client.ts`
+- Extracts footnote content from individual blocks
+- Stores footnotes in `block.Footnotes` arrays
+- **Does NOT assign sequential indices yet**
+
+**Phase 2: Page-Level Index Assignment**
+- Happens after all blocks are built
+- Function: `extractFootnotesInPage(blocks)`
+- Traverses entire block tree recursively
+- **Assigns sequential `Index` property (1, 2, 3...)**
+- Returns complete footnotes array for caching
+
+### The Recursion Problem
+
+**Question**: Why can't we assign indices during Phase 1 when building blocks?
+
+**Answer**: Recursion breaks simple sequential ordering.
+
+```typescript
+// Execution order example:
+1. Build Block A (top-level)
+2. Build Block B (top-level)
+3. Fetch children of Block B:
+4.   Build Block C (child of B)
+5.   Build Block D (child of B)
+6. Back to Block B
+7. Build Block E (top-level)
+
+// If we assigned Index during Phase 1:
+// Block A: Index=1, Block B: Index=2, Block C: Index=3, Block D: Index=4, Block E: Index=5
+// But the reading order is: A → B (and its children C, D) → E
+// The indices don't match document order!
+```
+
+To assign indices during Phase 1, we'd need to thread a shared counter through all recursive calls, adding complexity throughout the call chain. Phase 2's separate traversal is cleaner.
+
+### Where Index Is Used
+
+The `Index` property serves a critical purpose: **converting semantic markers to sequential display**.
+
+**Without Index**: Users would see `[^ft_important_methodology_caveat]` (the semantic marker name)
+**With Index**: Users see `[a]`, `[b]`, `[c]` (clean sequential letters)
+
+**Usage locations**:
+1. **In-text markers** (`FootnoteMarker.astro`): Display `[1]` instead of `[^ft_a]`
+2. **Footnotes section** (`FootnotesSection.astro`): Back-links show `[a]`, `[b]`, `[c]`
+3. **Margin note prefixes** (`FootnoteMarker.astro`): Prefix shows `[1]:` before content
+
+**Conversion**: `numberToAlphabet()` function converts 1→"a", 2→"b", 26→"z", 27→"aa", etc.
+
+### Performance Analysis
+
+**Three Separate Tree Traversals** exist in the system:
+
+1. **Footnotes extraction** (`extractFootnotesInPage()` in `footnotes.ts`)
+2. **Citations extraction** (similar pattern)
+3. **Interlinked content extraction** (`extractInterlinkedContentInPage()` in `blog-helpers.ts`)
+
+**Question**: Are three traversals wasteful?
+
+**Analysis**:
+- Each does different work for different features
+- Could combine into one "mega-traversal" function
+- **Trade-offs**:
+  - ✅ Pro: One traversal instead of three
+  - ❌ Con: Tight coupling between unrelated features
+  - ❌ Con: Harder to enable/disable features independently
+  - ❌ Con: More complex code vs simpler focused functions
+  - ❌ Con: Caching becomes more complex
+
+**Performance impact**: For typical post with 50 blocks, ~150ms total. For large post with 500 blocks, ~1.5s total. Not a bottleneck (build-time only, not runtime).
+
+**Potential redundant call** identified at `client.ts` line 467:
+```typescript
+if (fs.existsSync(cacheFootnotesInPageFilePath)) {
+  footnotesInPage = superjson.parse(...);
+  // Call below may be redundant if caches are in sync
+  extractFootnotesInPage(blocks);  // Mutates block.Footnotes[].Index
+}
+```
+
+This call ensures blocks have updated indices even if cache is stale. May be unnecessary if both caches are fresh. User decision: "i'll consider later if one extra traversal is worth saving or not."
+
+### Alternative Approaches Considered
+
+**1. Single-pass with shared counter** (rejected):
+- Thread `currentIndex` ref through all recursive calls
+- Too invasive, breaks separation of concerns
+
+**2. Render-time index assignment** (rejected):
+- Assign indices during component rendering
+- Doesn't work with cached HTML (components don't render)
+- Requires runtime state management
+
+**3. Cache-based collection** (✅ implemented):
+- Extract once during `getPostContentByPostId()`
+- Save to JSON cache
+- Load from cache in page components
+- **Why this won**: Works with cached HTML, follows existing patterns, clean architecture
+
+### Key Technical Insights
+
+1. **Phase 1 could assign `SourceBlockId` immediately** (block context available), but not `Index` (don't know document order yet)
+
+2. **`extractFootnotesInPage()` mutates blocks in place**, which is why it must run before caching blocks:
+   ```typescript
+   footnotesInPage = extractFootnotesInPage(blocks);  // Mutates block.Footnotes[].Index
+   fs.writeFileSync(cacheFilePath, serialize(blocks));  // Must save AFTER
+   ```
+
+3. **Recursion order matters** for sequential indexing - must wait until all blocks built to know depth-first traversal order
+
+### Future Optimization: Combining Traversals
+
+**User Decision**: Combine footnotes and references traversals into a single pass.
+
+**Rationale**:
+- References already do a separate full tree traversal (similar to footnotes)
+- Both are metadata extraction tasks
+- Combining them reduces duplicate traversal work
+
+**Why render-time incrementing won't work**:
+
+The idea of incrementing footnote index when `FootnoteMarker` renders in `RichText.astro` has critical flaws:
+
+1. **Multiple render paths**: A block's RichText may render multiple times:
+   - During normal block rendering
+   - Again in `NBlocksPopover` for interlinked content
+   - Again for links in the same block
+
+2. **No disambiguation**: If a block has a footnote marker `[^ft_a]` AND a link:
+   - Footnote marker renders → increment index to 1
+   - Link triggers `NBlocksPopover` → content re-renders → RichText.astro called again
+   - **Problem**: No way to know if this is a new footnote or re-rendering existing content
+   - Would increment twice for the same footnote
+
+3. **Cached HTML breaks it**: Cached pages don't render components, so no increment happens
+
+**Conclusion**: Build-time extraction remains correct. The optimization is combining footnotes + references traversals (both metadata), while keeping citations and interlinked content separate (different purposes).
+
+### Conclusion
+
+The two-phase architecture exists because:
+- Phase 1 needs block context (extraction happens during block building)
+- Phase 2 needs complete document tree (index assignment after all blocks built)
+- Recursion breaks simple sequential ordering
+- Cache-based collection is cleanest for SSG architecture
+
+The performance cost is acceptable, and the architecture maintains clean separation of concerns. Future optimization will combine footnotes and references traversals into a single metadata extraction pass.
+
+---
+
+**Document Version**: 3.1
+**Last Updated**: 2025-10-26
 **Author**: Claude Code
-**Implementation Sessions**: October 24-25, 2025 (Initial + Dark Mode Optimization)
+**Implementation Sessions**: October 24-26, 2025 (Initial + Dark Mode + Architecture Deep-Dive)

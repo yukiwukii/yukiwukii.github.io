@@ -22,18 +22,6 @@ export async function getCollections() {
 	);
 }
 
-export async function getTagsNameWDesc() {
-	const { propertiesRaw } = await getDataSource();
-	const options = propertiesRaw.Tags?.multi_select?.options || [];
-
-	const mappedOptions = options.reduce((acc, option) => {
-		acc[option.name] = option.description || "";
-		return acc;
-	}, {});
-
-	return mappedOptions;
-}
-
 export async function getCollectionsWDesc() {
 	const { propertiesRaw } = await getDataSource();
 

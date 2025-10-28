@@ -23,6 +23,8 @@ export const BUILD_FOLDER_PATHS = {
 	interlinkedContentInPage: path.join("./tmp", "blocks-json-cache", "interlinked-content-in-page"),
 	interlinkedContentToPage: path.join("./tmp", "blocks-json-cache", "interlinked-content-to-page"),
 	footnotesInPage: path.join("./tmp", "blocks-json-cache", "footnotes-in-page"),
+	citationsInPage: path.join("./tmp", "blocks-json-cache", "citations-in-page"),
+	bibFilesCache: path.join("./tmp", "bib-files-cache"),
 	ogImages: path.join("./tmp", "og-images"),
 	rssCache: path.join("./tmp", "rss-cache"),
 	blocksHtmlCache: path.join("./tmp", "blocks-html-cache"),
@@ -89,6 +91,26 @@ export const SITEWIDE_FOOTNOTES_PAGE_SLUG =
 // Helper to check if in-page footnotes are enabled
 export const IN_PAGE_FOOTNOTES_ENABLED =
 	FOOTNOTES?.["in-page-footnotes-settings"]?.enabled === true;
+
+/**
+ * Citations configuration
+ * - "add-cite-this-post-section": Show BibTeX entry for current page
+ * - "extract-and-process-bibtex-citations": Automatic citation processing from BibTeX files
+ */
+export const CITATIONS = key_value_from_json?.["auto-extracted-sections"]?.citations || null;
+
+// Helper to check if citations are enabled
+export const CITATIONS_ENABLED =
+	CITATIONS?.["extract-and-process-bibtex-citations"]?.enabled === true;
+
+// Get bibliography style (either "apa" or "simplified-ieee")
+export const BIBLIOGRAPHY_STYLE = (() => {
+	if (!CITATIONS?.["extract-and-process-bibtex-citations"]) return null;
+	const formats = CITATIONS["extract-and-process-bibtex-citations"]["bibliography-format"];
+	if (formats?.["simplified-ieee"]) return "simplified-ieee";
+	if (formats?.apa) return "apa";
+	return "simplified-ieee"; // default
+})();
 
 export const OG_SETUP = key_value_from_json["og-setup"] || {
 	columns: 1,

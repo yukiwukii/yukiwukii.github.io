@@ -338,7 +338,12 @@ ${createCssVariables("dark")}
   /* This prevents the padding from shifting surrounding text */
 }
 
-.footnote-margin-note.highlighted sup {
+.footnote-margin-blocks> :nth-child(2) {
+  display: inline !important;
+  margin-top: 0 !important;
+}
+
+.footnote-margin-note.highlighted > :first-child > :first-child {
   background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
   border-radius: 3px;
   padding: 0 2px;
@@ -346,11 +351,6 @@ ${createCssVariables("dark")}
   /* Prevents padding from shifting text */
   color: var(--color-quote);
   /* Keep the quote color for the number */
-}
-
-.footnote-margin-blocks> :nth-child(2) {
-  display: inline !important;
-  margin-top: 0 !important;
 }
 
 @media (max-width: 1023px) {

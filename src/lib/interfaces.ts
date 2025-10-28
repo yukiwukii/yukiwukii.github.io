@@ -61,6 +61,8 @@ export interface Block {
 
 	// Footnotes (populated by extractFootnotes during build)
 	Footnotes?: Footnote[];
+	// Citations (populated by extractCitations during build)
+	Citations?: Citation[];
 }
 
 export interface InterlinkedContentInPage {
@@ -267,6 +269,10 @@ export interface RichText {
 	// Footnote marker (set by extractFootnotes during build)
 	FootnoteRef?: string; // e.g., "ft_a" (without [^] wrapper)
 	IsFootnoteMarker?: boolean;
+
+	// Citation marker (set by extractCitations during build)
+	CitationRef?: string; // e.g., "smith2020" (citation key)
+	IsCitationMarker?: boolean;
 }
 
 export interface Text {
@@ -377,12 +383,18 @@ export type BlockTypes =
  * Represents a single footnote extracted from content
  */
 export interface Footnote {
-	Marker: string; // e.g., "ft_a" (without [^] wrapper)
-	FullMarker: string; // e.g., "[^ft_a]" (with wrapper for matching)
-	Content: FootnoteContent;
-	Index?: number; // Sequential index for display (1, 2, 3...)
-	SourceLocation: "content" | "caption" | "table" | "comment"; // Where it came from
-	SourceBlockId?: string; // ID of the block where the marker appears (for back-links)
+	Marker: string;
+	FullMarker: string;
+	Index?: number;
+	Content: {
+		Type: "rich_text" | "blocks" | "comment";
+		RichTexts?: RichText[];
+		Blocks?: Block[];
+		CommentAttachments?: CommentAttachment[];
+	};
+	SourceLocation: "content" | "caption" | "table" | "comment";
+	SourceBlockId?: string;
+	SourceBlock?: Block;
 }
 
 /**
@@ -399,9 +411,11 @@ export interface FootnoteContent {
  * Attachment from Notion Comments API
  */
 export interface CommentAttachment {
-	Category: string; // 'image'
+	Category: string;
 	Url: string;
-	ExpiryTime?: string;
+	OptimizedUrl?: string;
+	Name?: string;
+	ExpiryTime: string;
 }
 
 /**
@@ -456,4 +470,71 @@ export interface RichTextLocation {
 	property: string; // e.g., "Paragraph.RichTexts", "NImage.Caption"
 	richTexts: RichText[];
 	setter: (newRichTexts: RichText[]) => void;
+}
+
+// ============================================================================
+// Citations Types
+// ============================================================================
+
+/**
+ * Represents a single citation extracted from content
+ */
+export interface Citation {
+	Key: string; // e.g., "smith2020"
+	Index?: number; // Sequential index for IEEE style (1, 2, 3...)
+	FormattedEntry: string; // HTML formatted bibliography entry
+	Authors: string; // "Smith et al." or "Smith, J."
+	Year: string; // "2020"
+	SourceBlockIds: string[]; // ARRAY of all block IDs where this key appears
+	SourceBlocks?: Block[]; // ARRAY of actual Block objects where this key appears (like interlinked content)
+	FirstAppearanceIndex?: number; // Order of first occurrence in document
+}
+
+/**
+ * Configuration for citations system
+ */
+export interface CitationsConfig {
+	"add-cite-this-post-section": boolean;
+	"extract-and-process-bibtex-citations": {
+		enabled: boolean;
+		"bibtex-file-url-list": string[];
+		"in-text-citation-format": string; // "[@key]", "\cite{key}", or "#cite(key)"
+		"bibliography-format": {
+			"simplified-ieee": boolean;
+			apa: boolean;
+		};
+		"generate-bibliography-section": boolean;
+		"intext-display": {
+			"always-popup": boolean;
+			"small-popup-large-margin": boolean;
+		};
+	};
+}
+
+/**
+ * Information about a BibTeX source URL
+ */
+export interface BibSourceInfo {
+	source: "github-gist" | "github-repo" | "dropbox" | "google-drive" | "unknown";
+	download_url: string;
+	updated_url: string | null; // null if no public timestamp available
+	updated_instructions: string | null;
+}
+
+/**
+ * Metadata for a cached BibTeX file
+ */
+export interface BibFileMeta {
+	url: string;
+	last_updated: string | null;
+	entry_count: number;
+	last_fetched: string; // ISO timestamp
+}
+
+/**
+ * Result from extracting citations from a block
+ */
+export interface CitationExtractionResult {
+	citations: Citation[];
+	processedRichTexts: boolean;
 }

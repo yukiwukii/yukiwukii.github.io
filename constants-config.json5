@@ -5,7 +5,6 @@
 	notion: {
 		// (Preferred) The Data Source ID for your Notion integration. This is a more stable way to connect to your database. You can find this in UI here: https://developers.notion.com/reference/retrieve-a-data-source#finding-a-data-source-id
 		"data-source-id": "f6e3813f-eb93-4a77-bbf4-81ad653d63ba",
-
 		// (Fallback) The classic Database ID. This is used only if 'data-source-id' is empty. The integration will automatically find the Data Source ID and use the first one from this if needed.
 		"database-id": "",
 	},
@@ -15,10 +14,8 @@
 	"site-info": {
 		// Your name or the name of your site's author. Used in RSS feeds, OG images etc and other metadata for attribution.
 		author: "",
-
 		// Your custom domain name (e.g., "example.com"). Important: Do NOT include "https://" or a trailing slash. Leave this empty if you are deploying to a service like Vercel or Netlify without a custom domain.
 		"custom-domain": "",
-
 		// The sub-directory your site is deployed in (e.g., "/blog"). Leave empty if your site is at the root of your domain. Must start with a forward slash "/" if used.
 		"base-path": "",
 	},
@@ -28,19 +25,14 @@
 	"collections-and-listings": {
 		// The slug of the Notion page you want to use as your website's home page.
 		"home-page-slug": "home",
-
 		// If true, a section with the 5 most recent posts will be displayed on the home page.
 		"recent-posts-on-home-page": true,
-
 		// The number of posts to show on each page of a paginated list (e.g., /posts, /tags/mytag).
 		"number-of-posts-per-page": 10,
-
 		// The name of the Notion 'Collection' property value for pages that should appear in the main navigation menu. These are treated as static pages (e.g., 'About', 'Contact') rather than blog posts.
 		"menu-pages-collection": "main",
-
 		// An array of 'Collection' names where posts should be displayed in full on list pages. Useful for microblogs or "stream" style collections where showing the full content is desired.
 		"full-preview-collections": ["Stream"],
-
 		// If true, any post with a slug starting with an underscore (e.g., "_draft-post") will be hidden from all lists (home page, collections, tags), from sitemap and search. The page will still be built and accessible via its direct URL.
 		"hide-underscore-slugs-in-lists": true,
 	},
@@ -85,11 +77,9 @@
 		"fontfamily-google-fonts": {
 			// Provide the single, combined URL from Google Fonts for all font families you want to use.
 			"combined-url": "https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap",
-
 			// Font family names must exactly match the name provided by Google Fonts.
 			"sans-font-name": "Roboto",
 			"serif-font-name": "",
-
 			// Important: If a font name contains a space, you must escape it with two backslashes.
 			"mono-font-name": "Roboto\\ Mono",
 		},
@@ -230,11 +220,9 @@
 			// The slug for a single, dedicated page that contains all footnotes for the entire site.
 			// This is a legacy method for manual footnote management.
 			"sitewide-footnotes-page-slug": "_all-footnotes",
-
 			// Settings for the modern, automatic in-page footnote system.
 			"in-page-footnotes-settings": {
 				enabled: true,
-
 				// Defines where the system should look for footnote content.
 				// Important: Only ONE of these source options can be 'true' at a time.
 				source: {
@@ -248,13 +236,10 @@
 					// Not yet implemented.
 					"block-inline-text-comments": false,
 				},
-
 				// The prefix for footnote markers in your Notion text. e.g., `[^ft_1]` for a prefix of `ft_`.
 				"marker-prefix": "ft_",
-
 				// If true, a collated list of all footnotes will be automatically generated at the bottom of the page.
 				"generate-footnotes-section": true,
-
 				// Defines how footnote markers are displayed within the text.
 				"intext-display": {
 					// If true, footnotes will always appear as a popup on click.
@@ -284,19 +269,31 @@
 		// This feature is currently unsupported and may change.
 		citations: {
 			// If true, a "Cite this page" section will be added to each page.
-			"add-cite-this-post-section": false,
+			"add-cite-this-post-section": true,
 			// Configure how BibTeX citations are extracted and processed.
 			"extract-and-process-bibtex-citations": {
 				// If true, enables BibTeX citation processing.
-				enabled: false,
-				// Supported .bib file sources: GitHub Gist, GitHub repo file, Dropbox, and Google Drive.
-				// Publicly shared links are required and must be accessible without authentication.
-				// Provided links will be automatically transformed into direct-download URLs for processing.
-				"bibtex-file-url-list": [],
-				// The shortcode or pattern for in-text citations. Supports #cite(key), \cite{key}, and (almost berundgingly supports) [@key]. This will be rendered as [firstName et al, year] in text.
-				"in-text-citation-format": "#cite({key})",
-				// The citation style for the bibliography (e.g., "apa", "mla", "chicago").
-				"bibliography-format": "apa",
+				enabled: true,
+				// Supported .bib file sources: GitHub Gist, GitHub repo file, Dropbox, and Google Drive public share links.
+				// Google drive and dropbox links do not provide public last-updated timestamps; these files will be fetched and processed on every build and increase processing time, but https://retorque.re/zotero-better-bibtex/ can auto-update and auto sync them.
+				//Gitub links will be checked for last-updated timestamps to avoid unnecessary re-processing but will need push or scripted auto-push to keep updated.
+				"bibtex-file-url-list": [
+					"https://gist.github.com/nerdymomocat/dd0ea3c71898e6d7557d0b2a6b0f95f5",
+					"https://github.com/nerdymomocat-templates/bibfile-tester-webtrotion/blob/main/bibtex-test-webtr-github.bib",
+					"https://www.dropbox.com/scl/fi/vrtoh0mi2hsjwybu9s6gb/bibtex-test-webtr-dropbox.bib?rlkey=ry9qucvgh9kjs4nhgqe3jlq03&st=3lco5bnx&dl=0",
+					"https://drive.google.com/file/d/1GC98kFZeR1aUGIK1q8-9RirTTnQHl0KC/view?usp=sharing",
+				],
+				// The shortcode or pattern for in-text citations. Supports #cite(key) for support with typst, \cite{key} for support with latex, and for support with pandoc [@key]. This will be rendered as [firstName et al, year] or [1][2] in text. Only one format is supported at a time.
+				"in-text-citation-format": "[@key]",
+				// The citation style for the bibliography (e.g., "apa", "ieee", "simplified-ieee"). Only one format is supported at a time.
+				"bibliography-format": {
+					//For ICML/ReNeurIPS style simplified ieee is used.
+					"simplified-ieee": true,
+					//For other academic writing APA (ACL is a pared down version of this) is used.
+					apa: false,
+				},
+				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
+				"generate-bibliography-section": true,
 			},
 		},
 	},

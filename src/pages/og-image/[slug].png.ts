@@ -1,9 +1,6 @@
 import type { APIContext, GetStaticPaths } from "astro";
-// import { getEntryBySlug } from "astro:content";
 import satori, { type SatoriOptions } from "satori";
-// import { html } from "satori-html";
 import { Resvg } from "@resvg/resvg-js";
-// import { siteConfig } from "@/site-config";
 import { getFormattedDate } from "@/utils";
 import { buildTimeFilePath } from "@/lib/blog-helpers";
 
@@ -11,7 +8,6 @@ import { buildTimeFilePath } from "@/lib/blog-helpers";
 import { getPostBySlug, getAllEntries, getAllTagsWithCounts } from "@/lib/notion/client";
 import { getCollectionsWDesc } from "@/utils";
 
-// import { siteInfo } from "@/utils";
 import { siteInfo } from "@/siteInfo";
 import {
 	OG_SETUP,

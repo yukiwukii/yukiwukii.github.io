@@ -1,0 +1,95 @@
+---
+import type { Footnote, Block as BlockType, FileObject } from "@/lib/interfaces";
+import RichText from "@/components/notion-blocks/RichText.astro";
+import NotionBlocks from "@/components/NotionBlocks.astro";
+import NImage from "@/components/notion-blocks/embeds/NImage.astro";
+import Video from "@/components/notion-blocks/embeds/Video.astro";
+import NAudio from "@/components/notion-blocks/embeds/NAudio.astro";
+import File from "@/components/notion-blocks/File.astro";
+
+export interface Props {
+	content: Footnote["Content"];
+	sourceBlockId?: string;
+}
+
+const { content, sourceBlockId } = Astro.props;
+---
+
+{
+	content.Type === "rich_text" && content.RichTexts && (
+		<div>
+			{content.RichTexts.map((rt) => (
+				<RichText richText={rt} blockID={sourceBlockId} />
+			))}
+		</div>
+	)
+}
+{
+	content.Type === "blocks" && content.Blocks && (
+		<div class="prose prose-sm dark:prose-invert max-w-none">
+			<NotionBlocks blocks={content.Blocks} renderChildren={true} setId={false} />
+		</div>
+	)
+}
+{
+	content.Type === "comment" && content.RichTexts && (
+		<div>
+			{content.RichTexts.map((rt) => (
+				<RichText richText={rt} blockID={sourceBlockId} />
+			))}
+			{content.CommentAttachments && content.CommentAttachments.length > 0 && (
+				<div class="mt-2 space-y-1">
+					{content.CommentAttachments.map((attachment) => {
+						const fileObject: FileObject = {
+							Type: "file",
+							Url: attachment.Url,
+							OptimizedUrl: attachment.OptimizedUrl,
+							ExpiryTime: attachment.ExpiryTime,
+						};
+
+						let syntheticBlock: BlockType;
+
+						switch (attachment.Category) {
+							case "image":
+								syntheticBlock = {
+									Type: "image",
+									Id: "",
+									HasChildren: false,
+									NImage: { Type: "file", Caption: [], File: fileObject },
+									LastUpdatedTimeStamp: new Date(),
+								};
+								return <NImage block={syntheticBlock} />;
+							case "video":
+								syntheticBlock = {
+									Type: "video",
+									Id: "",
+									HasChildren: false,
+									Video: { Type: "file", Caption: [], File: fileObject },
+									LastUpdatedTimeStamp: new Date(),
+								};
+								return <Video block={syntheticBlock} />;
+							case "audio":
+								syntheticBlock = {
+									Type: "audio",
+									Id: "",
+									HasChildren: false,
+									NAudio: { Type: "file", Caption: [], File: fileObject },
+									LastUpdatedTimeStamp: new Date(),
+								};
+								return <NAudio block={syntheticBlock} />;
+							default:
+								syntheticBlock = {
+									Type: "file",
+									Id: "",
+									HasChildren: false,
+									File: { Type: "file", Caption: [], File: fileObject },
+									LastUpdatedTimeStamp: new Date(),
+								};
+								return <File block={syntheticBlock} />;
+						}
+					})}
+				</div>
+			)}
+		</div>
+	)
+}

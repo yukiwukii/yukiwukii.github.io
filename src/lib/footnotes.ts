@@ -943,30 +943,38 @@ async function extractBlockCommentsFootnotes(
 			// Remove the [^marker]: prefix from first RichText
 			const cleanedRichTexts = removeMarkerPrefix(contentRichTexts, match[0].length);
 
-			// Handle attachments (images) - download and convert to local paths
+			// Handle attachments (ALL TYPES) - download and convert to local paths
+
 			const attachments: CommentAttachment[] = [];
+
 			if (comment.attachments && comment.attachments.length > 0) {
 				for (const attachment of comment.attachments) {
-					if (attachment.category === "image" && attachment.file?.url) {
-						// Download the image file (same pattern as regular images in client.ts)
-						const imageUrl = new URL(attachment.file.url);
+					if (attachment.file?.url) {
+						const originalUrl = attachment.file.url;
 
-						// Download the file to local storage
-						await downloadFile(imageUrl);
+						const isImage = attachment.category === "image";
 
-						// Convert URL to webp if optimizing images (same as client.ts does for NImage)
-						let optimizedUrl = attachment.file.url;
-						if (isConvImageType(attachment.file.url) && OPTIMIZE_IMAGES) {
-							optimizedUrl =
-								attachment.file.url.substring(0, attachment.file.url.lastIndexOf(".")) + ".webp";
+						// Download the file, with optimization enabled only for images
+
+						await downloadFile(new URL(originalUrl), isImage);
+
+						let optimizedUrl = originalUrl;
+
+						if (isImage && isConvImageType(originalUrl) && OPTIMIZE_IMAGES) {
+							optimizedUrl = originalUrl.substring(0, originalUrl.lastIndexOf(".")) + ".webp";
 						}
 
-						// Convert to local path for display
-						const localPath = buildTimeFilePath(new URL(optimizedUrl));
+						const fileName = new URL(originalUrl).pathname.split("/").pop() || "download";
 
 						attachments.push({
-							Category: "image",
-							Url: localPath, // Store local path, not the remote URL
+							Category: attachment.category,
+
+							Url: originalUrl,
+
+							OptimizedUrl: optimizedUrl,
+
+							Name: fileName,
+
 							ExpiryTime: attachment.file.expiry_time,
 						});
 					}
@@ -1086,77 +1094,4 @@ export async function extractFootnotesFromBlockAsync(
 				hasProcessedChildren: false,
 			};
 	}
-}
-
-/**
- * Extracts all footnotes from all blocks in a page (recursively)
- * Returns an array of all unique footnotes with their assigned indices
- * This is used to cache footnotes for the page
- */
-export function extractFootnotesInPage(blocks: Block[]): Footnote[] {
-	const allFootnotes: Footnote[] = [];
-	let footnoteIndex = 0;
-
-	function collectFromBlock(block: Block): void {
-		// Collect footnotes from this block
-		if (block.Footnotes && block.Footnotes.length > 0) {
-			block.Footnotes.forEach((footnote) => {
-				// Assign sequential index if not already assigned
-				if (!footnote.Index) {
-					footnote.Index = ++footnoteIndex;
-				}
-				// Store the block ID where this marker appears (for back-links)
-				if (!footnote.SourceBlockId) {
-					footnote.SourceBlockId = block.Id;
-				}
-				allFootnotes.push(footnote);
-			});
-		}
-
-		// Recursively collect from children
-		const childBlocks = getChildrenBlocks(block);
-		if (childBlocks) {
-			childBlocks.forEach(collectFromBlock);
-		}
-
-		// Collect from column lists
-		if (block.ColumnList?.Columns) {
-			block.ColumnList.Columns.forEach((column) => {
-				if (column.Children) {
-					column.Children.forEach(collectFromBlock);
-				}
-			});
-		}
-	}
-
-	// Helper to get children blocks from any block type
-	function getChildrenBlocks(block: Block): Block[] | null {
-		if (block.Paragraph?.Children) return block.Paragraph.Children;
-		if (block.Heading1?.Children) return block.Heading1.Children;
-		if (block.Heading2?.Children) return block.Heading2.Children;
-		if (block.Heading3?.Children) return block.Heading3.Children;
-		if (block.Quote?.Children) return block.Quote.Children;
-		if (block.Callout?.Children) return block.Callout.Children;
-		if (block.Toggle?.Children) return block.Toggle.Children;
-		if (block.BulletedListItem?.Children) return block.BulletedListItem.Children;
-		if (block.NumberedListItem?.Children) return block.NumberedListItem.Children;
-		if (block.ToDo?.Children) return block.ToDo.Children;
-		if (block.SyncedBlock?.Children) return block.SyncedBlock.Children;
-		return null;
-	}
-
-	blocks.forEach(collectFromBlock);
-
-	// Remove duplicates based on Marker
-	const uniqueFootnotes = Array.from(new Map(allFootnotes.map((fn) => [fn.Marker, fn])).values());
-
-	// Sort by Index
-	uniqueFootnotes.sort((a, b) => {
-		if (a.Index && b.Index) {
-			return a.Index - b.Index;
-		}
-		return a.Marker.localeCompare(b.Marker);
-	});
-
-	return uniqueFootnotes;
 }
