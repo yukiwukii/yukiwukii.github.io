@@ -1,15 +1,15 @@
 ---
 import BaseLayout from "./Base.astro";
-import BlogHero from "@/components/blog/Hero.astro";
-import TOC from "@/components/blog/TOC.astro";
-import WebMentions from "@/components/blog/webmentions/index.astro";
+import BlogHero from "@/components/layout/Hero.astro";
+import TOC from "@/components/auto-added-sections/TOC.astro";
+import WebMentions from "@/components/auto-added-sections/webmentions/index.astro";
 import type { Post } from "@/lib/interfaces";
 import type { Heading } from "@/types";
-import PostComments from "@/components/blog/PostComments.astro";
+import PostComments from "@/components/auto-added-sections/PostComments.astro";
 import { INTERLINKED_CONTENT } from "@/constants";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
-import InterlinkedContentSection from "@/components/blog/interlinked-content/InterlinkedContentSection.astro";
-import Icon from "@/components/Icon.astro";
+import InterlinkedContentSection from "@/components/auto-added-sections/interlinked-content/InterlinkedContentSection.astro";
+import Icon from "@/components/ui/Icon.astro";
 
 interface Props {
 	post: Post;

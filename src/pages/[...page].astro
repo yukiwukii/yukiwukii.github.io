@@ -26,15 +26,15 @@ import {
 	LAST_BUILD_TIME,
 	BUILD_FOLDER_PATHS,
 } from "@/constants";
-import PostPreview from "@/components/blog/PostPreview.astro";
-import Icon from "@/components/Icon.astro";
+import PostPreview from "@/components/listing-layout/PostPreview.astro";
+import Icon from "@/components/ui/Icon.astro";
 import { buildHeadings } from "@/utils";
-import TOC from "@/components/blog/TOC.astro";
+import TOC from "@/components/auto-added-sections/TOC.astro";
 import fs from "fs/promises";
 import path from "path";
 import superjson from "superjson";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
-import FootnotesSection from "@/components/blog/FootnotesSection.astro";
+import FootnotesSection from "@/components/auto-added-sections/FootnotesSection.astro";
 
 export async function getStaticPaths() {
 	const pages = await getAllPages();
@@ -256,7 +256,7 @@ if (pageFound && page.Slug === HOME_PAGE_SLUG && RECENT_POSTS_ON_HOME_PAGE) {
 				<Icon name={"to-top"} class="h-6 w-6" aria-label="Go Back to Top" stroke-linecap="round" />
 			</button>
 
-			<script src="../assets/scripts/to-top-btn.ts" />
+			<script src="../scripts/to-top-btn.ts" />
 		</>
 	)
 }
