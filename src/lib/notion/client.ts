@@ -17,8 +17,16 @@ import {
 	BUILD_FOLDER_PATHS,
 	IN_PAGE_FOOTNOTES_ENABLED,
 	FOOTNOTES,
+	CITATIONS_ENABLED,
+	CITATIONS,
+	BIBLIOGRAPHY_STYLE,
 } from "../../constants";
-import { extractFootnotesFromBlockAsync, extractFootnotesInPage } from "../../lib/footnotes";
+import { extractFootnotesFromBlockAsync } from "../../lib/footnotes";
+import {
+	parseBibTeXFiles,
+	extractCitationsFromBlock,
+	prepareBibliography,
+} from "../../lib/citations";
 import type * as responses from "@/lib/notion/responses";
 import type * as requestParams from "@/lib/notion/request-params";
 import type {
@@ -63,12 +71,13 @@ import type {
 	NAudio,
 	InterlinkedContentInPage,
 	Footnote,
+	Citation,
 } from "@/lib/interfaces";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Client, APIResponseError } from "@notionhq/client";
 import { getFormattedDateWithTime } from "../../utils/date";
 import { slugify } from "../../utils/slugify";
-import { extractInterlinkedContentInPage } from "../../lib/blog-helpers";
+import { extractPageContent } from "../../lib/blog-helpers";
 import superjson from "superjson";
 
 const client = new Client({
@@ -99,6 +108,10 @@ export let adjustedFootnotesConfig: any = null;
 
 // Footnotes: Track initialization promise to ensure it only runs once
 let initializationPromise: Promise<void> | null = null;
+
+// Citations: Module-level cache for BibTeX entries
+// Now loaded from cache created by citations-initializer integration
+let bibEntriesCache: Map<string, any> | null = null;
 
 /**
  * Initialize footnotes config once at module load
@@ -169,10 +182,46 @@ async function initializeFootnotesConfig(): Promise<void> {
 	return initializationPromise;
 }
 
+/**
+ * Load BibTeX entries from cache (created by citations-initializer integration)
+ * This is a lazy loader - only loads when first needed and caches the result
+ */
+function getBibEntriesCache(): Map<string, any> {
+	if (bibEntriesCache !== null) {
+		return bibEntriesCache;
+	}
+
+	if (!CITATIONS_ENABLED || !CITATIONS) {
+		bibEntriesCache = new Map();
+		return bibEntriesCache;
+	}
+
+	// Load from combined cache file (created by integration at build:start)
+	const cacheDir = BUILD_FOLDER_PATHS.bibFilesCache;
+	const combinedPath = path.join(cacheDir, "combined-entries.json");
+
+	if (fs.existsSync(combinedPath)) {
+		try {
+			const content = fs.readFileSync(combinedPath, "utf-8");
+			const entriesObject = JSON.parse(content);
+			bibEntriesCache = new Map<string, any>(Object.entries(entriesObject));
+		} catch (error) {
+			console.warn("Failed to load BibTeX cache from combined-entries.json:", error);
+			bibEntriesCache = new Map();
+		}
+	} else {
+		console.warn("BibTeX cache not found. Citations may not work correctly.");
+		bibEntriesCache = new Map();
+	}
+
+	return bibEntriesCache;
+}
+
 const BUILDCACHE_DIR = BUILD_FOLDER_PATHS["buildcache"];
 async function getResolvedDataSourceId(): Promise<string> {
 	// Initialize config once at module load
 	await initializeFootnotesConfig();
+	// Note: BibTeX cache is now initialized by citations-initializer integration at build:start
 
 	if (resolvedDataSourceId) {
 		return resolvedDataSourceId;
@@ -371,6 +420,7 @@ export async function getPostContentByPostId(post: Post): Promise<{
 	blocks: Block[];
 	interlinkedContentInPage: InterlinkedContentInPage[] | null;
 	footnotesInPage: Footnote[] | null;
+	citationsInPage: Citation[] | null;
 }> {
 	const tmpDir = BUILD_FOLDER_PATHS["blocksJson"];
 	const cacheFilePath = path.join(tmpDir, `${post.PageId}.json`);
@@ -382,6 +432,10 @@ export async function getPostContentByPostId(post: Post): Promise<{
 		BUILD_FOLDER_PATHS["footnotesInPage"],
 		`${post.PageId}.json`,
 	);
+	const cacheCitationsInPageFilePath = path.join(
+		BUILD_FOLDER_PATHS["citationsInPage"],
+		`${post.PageId}.json`,
+	);
 	const isPostUpdatedAfterLastBuild = LAST_BUILD_TIME
 		? post.LastUpdatedTimeStamp > LAST_BUILD_TIME
 		: true;
@@ -389,71 +443,133 @@ export async function getPostContentByPostId(post: Post): Promise<{
 	let blocks: Block[];
 	let interlinkedContentInPage: InterlinkedContentInPage[] | null;
 	let footnotesInPage: Footnote[] | null = null;
+	let citationsInPage: Citation[] | null = null;
+
+	const shouldExtractFootnotes =
+		adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled || false;
+	const shouldExtractCitations = (CITATIONS_ENABLED && BIBLIOGRAPHY_STYLE) || false;
 
 	if (!isPostUpdatedAfterLastBuild && fs.existsSync(cacheFilePath)) {
-		// If the post was not updated after the last build and cache file exists, return the cached data
+		// CACHE HIT PATH: Post was not updated, try to load all caches
 		console.log("\nHit cache for", post.Slug);
 		blocks = superjson.parse(fs.readFileSync(cacheFilePath, "utf-8"));
-		if (fs.existsSync(cacheInterlinkedContentInPageFilePath)) {
+
+		// Check which caches exist
+		const hasInterlinkedCache = fs.existsSync(cacheInterlinkedContentInPageFilePath);
+		const hasFootnotesCache = fs.existsSync(cacheFootnotesInPageFilePath);
+		const hasCitationsCache = fs.existsSync(cacheCitationsInPageFilePath);
+
+		// If all relevant caches exist, load them
+		const allCachesExist =
+			hasInterlinkedCache &&
+			(!shouldExtractFootnotes || hasFootnotesCache) &&
+			(!shouldExtractCitations || hasCitationsCache);
+
+		if (allCachesExist) {
+			// Load all from cache
 			interlinkedContentInPage = superjson.parse(
 				fs.readFileSync(cacheInterlinkedContentInPageFilePath, "utf-8"),
 			);
-		} else {
-			interlinkedContentInPage = extractInterlinkedContentInPage(post.PageId, blocks);
-			fs.writeFileSync(
-				cacheInterlinkedContentInPageFilePath,
-				superjson.stringify(interlinkedContentInPage),
-				"utf-8",
-			);
-		}
-		// Load or extract footnotes (only if footnotes are enabled)
-		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled) {
-			if (fs.existsSync(cacheFootnotesInPageFilePath)) {
+			if (shouldExtractFootnotes) {
 				footnotesInPage = superjson.parse(fs.readFileSync(cacheFootnotesInPageFilePath, "utf-8"));
-				// Still need to update blocks with indices in case blocks cache is old
-				extractFootnotesInPage(blocks);
-			} else {
-				footnotesInPage = extractFootnotesInPage(blocks);
+			}
+			if (shouldExtractCitations) {
+				citationsInPage = superjson.parse(fs.readFileSync(cacheCitationsInPageFilePath, "utf-8"));
+			}
+		} else {
+			// Some caches missing - use unified extraction for missing pieces
+			const extracted = extractPageContent(post.PageId, blocks, {
+				extractFootnotes: shouldExtractFootnotes && !hasFootnotesCache,
+				extractCitations: shouldExtractCitations && !hasCitationsCache,
+				extractInterlinkedContent: !hasInterlinkedCache,
+			});
+
+			// Use extracted or cached data
+			interlinkedContentInPage = hasInterlinkedCache
+				? superjson.parse(fs.readFileSync(cacheInterlinkedContentInPageFilePath, "utf-8"))
+				: extracted.interlinkedContent;
+
+			footnotesInPage = hasFootnotesCache
+				? superjson.parse(fs.readFileSync(cacheFootnotesInPageFilePath, "utf-8"))
+				: shouldExtractFootnotes
+					? extracted.footnotes
+					: null;
+
+			citationsInPage = hasCitationsCache
+				? superjson.parse(fs.readFileSync(cacheCitationsInPageFilePath, "utf-8"))
+				: shouldExtractCitations
+					? extracted.citations
+					: null;
+
+			// Save missing caches
+			if (!hasInterlinkedCache) {
+				fs.writeFileSync(
+					cacheInterlinkedContentInPageFilePath,
+					superjson.stringify(interlinkedContentInPage),
+					"utf-8",
+				);
+			}
+			if (!hasFootnotesCache && shouldExtractFootnotes && footnotesInPage) {
 				fs.writeFileSync(
 					cacheFootnotesInPageFilePath,
 					superjson.stringify(footnotesInPage),
 					"utf-8",
 				);
-				// Re-save blocks cache with updated footnote indices
+			}
+			if (!hasCitationsCache && shouldExtractCitations && citationsInPage) {
+				fs.writeFileSync(
+					cacheCitationsInPageFilePath,
+					superjson.stringify(citationsInPage),
+					"utf-8",
+				);
+			}
+
+			// Re-save blocks if footnotes or citations were extracted (they mutate blocks)
+			if (
+				(!hasFootnotesCache && shouldExtractFootnotes) ||
+				(!hasCitationsCache && shouldExtractCitations)
+			) {
 				fs.writeFileSync(cacheFilePath, superjson.stringify(blocks), "utf-8");
 			}
 		}
 	} else {
-		// If the post was updated after the last build or cache does not exist, fetch new data
+		// CACHE MISS PATH: Post was updated or no cache exists
 		blocks = await getAllBlocksByBlockId(post.PageId);
 
-		// Extract footnotes first (this assigns Index and SourceBlockId to block.Footnotes in place)
-		// Only if footnotes are enabled
-		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled) {
-			footnotesInPage = extractFootnotesInPage(blocks);
-		}
+		// Use unified extraction for all three types in ONE tree traversal
+		const extracted = extractPageContent(post.PageId, blocks, {
+			extractFootnotes: shouldExtractFootnotes,
+			extractCitations: shouldExtractCitations,
+			extractInterlinkedContent: true,
+		});
 
-		// Now write blocks to cache (with updated footnote indices)
+		footnotesInPage = extracted.footnotes.length > 0 ? extracted.footnotes : null;
+		citationsInPage = extracted.citations.length > 0 ? extracted.citations : null;
+		interlinkedContentInPage = extracted.interlinkedContent;
+
+		// Save blocks to cache (with mutated footnote/citation indices)
 		fs.writeFileSync(cacheFilePath, superjson.stringify(blocks), "utf-8");
 
-		// Extract and save interlinked content
-		interlinkedContentInPage = extractInterlinkedContentInPage(post.PageId, blocks);
+		// Save all extracted content to their respective caches
 		fs.writeFileSync(
 			cacheInterlinkedContentInPageFilePath,
 			superjson.stringify(interlinkedContentInPage),
 			"utf-8",
 		);
 
-		// Save footnotes cache (only if footnotes are enabled)
-		if (adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled && footnotesInPage) {
+		if (shouldExtractFootnotes && footnotesInPage) {
 			fs.writeFileSync(cacheFootnotesInPageFilePath, superjson.stringify(footnotesInPage), "utf-8");
+		}
+
+		if (shouldExtractCitations && citationsInPage) {
+			fs.writeFileSync(cacheCitationsInPageFilePath, superjson.stringify(citationsInPage), "utf-8");
 		}
 	}
 
 	// Update the blockIdPostIdMap
 	updateBlockIdPostIdMap(post.PageId, blocks);
 
-	return { blocks, interlinkedContentInPage, footnotesInPage };
+	return { blocks, interlinkedContentInPage, footnotesInPage, citationsInPage };
 }
 
 function formatUUID(id: string): string {
@@ -612,7 +728,24 @@ export async function getAllBlocksByBlockId(blockId: string): Promise<Block[]> {
 			block.Callout.Children = await getAllBlocksByBlockId(block.Id);
 		}
 
-		// Extract footnotes AFTER children are fetched
+		// CRITICAL ORDER: Extract citations BEFORE footnotes
+		// Footnote content blocks can contain citation markers, so we must process citations first
+		try {
+			if (CITATIONS_ENABLED && CITATIONS) {
+				const bibCache = getBibEntriesCache();
+				if (bibCache.size > 0) {
+					const citationResult = extractCitationsFromBlock(block, CITATIONS, bibCache);
+					if (citationResult.citations.length > 0) {
+						block.Citations = citationResult.citations;
+					}
+				}
+			}
+		} catch (error) {
+			console.error(`Failed to extract citations from block ${block.Id}:`, error);
+			// Continue without citations rather than failing the entire build
+		}
+
+		// Extract footnotes AFTER children are fetched and citations are extracted
 		// This is critical for start-of-child-blocks mode which needs the Children array populated
 		try {
 			if (

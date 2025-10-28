@@ -1,4 +1,9 @@
-import { BUILD_FOLDER_PATHS, HOME_PAGE_SLUG, MENU_PAGES_COLLECTION } from "../constants";
+import {
+	BUILD_FOLDER_PATHS,
+	HOME_PAGE_SLUG,
+	MENU_PAGES_COLLECTION,
+	BIBLIOGRAPHY_STYLE,
+} from "../constants";
 import type {
 	Block,
 	Heading1,
@@ -8,12 +13,15 @@ import type {
 	Column,
 	InterlinkedContentInPage,
 	Post,
+	Footnote,
+	Citation,
 } from "@/lib/interfaces";
 import { slugify } from "../utils/slugify";
 import path from "path";
 import fs from "node:fs";
 import { getBlock, getPostByPageId } from "../lib/notion/client";
 import superjson from "superjson";
+import { prepareBibliography } from "./citations";
 
 const BASE_PATH = import.meta.env.BASE_URL;
 let interlinkedContentInPageCache: { [entryId: string]: InterlinkedContentInPage[] } | null = null;
@@ -269,60 +277,6 @@ const _extractInterlinkedContentInBlock = (
 	filteredRichText.direct_nonmedia_link = direct_nonmedia_link ?? null;
 	filteredRichText.link_to_pageid = link_to_pageid ?? null;
 	return filteredRichText;
-};
-
-export const extractInterlinkedContentInPage = (
-	postId: string,
-	blocks: Block[],
-): InterlinkedContentInPage[] => {
-	// console.debug("here in extractInterlinkedContentInPage");
-	return blocks
-		.reduce((acc: InterlinkedContentInPage[], block) => {
-			acc.push(_extractInterlinkedContentInBlock(postId, block));
-
-			if (block.ColumnList && block.ColumnList.Columns) {
-				acc = acc.concat(_extractInterlinkedContentFromColumns(postId, block.ColumnList.Columns));
-			} else if (block.BulletedListItem && block.BulletedListItem.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.BulletedListItem.Children));
-			} else if (block.NumberedListItem && block.NumberedListItem.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.NumberedListItem.Children));
-			} else if (block.ToDo && block.ToDo.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.ToDo.Children));
-			} else if (block.SyncedBlock && block.SyncedBlock.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.SyncedBlock.Children));
-			} else if (block.Toggle && block.Toggle.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Toggle.Children));
-			} else if (block.Paragraph && block.Paragraph.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Paragraph.Children));
-			} else if (block.Heading1 && block.Heading1.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Heading1.Children));
-			} else if (block.Heading2 && block.Heading2.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Heading2.Children));
-			} else if (block.Heading3 && block.Heading3.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Heading3.Children));
-			} else if (block.Quote && block.Quote.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Quote.Children));
-			} else if (block.Callout && block.Callout.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, block.Callout.Children));
-			}
-
-			return acc;
-		}, [])
-		.flat();
-};
-
-const _extractInterlinkedContentFromColumns = (
-	postId: string,
-	columns: Column[],
-): InterlinkedContentInPage[] => {
-	return columns
-		.reduce((acc: InterlinkedContentInPage[], column) => {
-			if (column.Children) {
-				acc = acc.concat(extractInterlinkedContentInPage(postId, column.Children));
-			}
-			return acc;
-		}, [])
-		.flat();
 };
 
 export const buildURLToHTMLMap = async (urls: URL[]): Promise<{ [key: string]: string }> => {
@@ -769,4 +723,218 @@ export async function saveCachedHeadings(postSlug: string, headings: any): Promi
 	} catch (e) {
 		console.error("Error saving headings cache:", e);
 	}
+}
+
+// ============================================================================
+// Unified Page Content Extraction
+// ============================================================================
+
+/**
+ * Unified Page Content Extraction System
+ *
+ * This combines footnotes, citations, and interlinked content extraction
+ * into a SINGLE tree traversal for optimal performance.
+ *
+ * Instead of:
+ * - extractFootnotesInPage (full tree traversal)
+ * - extractCitationsInPage (full tree traversal)
+ * - extractInterlinkedContentInPage (full tree traversal)
+ *
+ * We now do ONE traversal that collects all three types of content.
+ */
+
+export interface PageContentExtractionResult {
+	footnotes: Footnote[];
+	citations: Citation[];
+	interlinkedContent: InterlinkedContentInPage[];
+}
+
+/**
+ * Extract footnotes from a block's Footnotes array
+ * Simplified helper that just collects from block.Footnotes
+ */
+function extractFootnotesFromBlock(block: Block): Footnote[] {
+	if (!block.Footnotes || block.Footnotes.length === 0) {
+		return [];
+	}
+	return block.Footnotes;
+}
+
+/**
+ * Extract citations from a block's Citations array
+ * Simplified helper that just collects from block.Citations
+ */
+function extractCitationsFromBlock(block: Block): Citation[] {
+	if (!block.Citations || block.Citations.length === 0) {
+		return [];
+	}
+	return block.Citations;
+}
+
+/**
+ * Unified extraction function that traverses the block tree ONCE
+ * and collects footnotes, citations, and interlinked content
+ */
+export function extractPageContent(
+	postId: string,
+	blocks: Block[],
+	options: {
+		extractFootnotes: boolean;
+		extractCitations: boolean;
+		extractInterlinkedContent: boolean;
+	},
+): PageContentExtractionResult {
+	const allFootnotes: Footnote[] = [];
+	const citationMap = new Map<string, Citation>();
+	const allInterlinkedContent: InterlinkedContentInPage[] = [];
+
+	// Tracking for footnotes
+	let footnoteIndex = 0;
+
+	// Tracking for citations
+	const keyToIndex = new Map<string, number>();
+	let firstAppearanceCounter = 0;
+	const bibliographyStyle = (BIBLIOGRAPHY_STYLE as "apa" | "simplified-ieee") || "simplified-ieee";
+
+	/**
+	 * Recursive function that processes a single block and all its children
+	 */
+	function processBlock(block: Block): void {
+		// 1. Extract and process footnotes
+		if (options.extractFootnotes) {
+			const blockFootnotes = extractFootnotesFromBlock(block);
+			blockFootnotes.forEach((footnote) => {
+				// Assign sequential index if not already assigned
+				if (!footnote.Index) {
+					footnote.Index = ++footnoteIndex;
+				}
+				// Store the block ID where this marker appears (for back-links)
+				if (!footnote.SourceBlockId) {
+					footnote.SourceBlockId = block.Id;
+				}
+				allFootnotes.push(footnote);
+			});
+		}
+
+		// 2. Extract and process citations
+		if (options.extractCitations) {
+			const blockCitations = extractCitationsFromBlock(block);
+			blockCitations.forEach((citation) => {
+				const key = citation.Key;
+
+				if (keyToIndex.has(key)) {
+					// Already seen this key - reuse existing index
+					const existingIndex = keyToIndex.get(key)!;
+					citation.Index = existingIndex; // MUTATE directly
+					citation.FirstAppearanceIndex = existingIndex;
+
+					// Add this block ID and Block object to the citation's SourceBlockIds and SourceBlocks
+					const existing = citationMap.get(key)!;
+					if (!existing.SourceBlockIds.includes(block.Id)) {
+						existing.SourceBlockIds.push(block.Id);
+						if (!existing.SourceBlocks) {
+							existing.SourceBlocks = [];
+						}
+						existing.SourceBlocks.push(block);
+					}
+				} else {
+					// First time seeing this key - assign new index
+					firstAppearanceCounter++;
+					const index =
+						bibliographyStyle === "simplified-ieee" ? firstAppearanceCounter : undefined;
+
+					// MUTATE the citation directly
+					citation.Index = index;
+					citation.FirstAppearanceIndex = firstAppearanceCounter;
+					citation.SourceBlockIds = [block.Id];
+					citation.SourceBlocks = [block];
+
+					// Track this key's index
+					if (index !== undefined) {
+						keyToIndex.set(key, index);
+					}
+
+					// Add to map for bibliography
+					citationMap.set(key, citation);
+				}
+			});
+		}
+
+		// 3. Extract interlinked content
+		if (options.extractInterlinkedContent) {
+			const interlinkedContent = _extractInterlinkedContentInBlock(postId, block);
+			allInterlinkedContent.push(interlinkedContent);
+		}
+
+		// 4. Recursively process children
+		const childBlocks: Block[] = [];
+
+		// Collect all possible children
+		if (block.Paragraph?.Children) childBlocks.push(...block.Paragraph.Children);
+		if (block.Heading1?.Children) childBlocks.push(...block.Heading1.Children);
+		if (block.Heading2?.Children) childBlocks.push(...block.Heading2.Children);
+		if (block.Heading3?.Children) childBlocks.push(...block.Heading3.Children);
+		if (block.Quote?.Children) childBlocks.push(...block.Quote.Children);
+		if (block.Callout?.Children) childBlocks.push(...block.Callout.Children);
+		if (block.Toggle?.Children) childBlocks.push(...block.Toggle.Children);
+		if (block.BulletedListItem?.Children) childBlocks.push(...block.BulletedListItem.Children);
+		if (block.NumberedListItem?.Children) childBlocks.push(...block.NumberedListItem.Children);
+		if (block.ToDo?.Children) childBlocks.push(...block.ToDo.Children);
+		if (block.SyncedBlock?.Children) childBlocks.push(...block.SyncedBlock.Children);
+		if (block.Table?.Children) childBlocks.push(...block.Table.Children);
+
+		// Recurse into children
+		childBlocks.forEach(processBlock);
+
+		// Handle column lists specially
+		if (block.ColumnList?.Columns) {
+			block.ColumnList.Columns.forEach((column) => {
+				if (column.Children) {
+					column.Children.forEach(processBlock);
+				}
+			});
+		}
+
+		// Also process citations in footnote content blocks (if extracting citations)
+		if (options.extractCitations && block.Footnotes) {
+			block.Footnotes.forEach((footnote) => {
+				if (footnote.Content.Type === "blocks" && footnote.Content.Blocks) {
+					footnote.Content.Blocks.forEach(processBlock);
+				}
+			});
+		}
+	}
+
+	// Process all top-level blocks
+	blocks.forEach(processBlock);
+
+	// Post-processing for footnotes
+	let footnotes: Footnote[] = [];
+	if (options.extractFootnotes) {
+		// Remove duplicates based on Marker
+		const uniqueFootnotes = Array.from(new Map(allFootnotes.map((fn) => [fn.Marker, fn])).values());
+
+		// Sort by Index
+		uniqueFootnotes.sort((a, b) => {
+			if (a.Index && b.Index) {
+				return a.Index - b.Index;
+			}
+			return a.Marker.localeCompare(b.Marker);
+		});
+
+		footnotes = uniqueFootnotes;
+	}
+
+	// Post-processing for citations
+	let citations: Citation[] = [];
+	if (options.extractCitations) {
+		citations = Array.from(citationMap.values());
+		citations = prepareBibliography(citations, bibliographyStyle);
+	}
+
+	return {
+		footnotes,
+		citations,
+		interlinkedContent: allInterlinkedContent,
+	};
 }

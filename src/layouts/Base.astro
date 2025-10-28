@@ -26,15 +26,15 @@ const {
 			<slot />
 		</main>
 		<Footer />
-		<script src="../assets/scripts/print.ts"></script>
-		{ENABLE_LIGHTBOX && <script src="../assets/scripts/lightbox.ts" />}
-		<script src="../assets/scripts/popover.ts"></script>
+		<script src="../scripts/print.ts"></script>
+		{ENABLE_LIGHTBOX && <script src="../scripts/lightbox.ts" />}
+		<script src="../scripts/popover.ts"></script>
 		{
 			adjustedFootnotesConfig &&
 				adjustedFootnotesConfig["in-page-footnotes-settings"]?.["intext-display"]?.[
 					"small-popup-large-margin"
-				] && <script src="../assets/scripts/margin-notes.ts" />
+				] && <script src="../scripts/margin-notes.ts" />
 		}
-		<script src="../assets/scripts/datatables.ts"></script>
+		<script src="../scripts/datatables.ts"></script>
 	</body>
 </html>

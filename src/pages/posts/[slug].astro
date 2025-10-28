@@ -15,10 +15,12 @@ import {
 import { getAllPosts, getPostContentByPostId, processFileBlocks } from "@/lib/notion/client";
 import type { Post } from "@/lib/interfaces";
 import { buildHeadings } from "@/utils";
-import { LAST_BUILD_TIME } from "@/constants";
+import { LAST_BUILD_TIME, CITATIONS } from "@/constants";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 import type { Block } from "@/lib/interfaces";
 import FootnotesSection from "@/components/blog/FootnotesSection.astro";
+import BibliographySection from "@/components/blog/BibliographySection.astro";
+import CiteThisPage from "@/components/blog/CiteThisPage.astro";
 
 export async function getStaticPaths() {
 	const posts = await getAllPosts();
@@ -102,12 +104,14 @@ if (postFound) {
 }
 
 let footnotesInPage = null;
+let citationsInPage = null;
 
 if (postFound) {
 	const result = await getPostContentByPostId(post);
 	blocks = result.blocks;
 	interlinkedContentInPage = result.interlinkedContentInPage;
 	footnotesInPage = result.footnotesInPage;
+	citationsInPage = result.citationsInPage;
 	// Use cached headings if available, otherwise build and save them
 	if (cachedHeadings) {
 		headings = cachedHeadings;
@@ -159,6 +163,14 @@ if (postFound) {
 								"generate-footnotes-section"
 							] &&
 							footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
+						{/* Bibliography section */}
+						{CITATIONS?.["extract-and-process-bibtex-citations"]?.[
+							"generate-bibliography-section"
+						] &&
+							citationsInPage &&
+							citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}
+						{/* Cite This Page section */}
+						{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post} />}
 					</>
 				)}
 			</div>

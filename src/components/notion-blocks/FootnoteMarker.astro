@@ -59,7 +59,7 @@ const displaySymbol =
 						data-footnote-id={uniqueId}
 						data-popover-target={`popover-${uniqueId}`}
 						data-popover-placement="bottom-start"
-						class="text-quote/60 hover:text-quote cursor-pointer font-mono text-xs transition-opacity"
+						class="text-quote cursor-pointer font-mono text-xs"
 						aria-label={`Show footnote ${displaySymbol}`}
 						role="button"
 						tabindex="0"
@@ -104,9 +104,9 @@ const displaySymbol =
 					data-popover
 					id={`popover-${uniqueId}`}
 					role="tooltip"
-					class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-md rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
+					class="popoverEl border-accent-2/20 bg-popover-bg/95 text-textColor/80 invisible absolute z-40 hidden inline-block w-72 rounded-lg border text-sm opacity-0 shadow-xs backdrop-blur-sm transition-opacity duration-300"
 				>
-					<div class="space-y-2 p-2">
+					<div class="space-y-2 p-3">
 						{footnote.Content.Type === "rich_text" && footnote.Content.RichTexts && (
 							<div class="footnote-content">
 								{footnote.Content.RichTexts.map((rt) => (
@@ -141,6 +141,7 @@ const displaySymbol =
 									)}
 							</div>
 						)}
+						<span data-popover-link>{""}</span>
 					</div>
 				</div>
 			</template>

@@ -25,6 +25,7 @@ import {
 	RECENT_POSTS_ON_HOME_PAGE,
 	LAST_BUILD_TIME,
 	BUILD_FOLDER_PATHS,
+	CITATIONS,
 } from "@/constants";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import Icon from "@/components/Icon.astro";
@@ -35,6 +36,8 @@ import path from "path";
 import superjson from "superjson";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 import FootnotesSection from "@/components/blog/FootnotesSection.astro";
+import BibliographySection from "@/components/blog/BibliographySection.astro";
+import CiteThisPage from "@/components/blog/CiteThisPage.astro";
 
 export async function getStaticPaths() {
 	const pages = await getAllPages();
@@ -101,6 +104,7 @@ let blocks = null;
 let interlinkedContentInPage = null;
 let headings = null;
 let footnotesInPage = null;
+let citationsInPage = null;
 
 if (!page) {
 	console.log("Page not found");
@@ -138,6 +142,7 @@ if (pageFound) {
 	blocks = result.blocks;
 	interlinkedContentInPage = result.interlinkedContentInPage;
 	footnotesInPage = result.footnotesInPage;
+	citationsInPage = result.citationsInPage;
 
 	if (cachedHeadings) {
 		headings = cachedHeadings;
@@ -208,6 +213,14 @@ if (pageFound && page.Slug === HOME_PAGE_SLUG && RECENT_POSTS_ON_HOME_PAGE) {
 										"generate-footnotes-section"
 									] &&
 									footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
+								{/* Bibliography section */}
+								{CITATIONS?.["extract-and-process-bibtex-citations"]?.[
+									"generate-bibliography-section"
+								] &&
+									citationsInPage &&
+									citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}
+								{/* Cite This Page section */}
+								{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={page} />}
 							</div>
 						)}
 						{headings && !!headings.length && <TOC headings={headings} />}
@@ -256,7 +269,7 @@ if (pageFound && page.Slug === HOME_PAGE_SLUG && RECENT_POSTS_ON_HOME_PAGE) {
 				<Icon name={"to-top"} class="h-6 w-6" aria-label="Go Back to Top" stroke-linecap="round" />
 			</button>
 
-			<script src="../assets/scripts/to-top-btn.ts" />
+			<script src="../scripts/to-top-btn.ts" />
 		</>
 	)
 }

@@ -10,9 +10,9 @@
 		"lastBuildTimestampStore": "vC"
 	},
 	"scripts": {
-		"predev": "rm -rf buildcache && for folder in blocks-html-cache blocks-json-cache rss-cache; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
+		"predev": "rm -rf buildcache && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
 		"dev": "astro dev",
-		"prebuild-local": "rm -rf buildcache && for folder in blocks-html-cache blocks-json-cache rss-cache; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
+		"prebuild-local": "rm -rf buildcache && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
 		"build-local": "astro build",
 		"start": "astro dev",
 		"build": "rm -rf buildcache && astro build",
@@ -26,6 +26,9 @@
 		"@astrojs/partytown": "^2.1.4",
 		"@astrojs/rss": "^4.0.13",
 		"@atproto/api": "^0.13.19",
+		"@citation-js/core": "^0.7.14",
+		"@citation-js/plugin-bibtex": "^0.7.14",
+		"@citation-js/plugin-csl": "^0.7.14",
 		"@notionhq/client": "^5.0.0",
 		"astro": "^5.15.1",
 		"astro-robots-txt": "^1.0.0",

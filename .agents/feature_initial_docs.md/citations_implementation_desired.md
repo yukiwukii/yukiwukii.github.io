@@ -23,13 +23,6 @@
 				},
 				// If true, a collated bibliography section will be automatically generated at the bottom of the page.
 				"generate-bibliography-section": true,
-				// Defines how footnote markers are displayed within the text.
-				"intext-display": {
-					// If true, the formatted bibliography entry will always appear as a popup on click.
-					"always-popup": false,
-					// (Recommended) On large screens, displays formatted bibliography entry  in the margin. On smaller screens, it falls back to a popup.
-					"small-popup-large-margin": true,
-				},
 			},
 		},
 	```
@@ -127,14 +120,9 @@ The downloaded bib file would then be processed into the format decided and stor
 	* These days papers sometimes have 500 authors, in which case, let's cap it to max 8 authors then et al.
 	* If section is enabled in config, it would be rendered after interlinked content. Similar to interlinked content, add at [marker] [marker] where each marker is the backlink to the block which used the key for this formatted entry and will behave the same way (hover/click to show popover original block without reference).
 
-5. "intext-display": {
-					// If true, the formatted bibliography entry will always appear as a popup on click.
-					"always-popup": false,
-					// (Recommended) On large screens, displays formatted bibliography entry  in the margin. On smaller screens, it falls back to a popup.
-					"small-popup-large-margin": true,
-				},
-
-	If it is always-popup true, then every in-text citation would show the formatted entry as a popup on click. If small-popup-large-margin is true, then on large screens it would show in margin on hover and on small screens it would show as popup on click. The thing to note here is if there is a citation inside footnote content, we do process them too and in formatted entry backlink it links to the block which had the footnote marker or if margin is enabled and visible, then to the margin citation content.
-	Another thing to note is if margin is true, we need to find a way to work with margin.ts such that there are no overlaps in footnote arrangement and citation arrangement in margin. If margin is true and there is a citation in footnote content in margin, then we can insert the citation formatted entry below the footnote content in margin, I guess?
+The thing to note here is if there is a citation inside footnote content, we do process them too and in formatted entry backlink it links to the block which had the footnote marker or if margin is enabled and visible, then to the margin citation content.
 
 The section and processing will happen for the locations footnotes are added: src/pages/[...page].astro, src/pages/posts/[slug].astro and src/components/blog/PostPreviewFull.astro
+
+Moonshot:  when someone clicks jump to bibliography, add a button (similar to jump to top) but diff in a sense that clicking this button will jump to the
+block where they clicked jump to bibliography. how will you do it?

@@ -35,6 +35,7 @@ import buildTimestampRecorder from "./src/integrations/build-timestamp-recorder"
 import rssContentEnhancer from "./src/integrations/rss-content-enhancer";
 import CSSWriter from "./src/integrations/theme-constants-to-css";
 import createFoldersIfMissing from "./src/integrations/create-folders-if-missing";
+import citationsInitializer from "./src/integrations/citations-initializer";
 import robotsTxt from "astro-robots-txt";
 import partytown from "@astrojs/partytown";
 
@@ -80,6 +81,7 @@ export default defineConfig({
 	integrations: [
 		createFoldersIfMissing(),
 		buildTimestampRecorder(),
+		citationsInitializer(), // Initialize BibTeX cache after timestamp is recorded
 		EntryCacheEr(),
 		CustomIconDownloader(),
 		CSSWriter(),

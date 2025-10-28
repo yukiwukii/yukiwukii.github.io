@@ -11,9 +11,11 @@ import {
 } from "@/lib/blog-helpers";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import { getNotionColorToTailwindColor } from "@/lib/style-helpers";
-import { MENU_PAGES_COLLECTION, BUILD_FOLDER_PATHS } from "@/constants";
+import { MENU_PAGES_COLLECTION, BUILD_FOLDER_PATHS, CITATIONS } from "@/constants";
 import { adjustedFootnotesConfig } from "@/lib/notion/client";
 import FootnotesSection from "@/components/blog/FootnotesSection.astro";
+import BibliographySection from "@/components/blog/BibliographySection.astro";
+import CiteThisPage from "@/components/blog/CiteThisPage.astro";
 import Icon from "@/components/Icon.astro";
 import { buildHeadings, slugify } from "@/utils";
 import fs from "fs/promises";
@@ -35,7 +37,7 @@ const {
 	as: Tag = "div",
 	withDesc = false,
 } = Astro.props;
-const { blocks, interlinkedContentInPage, footnotesInPage } =
+const { blocks, interlinkedContentInPage, footnotesInPage, citationsInPage } =
 	await getPostContentByPostId(post_full_preview);
 
 // --- Headings Cache Handling ---
@@ -169,6 +171,12 @@ const postLink = getPostLink(
 				{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
 					adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.["generate-footnotes-section"] &&
 					footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
+				{/* Bibliography section */}
+				{CITATIONS?.["extract-and-process-bibtex-citations"]?.["generate-bibliography-section"] &&
+					citationsInPage &&
+					citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}
+				{/* Cite This Page section */}
+				{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post_full_preview} />}
 			</>
 		)
 	}
