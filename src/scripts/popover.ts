@@ -153,13 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		const selector = getPopoverSelector();
 		const triggerEl = event.target.closest(selector);
 
-		console.log("[POPOVER DEBUG] Click event:", {
-			target: event.target,
-			targetClass: event.target.className,
-			triggerEl: triggerEl,
-			triggerElId: triggerEl?.id,
-		});
-
 		if (triggerEl) {
 			const href = triggerEl.dataset.href;
 
@@ -175,24 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 
-		// Check for data-popover-link FIRST - these are intentional "close and navigate" links
 		const popoverLink = event.target.closest("[data-popover-link]");
 		if (popoverLink) {
-			console.log("[POPOVER DEBUG] Clicked data-popover-link:", popoverLink);
 			hideAllPopovers(-1);
-			return;
-		}
-
-		// Then check if click is inside a popover - allow interaction without closing
-		const insidePopover = event.target.closest("[data-popover]");
-		if (insidePopover) {
-			console.log("[POPOVER DEBUG] Clicked inside popover:", insidePopover.id);
-			return;
-		}
-
-		// Finally, close popovers for clicks outside
-		if (!triggerEl) {
-			console.log("[POPOVER DEBUG] Clicked outside, closing all popovers");
+		} else if (!triggerEl) {
 			hideAllPopovers(-1);
 		}
 	});
