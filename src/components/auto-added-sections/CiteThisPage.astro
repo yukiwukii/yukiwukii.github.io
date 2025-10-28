@@ -3,7 +3,7 @@ import type { Post } from "@/lib/interfaces";
 import { siteInfo } from "@/siteInfo";
 import { getPostLink } from "@/lib/blog-helpers";
 import { MENU_PAGES_COLLECTION } from "@/constants";
-import Icon from "@/components/Icon.astro";
+import Icon from "@/components/ui/Icon.astro";
 
 export interface Props {
 	post: Post;
@@ -165,8 +165,4 @@ const citeThisPageHeaderStyles = `
 				class="overflow-x-auto rounded-sm bg-gray-100 p-4 font-mono text-sm dark:bg-gray-800"><code>{bibtexEntry}</code></pre>
 		</div>
 	</div>
-
-	<p class="text-textColor/70 mt-2 text-xs">
-		Use this BibTeX entry to cite this page in your academic work.
-	</p>
 </section>
