@@ -1,5 +1,4 @@
 import { getDataSource } from "@/lib/notion/client";
-// import { getNavLink, getSite } from "@/lib/blog-helpers";
 import type { SiteConfig } from "@/types";
 import { AUTHOR, WEBMENTION_LINK, HOME_PAGE_SLUG } from "@/constants";
 

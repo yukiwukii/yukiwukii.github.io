@@ -61,9 +61,6 @@ export function setTrackCurrentPageId(pageId: string) {
 	track_current_page_id = pageId;
 	return true;
 }
-export function getTrackCurrentPageId() {
-	return track_current_page_id;
-}
 
 export const filePath = (url: URL): string => {
 	const [dir, filename] = url.pathname.split("/").slice(-2);

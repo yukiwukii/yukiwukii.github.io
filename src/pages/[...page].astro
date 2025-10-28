@@ -209,18 +209,21 @@ if (pageFound && page.Slug === HOME_PAGE_SLUG && RECENT_POSTS_ON_HOME_PAGE) {
 							<div class="post-body" data-html-type="new">
 								<NotionBlocks blocks={blocks} />
 								{/* Cite This Page section */}
-																{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={page} />}
-																{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
-																	adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.[ 
-																		"generate-footnotes-section"
-																	] &&
-																	footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
-																{/* Bibliography section */}
-																{CITATIONS?.["extract-and-process-bibtex-citations"]?.[ 
-																	"generate-bibliography-section"
-																] &&
-																	citationsInPage &&
-																	citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}							</div>
+								{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={page} />}
+								{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
+									adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.[
+										"generate-footnotes-section"
+									] &&
+									footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
+								{/* Bibliography section */}
+								{CITATIONS?.["extract-and-process-bibtex-citations"]?.[
+									"generate-bibliography-section"
+								] &&
+									citationsInPage &&
+									citationsInPage.length > 0 && (
+										<BibliographySection citations={citationsInPage} />
+									)}{" "}
+							</div>
 						)}
 						{headings && !!headings.length && <TOC headings={headings} />}
 					</article>

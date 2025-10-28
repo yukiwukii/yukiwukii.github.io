@@ -22,11 +22,7 @@ import {
 	BIBLIOGRAPHY_STYLE,
 } from "../../constants";
 import { extractFootnotesFromBlockAsync } from "../../lib/footnotes";
-import {
-	parseBibTeXFiles,
-	extractCitationsFromBlock,
-	prepareBibliography,
-} from "../../lib/citations";
+import { extractCitationsFromBlock } from "../../lib/citations";
 import type * as responses from "@/lib/notion/responses";
 import type * as requestParams from "@/lib/notion/request-params";
 import type {

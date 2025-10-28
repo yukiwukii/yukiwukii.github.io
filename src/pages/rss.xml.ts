@@ -1,5 +1,4 @@
 import rss from "@astrojs/rss";
-// import { siteConfig } from "@/site-config";
 import { getAllPosts, getDataSource } from "@/lib/notion/client";
 import { getPostLink } from "@/lib/blog-helpers";
 import { HIDE_UNDERSCORE_SLUGS_IN_LISTS, AUTHOR } from "@/constants";

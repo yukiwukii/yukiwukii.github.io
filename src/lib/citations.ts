@@ -31,7 +31,6 @@ import type {
 	BibSourceInfo,
 	BibFileMeta,
 	CitationExtractionResult,
-	RichTextLocation,
 } from "./interfaces";
 import { getAllRichTextLocations, cloneRichText, joinPlainText } from "./footnotes";
 import { BUILD_FOLDER_PATHS, LAST_BUILD_TIME } from "../constants";
@@ -449,11 +448,7 @@ export function formatCitation(
 	// Get year
 	const year = entry.issued?.["date-parts"]?.[0]?.[0]?.toString() || entry.year || "n.d.";
 
-	// Get authors for IN-TEXT citation (APA rules)
-	// - 1 author: Smith
-	// - 2 authors: Smith & Jones
-	// - 3+ authors: Smith et al.
-	// Note: The bibliography entry (FormattedEntry) will have full author list via citation-js
+	// Get authors
 	let authors = "Unknown";
 	if (entry.author && entry.author.length > 0) {
 		const authorList = entry.author;
@@ -463,9 +458,23 @@ export function formatCitation(
 		} else if (authorList.length === 2) {
 			authors = `${authorList[0].family || authorList[0].literal} & ${authorList[1].family || authorList[1].literal}`;
 		} else {
-			// 3+ authors: Only show first author + "et al." for in-text citation (APA style)
-			const firstAuthor = authorList[0].family || authorList[0].literal;
-			authors = `${firstAuthor} et al.`;
+			// Cap at 8 authors, then "et al."
+			const displayCount = Math.min(8, authorList.length);
+			if (authorList.length > 8) {
+				const firstAuthors = authorList
+					.slice(0, displayCount)
+					.map((a: any) => a.family || a.literal)
+					.join(", ");
+				authors = `${firstAuthors}, et al.`;
+			} else {
+				const allButLast = authorList
+					.slice(0, -1)
+					.map((a: any) => a.family || a.literal)
+					.join(", ");
+				const last =
+					authorList[authorList.length - 1].family || authorList[authorList.length - 1].literal;
+				authors = `${allButLast} & ${last}`;
+			}
 		}
 	}
 
