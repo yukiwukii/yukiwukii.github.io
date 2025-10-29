@@ -47,9 +47,9 @@ Acknowledgments: Thanks to [Astro Cactus](https://github.com/chrismwilliams/astr
 - **API request output caching on Github Actions for fast build times**
 - **Mini blog streams (idea copied from [Linus’s stream](https://stream.thesephist.com/))**
 - **Auto-generated related content and pages that link to this page**
-- **Pretty looking wikipedia like popups on hover that works with links to any block on any page.**
+- **Pretty looking wikipedia like popovers on hover that works with links to any block on any page.**
 - **Floating Table of Contents**
-- **Footnotes support**
+- **Footnotes and citation support**
 
 ## Demo
 

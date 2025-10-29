@@ -16,8 +16,8 @@ const config = adjustedFootnotesConfig?.["in-page-footnotes-settings"];
 const displayMode = config?.["intext-display"];
 
 // Determine display mode
-const isAlwaysPopup = displayMode?.["always-popup"] === true;
-const isMarginMode = displayMode?.["small-popup-large-margin"] === true;
+const isAlwaysPopover = displayMode?.["always-popover"] === true;
+const isMarginMode = displayMode?.["small-popover-large-margin"] === true;
 
 // Get the footnote marker reference (e.g., "ft_a")
 const footnoteRef = richText.FootnoteRef;
@@ -32,10 +32,10 @@ if (block.Footnotes && footnoteRef) {
 const uniqueId = `footnote-${block.Id}-${footnoteRef}`;
 
 // Determine what symbol to display:
-// - Use † ONLY when always-popup is true AND generate-footnotes-section is false
+// - Use † ONLY when always-popover is true AND generate-footnotes-section is false
 // - Otherwise use sequential numbers [1], [2], etc.
 const generateSection = config?.["generate-footnotes-section"];
-const useNumbering = generateSection || isMarginMode || !isAlwaysPopup;
+const useNumbering = generateSection || isMarginMode || !isAlwaysPopover;
 const displaySymbol =
 	useNumbering && footnote?.Index ? `[${numberToAlphabet(footnote.Index)}]` : "[†]";
 ---
@@ -48,8 +48,8 @@ const displaySymbol =
 		</span>
 	) : (
 		<>
-			{/* Render footnote marker with appropriate attributes for popup or margin mode */}
-			{isAlwaysPopup ? (
+			{/* Render footnote marker with appropriate attributes for popover or margin mode */}
+			{isAlwaysPopover ? (
 				<span class="text-link decoration-accent-2/40 underline decoration-dotted underline-offset-2">
 					<span
 						data-popover-target={`popover-description-${uniqueId}`}

@@ -242,10 +242,10 @@
 				"generate-footnotes-section": true,
 				// Defines how footnote markers are displayed within the text.
 				"intext-display": {
-					// If true, footnotes will always appear as a popup on click.
-					"always-popup": false,
-					// (Recommended) On large screens, displays footnotes in the margin. On smaller screens, it falls back to a popup.
-					"small-popup-large-margin": true,
+					// If true, footnotes will always appear as a popover on click.
+					"always-popover": false,
+					// (Recommended) On large screens, displays footnotes in the margin. On smaller screens, it falls back to a popover.
+					"small-popover-large-margin": true,
 				},
 			},
 		},
