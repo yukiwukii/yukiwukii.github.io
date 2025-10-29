@@ -482,12 +482,24 @@ export interface RichTextLocation {
 export interface Citation {
 	Key: string; // e.g., "smith2020"
 	Index?: number; // Sequential index for IEEE style (1, 2, 3...)
-	FormattedEntry: string; // HTML formatted bibliography entry
+	FormattedEntry: string; // HTML formatted bibliography entry (dynamically selected based on style)
 	Authors: string; // "Smith et al." or "Smith, J."
 	Year: string; // "2020"
 	SourceBlockIds: string[]; // ARRAY of all block IDs where this key appears
 	SourceBlocks?: Block[]; // ARRAY of actual Block objects where this key appears (like interlinked content)
 	FirstAppearanceIndex?: number; // Order of first occurrence in document
+}
+
+/**
+ * Parsed and formatted citation entry stored in cache
+ * This is the minimal data we need for each citation
+ */
+export interface ParsedCitationEntry {
+	key: string; // Citation key (e.g., "smith2020")
+	authors: string; // Formatted authors string
+	year: string; // Publication year
+	ieee_formatted: string; // HTML formatted entry in IEEE style
+	apa_formatted: string; // HTML formatted entry in APA style
 }
 
 /**
@@ -529,6 +541,7 @@ export interface BibFileMeta {
 	last_updated: string | null;
 	entry_count: number;
 	last_fetched: string; // ISO timestamp
+	parsed_file: string; // Filename of the parsed_{md5}.json file
 }
 
 /**

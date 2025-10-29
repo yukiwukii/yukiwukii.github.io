@@ -31,6 +31,7 @@ import type {
 	BibSourceInfo,
 	BibFileMeta,
 	CitationExtractionResult,
+	ParsedCitationEntry,
 } from "./interfaces";
 import { getAllRichTextLocations, cloneRichText, joinPlainText } from "./footnotes";
 import { BUILD_FOLDER_PATHS, LAST_BUILD_TIME } from "../constants";
@@ -254,9 +255,10 @@ export async function fetchBibTeXFile(url: string): Promise<string> {
 		}
 	}
 
-	// Return cached content if we don't need to refetch
+	// Return success if we don't need to refetch (parsed file already exists)
 	if (!shouldRefetch && existingMeta) {
-		return fs.readFileSync(bibFilePath, "utf-8");
+		console.log(`Using cached parsed citations for ${url}`);
+		return "cached"; // We don't need the raw content anymore
 	}
 
 	// Fetch from remote
@@ -265,14 +267,17 @@ export async function fetchBibTeXFile(url: string): Promise<string> {
 		const response = await axios.get(sourceInfo.download_url, { timeout: 10000 });
 		const content = response.data;
 
-		// Parse to count entries
+		// Parse and format citations immediately
 		let entryCount = 0;
 		let remoteLastUpdated: string | null = null;
 		try {
-			const parsed = new Cite(content);
-			entryCount = parsed.data.length;
+			const parsedCitations = parseAndFormatBibTeXContent(content);
+			entryCount = parsedCitations.size;
+
+			// Save parsed citations to parsed_{urlHash}.json
+			saveParsedCitations(urlHash, parsedCitations);
 		} catch (error) {
-			console.warn(`Failed to parse BibTeX from ${url}, but saving anyway:`, error);
+			console.warn(`Failed to parse and format BibTeX from ${url}:`, error);
 		}
 
 		// Get remote timestamp if available
@@ -280,40 +285,166 @@ export async function fetchBibTeXFile(url: string): Promise<string> {
 			remoteLastUpdated = await getGitHubLastUpdated(sourceInfo.updated_url);
 		}
 
-		// Save to cache
-		fs.writeFileSync(bibFilePath, content, "utf-8");
+		// Save metadata
 		const meta: BibFileMeta = {
 			url: url,
 			last_updated: remoteLastUpdated,
 			entry_count: entryCount,
 			last_fetched: new Date().toISOString(),
+			parsed_file: `parsed_${urlHash}.json`,
 		};
 		fs.writeFileSync(metaFilePath, JSON.stringify(meta, null, 2), "utf-8");
 
 		// Update mapping file
 		updateBibFilesMapping(url, urlHash, sourceInfo.download_url);
 
-		console.log(`✓ Fetched and cached ${entryCount} entries from ${url}`);
-		return content;
+		console.log(`✓ Fetched, parsed, and cached ${entryCount} citations from ${url}`);
+		return "success";
 	} catch (error) {
 		console.error(`Failed to fetch BibTeX file from ${url}:`, error);
-		// Return cached content if fetch fails and we have cache
+		// Check if we have cached parsed citations as fallback
 		if (existingMeta) {
-			console.log(`Using cached version as fallback`);
-			return fs.readFileSync(bibFilePath, "utf-8");
+			const cachedParsed = loadParsedCitations(urlHash);
+			if (cachedParsed) {
+				console.log(`Using cached parsed citations as fallback`);
+				return "cached-fallback";
+			}
 		}
 		throw error;
 	}
 }
 
 // ============================================================================
-// BibTeX Parsing
+// BibTeX Parsing and Formatting
 // ============================================================================
+
+/**
+ * Parse BibTeX content and format each entry for both APA and IEEE styles
+ * Returns a Map of ParsedCitationEntry objects
+ */
+function parseAndFormatBibTeXContent(content: string): Map<string, ParsedCitationEntry> {
+	const parsed = new Cite(content);
+	const entries = new Map<string, ParsedCitationEntry>();
+
+	for (const entry of parsed.data) {
+		const key = entry.id || entry["citation-key"];
+		if (!key) continue;
+
+		// Extract year
+		const year = entry.issued?.["date-parts"]?.[0]?.[0]?.toString() || entry.year || "n.d.";
+
+		// Extract and format authors
+		let authors = "Unknown";
+		if (entry.author && entry.author.length > 0) {
+			const authorList = entry.author;
+			if (authorList.length === 1) {
+				const author = authorList[0];
+				authors = author.family || author.literal || "Unknown";
+			} else if (authorList.length === 2) {
+				authors = `${authorList[0].family || authorList[0].literal} & ${authorList[1].family || authorList[1].literal}`;
+			} else {
+				// Cap at 8 authors, then "et al."
+				const displayCount = Math.min(8, authorList.length);
+				if (authorList.length > 8) {
+					const firstAuthors = authorList
+						.slice(0, displayCount)
+						.map((a: any) => a.family || a.literal)
+						.join(", ");
+					authors = `${firstAuthors}, et al.`;
+				} else {
+					const allButLast = authorList
+						.slice(0, -1)
+						.map((a: any) => a.family || a.literal)
+						.join(", ");
+					const last =
+						authorList[authorList.length - 1].family || authorList[authorList.length - 1].literal;
+					authors = `${allButLast} & ${last}`;
+				}
+			}
+		}
+
+		// Format as IEEE
+		let ieeeFormatted = "";
+		try {
+			const cite = new Cite([entry]);
+			ieeeFormatted = cite.format("bibliography", {
+				format: "html",
+				template: "ieee",
+				lang: "en-US",
+			});
+			ieeeFormatted = ieeeFormatted.replace(/<div[^>]*>|<\/div>/g, "").trim();
+		} catch (error) {
+			console.warn(`Failed to format IEEE citation for ${key}:`, error);
+			const title = entry.title || "Untitled";
+			ieeeFormatted = `${authors} (${year}). ${title}.`;
+		}
+
+		// Format as APA
+		let apaFormatted = "";
+		try {
+			const cite = new Cite([entry]);
+			apaFormatted = cite.format("bibliography", {
+				format: "html",
+				template: "apa",
+				lang: "en-US",
+			});
+			apaFormatted = apaFormatted.replace(/<div[^>]*>|<\/div>/g, "").trim();
+		} catch (error) {
+			console.warn(`Failed to format APA citation for ${key}:`, error);
+			const title = entry.title || "Untitled";
+			apaFormatted = `${authors} (${year}). ${title}.`;
+		}
+
+		entries.set(key, {
+			key,
+			authors,
+			year,
+			ieee_formatted: ieeeFormatted,
+			apa_formatted: apaFormatted,
+		});
+	}
+
+	return entries;
+}
+
+/**
+ * Saves parsed citations to a file
+ */
+function saveParsedCitations(urlHash: string, entries: Map<string, ParsedCitationEntry>): void {
+	const cacheDir = BUILD_FOLDER_PATHS.bibFilesCache;
+	const parsedPath = path.join(cacheDir, `parsed_${urlHash}.json`);
+
+	const entriesObject = Object.fromEntries(entries);
+	fs.writeFileSync(parsedPath, JSON.stringify(entriesObject, null, 2), "utf-8");
+	console.log(`✓ Saved ${entries.size} parsed citations to parsed_${urlHash}.json`);
+}
+
+/**
+ * Loads parsed citations from a file
+ */
+function loadParsedCitations(urlHash: string): Map<string, ParsedCitationEntry> | null {
+	const cacheDir = BUILD_FOLDER_PATHS.bibFilesCache;
+	const parsedPath = path.join(cacheDir, `parsed_${urlHash}.json`);
+
+	if (!fs.existsSync(parsedPath)) {
+		return null;
+	}
+
+	try {
+		const content = fs.readFileSync(parsedPath, "utf-8");
+		const entriesObject = JSON.parse(content);
+		const entries = new Map<string, ParsedCitationEntry>(Object.entries(entriesObject));
+		return entries;
+	} catch (error) {
+		console.warn(`Failed to load parsed citations from parsed_${urlHash}.json:`, error);
+		return null;
+	}
+}
 
 /**
  * Saves combined BibTeX entries to cache
  */
-function saveCombinedEntries(entries: Map<string, any>): void {
+function saveCombinedEntries(entries: Map<string, ParsedCitationEntry>): void {
 	const cacheDir = BUILD_FOLDER_PATHS.bibFilesCache;
 	const combinedPath = path.join(cacheDir, "combined-entries.json");
 
@@ -328,7 +459,7 @@ function saveCombinedEntries(entries: Map<string, any>): void {
  * Loads combined BibTeX entries from cache
  * Returns null if cache doesn't exist or is invalid
  */
-function loadCombinedEntries(): Map<string, any> | null {
+function loadCombinedEntries(): Map<string, ParsedCitationEntry> | null {
 	const cacheDir = BUILD_FOLDER_PATHS.bibFilesCache;
 	const combinedPath = path.join(cacheDir, "combined-entries.json");
 
@@ -339,7 +470,7 @@ function loadCombinedEntries(): Map<string, any> | null {
 	try {
 		const content = fs.readFileSync(combinedPath, "utf-8");
 		const entriesObject = JSON.parse(content);
-		const entries = new Map<string, any>(Object.entries(entriesObject));
+		const entries = new Map<string, ParsedCitationEntry>(Object.entries(entriesObject));
 		console.log(`✓ Loaded ${entries.size} entries from combined cache`);
 		return entries;
 	} catch (error) {
@@ -349,75 +480,40 @@ function loadCombinedEntries(): Map<string, any> | null {
 }
 
 /**
- * Checks if any BibTeX source file has been updated since last parse
- */
-async function needsReparsing(urls: string[]): Promise<boolean> {
-	const cacheDir = BUILD_FOLDER_PATHS.bibFilesCache;
-	const combinedPath = path.join(cacheDir, "combined-entries.json");
-
-	// If combined cache doesn't exist, need to parse
-	if (!fs.existsSync(combinedPath)) {
-		return true;
-	}
-
-	// Check if any source file is newer than combined cache
-	const combinedStat = fs.statSync(combinedPath);
-	const combinedMtime = combinedStat.mtime;
-
-	for (const url of urls) {
-		const urlHash = crypto.createHash("md5").update(url).digest("hex");
-		const bibFilePath = path.join(cacheDir, `${urlHash}.bib`);
-
-		if (fs.existsSync(bibFilePath)) {
-			const bibStat = fs.statSync(bibFilePath);
-			if (bibStat.mtime > combinedMtime) {
-				console.log(`BibTeX file ${url} is newer than combined cache, reparsing...`);
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-/**
  * Parses multiple BibTeX files and merges into a single map
- * Uses combined cache if available and up-to-date
- * Returns Map<key, entry> where key is the citation key (e.g., "smith2020")
+ * Always recombines from individual parsed_{md5}.json files (fast operation)
+ * Returns Map<key, ParsedCitationEntry> where key is the citation key (e.g., "smith2020")
  */
-export async function parseBibTeXFiles(urls: string[]): Promise<Map<string, any>> {
-	// Try to load from combined cache first
-	const needsUpdate = await needsReparsing(urls);
-
-	if (!needsUpdate) {
-		const cached = loadCombinedEntries();
-		if (cached) {
-			return cached;
-		}
-	}
-
-	// Parse from individual .bib files
-	console.log("Parsing BibTeX files...");
-	const allEntries = new Map<string, any>();
+export async function parseBibTeXFiles(urls: string[]): Promise<Map<string, ParsedCitationEntry>> {
+	// Always combine from individual parsed_{md5}.json files
+	// This is a fast operation (just reading and merging JSON files)
+	console.log("Combining parsed BibTeX files...");
+	const allEntries = new Map<string, ParsedCitationEntry>();
 
 	for (const url of urls) {
 		try {
-			const content = await fetchBibTeXFile(url);
-			const parsed = new Cite(content);
+			// First, ensure the BibTeX file is fetched (this will create parsed_{md5}.json if needed)
+			await fetchBibTeXFile(url);
 
-			// Add each entry to map (later entries override earlier ones if same key)
-			for (const entry of parsed.data) {
-				const key = entry.id || entry["citation-key"];
-				if (key) {
+			// Now load the parsed citations
+			const urlHash = crypto.createHash("md5").update(url).digest("hex");
+			const parsedCitations = loadParsedCitations(urlHash);
+
+			if (parsedCitations) {
+				// Merge into allEntries (later entries override earlier ones if same key)
+				for (const [key, entry] of parsedCitations) {
 					allEntries.set(key, entry);
 				}
+				console.log(`  Added ${parsedCitations.size} citations from ${url}`);
+			} else {
+				console.warn(`  No parsed citations found for ${url} - file may need to be fetched`);
 			}
 		} catch (error) {
-			console.error(`Failed to parse BibTeX from ${url}:`, error);
+			console.error(`Failed to load citations from ${url}:`, error);
 		}
 	}
 
-	console.log(`\nTotal BibTeX entries loaded: ${allEntries.size}`);
+	console.log(`\nTotal unique citations loaded: ${allEntries.size}`);
 
 	// Save to combined cache
 	saveCombinedEntries(allEntries);
@@ -430,14 +526,14 @@ export async function parseBibTeXFiles(urls: string[]): Promise<Map<string, any>
 // ============================================================================
 
 /**
- * Formats a citation entry for display
+ * Formats a citation entry for display using pre-formatted data
  *
- * @param entry - Raw entry from citation-js
+ * @param entry - ParsedCitationEntry with pre-formatted bibliography
  * @param style - "apa" or "simplified-ieee"
  * @returns Object with formatted strings
  */
 export function formatCitation(
-	entry: any,
+	entry: ParsedCitationEntry,
 	style: "apa" | "simplified-ieee",
 ): {
 	inText: string;
@@ -445,77 +541,24 @@ export function formatCitation(
 	authors: string;
 	year: string;
 } {
-	// Get year
-	const year = entry.issued?.["date-parts"]?.[0]?.[0]?.toString() || entry.year || "n.d.";
-
-	// Get authors
-	let authors = "Unknown";
-	if (entry.author && entry.author.length > 0) {
-		const authorList = entry.author;
-		if (authorList.length === 1) {
-			const author = authorList[0];
-			authors = author.family || author.literal || "Unknown";
-		} else if (authorList.length === 2) {
-			authors = `${authorList[0].family || authorList[0].literal} & ${authorList[1].family || authorList[1].literal}`;
-		} else {
-			// Cap at 8 authors, then "et al."
-			const displayCount = Math.min(8, authorList.length);
-			if (authorList.length > 8) {
-				const firstAuthors = authorList
-					.slice(0, displayCount)
-					.map((a: any) => a.family || a.literal)
-					.join(", ");
-				authors = `${firstAuthors}, et al.`;
-			} else {
-				const allButLast = authorList
-					.slice(0, -1)
-					.map((a: any) => a.family || a.literal)
-					.join(", ");
-				const last =
-					authorList[authorList.length - 1].family || authorList[authorList.length - 1].literal;
-				authors = `${allButLast} & ${last}`;
-			}
-		}
-	}
-
-	// Format bibliography entry using citation-js
-	let bibliography = "";
-	try {
-		const cite = new Cite([entry]);
-		// Use CSL style
-		if (style === "apa") {
-			bibliography = cite.format("bibliography", {
-				format: "html",
-				template: "apa",
-				lang: "en-US",
-			});
-		} else {
-			// simplified-ieee
-			bibliography = cite.format("bibliography", {
-				format: "html",
-				template: "ieee",
-				lang: "en-US",
-			});
-		}
-		// Remove wrapping div if present
-		bibliography = bibliography.replace(/<div[^>]*>|<\/div>/g, "").trim();
-	} catch (error) {
-		console.warn(`Failed to format citation for ${entry.id}:`, error);
-		// Fallback formatting
-		const title = entry.title || "Untitled";
-		bibliography = `${authors} (${year}). ${title}.`;
-	}
+	// Select the appropriate pre-formatted bibliography
+	const bibliography = style === "apa" ? entry.apa_formatted : entry.ieee_formatted;
 
 	// In-text format
 	let inText = "";
 	if (style === "apa") {
-		inText = `${authors}, ${year}`;
+		inText = `${entry.authors}, ${entry.year}`;
 	} else {
 		// simplified-ieee uses numbers, but Index is assigned later
 		inText = "[?]"; // Placeholder, will be replaced with actual number
 	}
 
-	return { inText, bibliography, authors, year };
+	return {
+		inText,
+		bibliography,
+		authors: entry.authors,
+		year: entry.year,
+	};
 }
 
 // ============================================================================
@@ -584,7 +627,7 @@ function splitRichTextsAtCharPosition(
 export function extractCitationsFromBlock(
 	block: Block,
 	config: CitationsConfig,
-	bibEntries: Map<string, any>,
+	bibEntries: Map<string, ParsedCitationEntry>,
 ): CitationExtractionResult {
 	const citations: Citation[] = [];
 	const locations = getAllRichTextLocations(block);

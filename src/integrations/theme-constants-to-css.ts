@@ -338,7 +338,7 @@ ${createCssVariables("dark")}
   /* This prevents the padding from shifting surrounding text */
 }
 
-.footnote-margin-blocks> :nth-child(2) {
+.footnote-margin-note> :first-child > :nth-child(2) {
   display: inline !important;
   margin-top: 0 !important;
 }

@@ -21,7 +21,7 @@ import {
 	CITATIONS,
 	BIBLIOGRAPHY_STYLE,
 } from "../../constants";
-import { extractFootnotesFromBlockAsync } from "../../lib/footnotes";
+import { extractFootnotesFromBlock } from "../../lib/footnotes";
 import { extractCitationsFromBlock } from "../../lib/citations";
 import type * as responses from "@/lib/notion/responses";
 import type * as requestParams from "@/lib/notion/request-params";
@@ -68,6 +68,7 @@ import type {
 	InterlinkedContentInPage,
 	Footnote,
 	Citation,
+	ParsedCitationEntry,
 } from "@/lib/interfaces";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Client, APIResponseError } from "@notionhq/client";
@@ -107,7 +108,7 @@ let initializationPromise: Promise<void> | null = null;
 
 // Citations: Module-level cache for BibTeX entries
 // Now loaded from cache created by citations-initializer integration
-let bibEntriesCache: Map<string, any> | null = null;
+let bibEntriesCache: Map<string, ParsedCitationEntry> | null = null;
 
 /**
  * Initialize footnotes config once at module load
@@ -182,7 +183,7 @@ async function initializeFootnotesConfig(): Promise<void> {
  * Load BibTeX entries from cache (created by citations-initializer integration)
  * This is a lazy loader - only loads when first needed and caches the result
  */
-function getBibEntriesCache(): Map<string, any> {
+function getBibEntriesCache(): Map<string, ParsedCitationEntry> {
 	if (bibEntriesCache !== null) {
 		return bibEntriesCache;
 	}
@@ -200,7 +201,7 @@ function getBibEntriesCache(): Map<string, any> {
 		try {
 			const content = fs.readFileSync(combinedPath, "utf-8");
 			const entriesObject = JSON.parse(content);
-			bibEntriesCache = new Map<string, any>(Object.entries(entriesObject));
+			bibEntriesCache = new Map<string, ParsedCitationEntry>(Object.entries(entriesObject));
 		} catch (error) {
 			console.warn("Failed to load BibTeX cache from combined-entries.json:", error);
 			bibEntriesCache = new Map();
@@ -748,7 +749,7 @@ export async function getAllBlocksByBlockId(blockId: string): Promise<Block[]> {
 				adjustedFootnotesConfig &&
 				adjustedFootnotesConfig["in-page-footnotes-settings"]?.enabled
 			) {
-				const extractionResult = await extractFootnotesFromBlockAsync(
+				const extractionResult = await extractFootnotesFromBlock(
 					block,
 					adjustedFootnotesConfig,
 					client,

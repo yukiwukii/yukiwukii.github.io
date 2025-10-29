@@ -747,28 +747,6 @@ export interface PageContentExtractionResult {
 }
 
 /**
- * Extract footnotes from a block's Footnotes array
- * Simplified helper that just collects from block.Footnotes
- */
-function extractFootnotesFromBlock(block: Block): Footnote[] {
-	if (!block.Footnotes || block.Footnotes.length === 0) {
-		return [];
-	}
-	return block.Footnotes;
-}
-
-/**
- * Extract citations from a block's Citations array
- * Simplified helper that just collects from block.Citations
- */
-function extractCitationsFromBlock(block: Block): Citation[] {
-	if (!block.Citations || block.Citations.length === 0) {
-		return [];
-	}
-	return block.Citations;
-}
-
-/**
  * Unified extraction function that traverses the block tree ONCE
  * and collects footnotes, citations, and interlinked content
  */
@@ -798,9 +776,8 @@ export function extractPageContent(
 	 */
 	function processBlock(block: Block): void {
 		// 1. Extract and process footnotes
-		if (options.extractFootnotes) {
-			const blockFootnotes = extractFootnotesFromBlock(block);
-			blockFootnotes.forEach((footnote) => {
+		if (options.extractFootnotes && block.Footnotes && block.Footnotes.length > 0) {
+			block.Footnotes.forEach((footnote) => {
 				// Assign sequential index if not already assigned
 				if (!footnote.Index) {
 					footnote.Index = ++footnoteIndex;
@@ -815,9 +792,8 @@ export function extractPageContent(
 		}
 
 		// 2. Extract and process citations
-		if (options.extractCitations) {
-			const blockCitations = extractCitationsFromBlock(block);
-			blockCitations.forEach((citation) => {
+		if (options.extractCitations && block.Citations && block.Citations.length > 0) {
+			block.Citations.forEach((citation) => {
 				const key = citation.Key;
 
 				if (keyToIndex.has(key)) {

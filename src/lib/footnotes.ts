@@ -1028,52 +1028,16 @@ async function extractBlockCommentsFootnotes(
 // ============================================================================
 
 /**
- * Main entry point for extracting footnotes from a block (SYNCHRONOUS)
- * This handles end-of-block and start-of-child-blocks sources
+ * Extract footnotes from a block with support for all footnote sources
  *
- * Called from client.ts during block building
+ * Supports three modes based on configuration:
+ * - "end-of-block": Inline footnotes like ^[text]
+ * - "start-of-child-blocks": Child blocks as footnote content
+ * - "block-comments": Footnotes from Notion Comments API
  *
- * NOTE: block-comments source requires async (Comments API), so it's handled separately
+ * Called from client.ts during block fetching (getAllBlocksByBlockId)
  */
-export function extractFootnotesFromBlock(
-	block: Block,
-	config: FootnotesConfig,
-): FootnoteExtractionResult {
-	const source = getActiveSource(config);
-
-	switch (source) {
-		case "end-of-block":
-			return extractEndOfBlockFootnotes(block, config);
-		case "start-of-child-blocks":
-			return extractStartOfChildBlocksFootnotes(block, config);
-		case "block-comments":
-			// Block comments require async API calls, not supported in synchronous build
-			console.warn("block-comments source requires async processing and is not yet implemented");
-			return {
-				footnotes: [],
-				hasProcessedRichTexts: false,
-				hasProcessedChildren: false,
-			};
-		default:
-			return {
-				footnotes: [],
-				hasProcessedRichTexts: false,
-				hasProcessedChildren: false,
-			};
-	}
-}
-
-/**
- * Async version for extracting footnotes with block-comments support
- * Use this when you need Comments API integration
- *
- * NOTE: This requires async block building, which is not currently supported
- * in the synchronous _buildBlock function. To enable block-comments:
- * 1. Make _buildBlock async
- * 2. Update all callers to await _buildBlock()
- * 3. Replace extractFootnotesFromBlock with extractFootnotesFromBlockAsync in client.ts
- */
-export async function extractFootnotesFromBlockAsync(
+export async function extractFootnotesFromBlock(
 	block: Block,
 	config: FootnotesConfig,
 	notionClient?: any,
