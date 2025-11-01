@@ -7,10 +7,14 @@ document.addEventListener("DOMContentLoaded", function () {
 		script.onload = initDataTables;
 		document.head.appendChild(script);
 
-		// Load simple-datatables CSS
+		// Load simple-datatables CSS (non-blocking)
 		const link = document.createElement("link");
 		link.rel = "stylesheet";
 		link.href = "https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.min.css";
+		link.media = "print"; // Initially set to print to avoid blocking
+		link.onload = () => {
+			link.media = "all"; // Switch to all once loaded
+		};
 		document.head.appendChild(link);
 	}
 });

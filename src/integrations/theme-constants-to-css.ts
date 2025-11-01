@@ -30,18 +30,11 @@ export default (): AstroIntegration => ({
   name: "theme-constants-to-css",
   hooks: {
     "astro:build:start": async () => {
-      const defaultSans = 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
-      const defaultSerif = 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
-      const defaultMono = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-
-      const theme_config_font_fonts = key_value_from_json["theme"]["fontfamily-google-fonts"];
-      const sansFontName = theme_config_font_fonts?.["sans-font-name"] || "";
-      const serifFontName = theme_config_font_fonts?.["serif-font-name"] || "";
-      const monoFontName = theme_config_font_fonts?.["mono-font-name"] || "";
-
-      const fontSans = sansFontName ? `"${sansFontName}", ${defaultSans}` : defaultSans;
-      const fontSerif = serifFontName ? `"${serifFontName}", ${defaultSerif}` : defaultSerif;
-      const fontMono = monoFontName ? `"${monoFontName}", ${defaultMono}` : defaultMono;
+      // Use CSS variables that will be populated by Astro's Font API
+      // If Font API isn't configured, fall back to system fonts
+      const fontSans = "var(--font-sans, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif)";
+      const fontSerif = "var(--font-serif, ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif)";
+      const fontMono = "var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace)";
 
       const customColors = {
         ngray: {

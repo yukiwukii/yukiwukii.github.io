@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"verbatimModuleSyntax": true,
-		"lib": ["DOM"],
+		"lib": ["DOM", "ES2021"],
 		"paths": {
 			"@/styles": ["src/styles/global.css"],
 			"@/*": ["src/*"],
