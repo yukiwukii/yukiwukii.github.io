@@ -381,9 +381,11 @@ export async function getAllEntries(): Promise<Post[]> {
 		params["start_cursor"] = res.next_cursor as string;
 	}
 
-	allEntriesCache = results
-		.filter((pageObject) => _validPageObject(pageObject))
-		.map((pageObject) => _buildPost(pageObject));
+	allEntriesCache = await Promise.all(
+		results
+			.filter((pageObject) => _validPageObject(pageObject))
+			.map((pageObject) => _buildPost(pageObject)),
+	);
 
 	allEntriesCache = allEntriesCache.sort(
 		(a, b) => new Date(b.Date).getTime() - new Date(a.Date).getTime(),
@@ -948,6 +950,16 @@ export function isConvImageType(filepath: string) {
 	return false;
 }
 
+// Helper function to check if an icon should be optimized to WebP
+// SVG icons are preserved in original format
+export function shouldOptimizeIcon(url: string): boolean {
+	const lowerUrl = url.toLowerCase();
+	if (lowerUrl.includes(".svg")) {
+		return false; // Preserve SVG
+	}
+	return isConvImageType(url); // Optimize PNG/JPG/JPEG
+}
+
 export async function downloadFile(
 	url: URL,
 	optimize_img: boolean = true,
@@ -1180,7 +1192,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "paragraph":
 			if (blockObject.paragraph) {
 				const paragraph: Paragraph = {
-					RichTexts: blockObject.paragraph.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.paragraph.rich_text.map(_buildRichText)),
 					Color: blockObject.paragraph.color,
 				};
 				block.Paragraph = paragraph;
@@ -1189,7 +1201,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "heading_1":
 			if (blockObject.heading_1) {
 				const heading1: Heading1 = {
-					RichTexts: blockObject.heading_1.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.heading_1.rich_text.map(_buildRichText)),
 					Color: blockObject.heading_1.color,
 					IsToggleable: blockObject.heading_1.is_toggleable,
 				};
@@ -1199,7 +1211,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "heading_2":
 			if (blockObject.heading_2) {
 				const heading2: Heading2 = {
-					RichTexts: blockObject.heading_2.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.heading_2.rich_text.map(_buildRichText)),
 					Color: blockObject.heading_2.color,
 					IsToggleable: blockObject.heading_2.is_toggleable,
 				};
@@ -1209,7 +1221,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "heading_3":
 			if (blockObject.heading_3) {
 				const heading3: Heading3 = {
-					RichTexts: blockObject.heading_3.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.heading_3.rich_text.map(_buildRichText)),
 					Color: blockObject.heading_3.color,
 					IsToggleable: blockObject.heading_3.is_toggleable,
 				};
@@ -1219,7 +1231,9 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "bulleted_list_item":
 			if (blockObject.bulleted_list_item) {
 				const bulletedListItem: BulletedListItem = {
-					RichTexts: blockObject.bulleted_list_item.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(
+						blockObject.bulleted_list_item.rich_text.map(_buildRichText),
+					),
 					Color: blockObject.bulleted_list_item.color,
 				};
 				block.BulletedListItem = bulletedListItem;
@@ -1228,7 +1242,9 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "numbered_list_item":
 			if (blockObject.numbered_list_item) {
 				const numberedListItem: NumberedListItem = {
-					RichTexts: blockObject.numbered_list_item.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(
+						blockObject.numbered_list_item.rich_text.map(_buildRichText),
+					),
 					Color: blockObject.numbered_list_item.color,
 				};
 				block.NumberedListItem = numberedListItem;
@@ -1237,7 +1253,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "to_do":
 			if (blockObject.to_do) {
 				const toDo: ToDo = {
-					RichTexts: blockObject.to_do.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.to_do.rich_text.map(_buildRichText)),
 					Checked: blockObject.to_do.checked,
 					Color: blockObject.to_do.color,
 				};
@@ -1247,7 +1263,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "video":
 			if (blockObject.video) {
 				const video: Video = {
-					Caption: blockObject.video.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.video.caption?.map(_buildRichText) || []),
 					Type: blockObject.video.type,
 				};
 				if (blockObject.video.type === "external" && blockObject.video.external) {
@@ -1266,7 +1282,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "image":
 			if (blockObject.image) {
 				const image: NImage = {
-					Caption: blockObject.image.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.image.caption?.map(_buildRichText) || []),
 					Type: blockObject.image.type,
 				};
 				if (blockObject.image.type === "external" && blockObject.image.external) {
@@ -1291,7 +1307,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "audio":
 			if (blockObject.audio) {
 				const audio: NAudio = {
-					Caption: blockObject.audio.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.audio.caption?.map(_buildRichText) || []),
 					Type: blockObject.audio.type,
 				};
 				if (blockObject.audio.type === "external" && blockObject.audio.external) {
@@ -1309,7 +1325,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "file":
 			if (blockObject.file) {
 				const file: File = {
-					Caption: blockObject.file.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.file.caption?.map(_buildRichText) || []),
 					Type: blockObject.file.type,
 				};
 				if (blockObject.file.type === "external" && blockObject.file.external) {
@@ -1327,8 +1343,8 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "code":
 			if (blockObject.code) {
 				const code: Code = {
-					Caption: blockObject.code.caption?.map(_buildRichText) || [],
-					RichTexts: blockObject.code.rich_text.map(_buildRichText),
+					Caption: await Promise.all(blockObject.code.caption?.map(_buildRichText) || []),
+					RichTexts: await Promise.all(blockObject.code.rich_text.map(_buildRichText)),
 					Language: blockObject.code.language,
 				};
 				block.Code = code;
@@ -1337,7 +1353,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "quote":
 			if (blockObject.quote) {
 				const quote: Quote = {
-					RichTexts: blockObject.quote.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.quote.rich_text.map(_buildRichText)),
 					Color: blockObject.quote.color,
 				};
 				block.Quote = quote;
@@ -1364,15 +1380,101 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 						blockObject.callout.icon.type === "external" &&
 						"external" in blockObject.callout.icon
 					) {
+						const iconUrl = blockObject.callout.icon.external?.url || "";
+						const shouldOptimize = shouldOptimizeIcon(iconUrl);
+						// Strip query parameters before changing extension
+						const urlWithoutQuery = iconUrl.split("?")[0];
+						const optimizedUrl =
+							shouldOptimize && OPTIMIZE_IMAGES
+								? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+								: iconUrl;
+
 						icon = {
 							Type: blockObject.callout.icon.type,
-							Url: blockObject.callout.icon.external?.url || "",
+							Url: iconUrl,
+							OptimizedUrl: optimizedUrl,
 						};
+
+						// Download icon if it doesn't exist
+						if (iconUrl) {
+							try {
+								const url = new URL(iconUrl);
+								const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+								if (!fs.existsSync(filepath)) {
+									await downloadFile(url, shouldOptimize);
+								}
+							} catch (err) {
+								console.log(`Error downloading callout icon: ${err}`);
+							}
+						}
+					} else if (
+						blockObject.callout.icon.type === "file" &&
+						"file" in blockObject.callout.icon
+					) {
+						const iconUrl = blockObject.callout.icon.file?.url || "";
+						const shouldOptimize = shouldOptimizeIcon(iconUrl);
+						// For file URLs, strip query parameters before changing extension
+						const urlWithoutQuery = iconUrl.split("?")[0];
+						const optimizedUrl =
+							shouldOptimize && OPTIMIZE_IMAGES
+								? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+								: iconUrl;
+
+						icon = {
+							Type: blockObject.callout.icon.type,
+							Url: iconUrl,
+							OptimizedUrl: optimizedUrl,
+							ExpiryTime: blockObject.callout.icon.file?.expiry_time,
+						};
+
+						// Download icon if it doesn't exist
+						if (iconUrl) {
+							try {
+								const url = new URL(iconUrl);
+								const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+								if (!fs.existsSync(filepath)) {
+									await downloadFile(url, shouldOptimize);
+								}
+							} catch (err) {
+								console.log(`Error downloading callout icon: ${err}`);
+							}
+						}
+					} else if (
+						blockObject.callout.icon.type === "custom_emoji" &&
+						"custom_emoji" in blockObject.callout.icon
+					) {
+						const emojiUrl = blockObject.callout.icon.custom_emoji?.url || "";
+						const shouldOptimize = shouldOptimizeIcon(emojiUrl);
+						// Strip query parameters before changing extension
+						const urlWithoutQuery = emojiUrl.split("?")[0];
+						const optimizedUrl =
+							shouldOptimize && OPTIMIZE_IMAGES
+								? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+								: emojiUrl;
+
+						icon = {
+							Type: "external", // Store as external type since it's a URL-based icon
+							Url: emojiUrl,
+							OptimizedUrl: optimizedUrl,
+						};
+
+						// Download custom emoji if it doesn't exist
+						if (emojiUrl) {
+							try {
+								const url = new URL(emojiUrl);
+								const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+								if (!fs.existsSync(filepath)) {
+									await downloadFile(url, shouldOptimize);
+								}
+							} catch (err) {
+								console.log(`Error downloading callout custom emoji: ${err}`);
+							}
+						}
 					}
 				}
 
 				const callout: Callout = {
-					RichTexts: blockObject.callout.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.callout.rich_text.map(_buildRichText)),
 					Icon: icon,
 					Color: blockObject.callout.color,
 				};
@@ -1397,7 +1499,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "toggle":
 			if (blockObject.toggle) {
 				const toggle: Toggle = {
-					RichTexts: blockObject.toggle.rich_text.map(_buildRichText),
+					RichTexts: await Promise.all(blockObject.toggle.rich_text.map(_buildRichText)),
 					Color: blockObject.toggle.color,
 					Children: [],
 				};
@@ -1407,7 +1509,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "embed":
 			if (blockObject.embed) {
 				const embed: Embed = {
-					Caption: blockObject.embed.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.embed.caption?.map(_buildRichText) || []),
 					Url: blockObject.embed.url,
 				};
 				block.Embed = embed;
@@ -1416,7 +1518,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "bookmark":
 			if (blockObject.bookmark) {
 				const bookmark: Bookmark = {
-					Caption: blockObject.bookmark.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.bookmark.caption?.map(_buildRichText) || []),
 					Url: blockObject.bookmark.url,
 				};
 				block.Bookmark = bookmark;
@@ -1425,7 +1527,7 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 		case "link_preview":
 			if (blockObject.link_preview) {
 				const linkPreview: LinkPreview = {
-					Caption: blockObject.link_preview.caption?.map(_buildRichText) || [],
+					Caption: await Promise.all(blockObject.link_preview.caption?.map(_buildRichText) || []),
 					Url: blockObject.link_preview.url,
 				};
 				block.LinkPreview = linkPreview;
@@ -1511,28 +1613,32 @@ async function _getTableRows(blockId: string): Promise<TableRow[]> {
 		params["start_cursor"] = res.next_cursor as string;
 	}
 
-	return results.map((blockObject) => {
-		const tableRow: TableRow = {
-			Id: blockObject.id,
-			Type: blockObject.type,
-			HasChildren: blockObject.has_children,
-			Cells: [],
-		};
+	return Promise.all(
+		results.map(async (blockObject) => {
+			const tableRow: TableRow = {
+				Id: blockObject.id,
+				Type: blockObject.type,
+				HasChildren: blockObject.has_children,
+				Cells: [],
+			};
 
-		if (blockObject.type === "table_row" && blockObject.table_row) {
-			const cells: TableCell[] = blockObject.table_row.cells.map((cell) => {
-				const tableCell: TableCell = {
-					RichTexts: cell.map(_buildRichText),
-				};
+			if (blockObject.type === "table_row" && blockObject.table_row) {
+				const cells: TableCell[] = await Promise.all(
+					blockObject.table_row.cells.map(async (cell) => {
+						const tableCell: TableCell = {
+							RichTexts: await Promise.all(cell.map(_buildRichText)),
+						};
 
-				return tableCell;
-			});
+						return tableCell;
+					}),
+				);
 
-			tableRow.Cells = cells;
-		}
+				tableRow.Cells = cells;
+			}
 
-		return tableRow;
-	});
+			return tableRow;
+		}),
+	);
 }
 
 async function _getColumns(blockId: string): Promise<Column[]> {
@@ -1610,8 +1716,11 @@ function _validPageObject(pageObject: responses.PageObject): boolean {
 	return !!prop.Page.title && prop.Page.title.length > 0;
 }
 
-function _buildPost(pageObject: responses.PageObject): Post {
+async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 	const prop = pageObject.properties;
+	const pageTitle = prop.Page?.title
+		? prop.Page.title.map((richText) => richText.plain_text).join("")
+		: "";
 
 	let icon: FileObject | Emoji | null = null;
 	if (pageObject.icon) {
@@ -1621,10 +1730,90 @@ function _buildPost(pageObject: responses.PageObject): Post {
 				Emoji: pageObject.icon.emoji,
 			};
 		} else if (pageObject.icon.type === "external" && "external" in pageObject.icon) {
+			const iconUrl = pageObject.icon.external?.url || "";
+			const shouldOptimize = shouldOptimizeIcon(iconUrl);
+			// Strip query parameters before changing extension
+			const urlWithoutQuery = iconUrl.split("?")[0];
+			const optimizedUrl =
+				shouldOptimize && OPTIMIZE_IMAGES
+					? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+					: iconUrl;
+
 			icon = {
 				Type: pageObject.icon.type,
-				Url: pageObject.icon.external?.url || "",
+				Url: iconUrl,
+				OptimizedUrl: optimizedUrl,
 			};
+
+			// Download icon if it doesn't exist
+			if (iconUrl) {
+				try {
+					const url = new URL(iconUrl);
+					const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+					if (!fs.existsSync(filepath)) {
+						await downloadFile(url, shouldOptimize);
+					}
+				} catch (err) {
+					console.log(`Error downloading page icon: ${err}`);
+				}
+			}
+		} else if (pageObject.icon.type === "file" && "file" in pageObject.icon) {
+			const iconUrl = pageObject.icon.file?.url || "";
+			const shouldOptimize = shouldOptimizeIcon(iconUrl);
+			// For file URLs, strip query parameters before changing extension
+			const urlWithoutQuery = iconUrl.split("?")[0];
+			const optimizedUrl =
+				shouldOptimize && OPTIMIZE_IMAGES
+					? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+					: iconUrl;
+
+			icon = {
+				Type: pageObject.icon.type,
+				Url: iconUrl,
+				OptimizedUrl: optimizedUrl,
+				ExpiryTime: pageObject.icon.file?.expiry_time,
+			};
+
+			// Download icon if it doesn't exist
+			if (iconUrl) {
+				try {
+					const url = new URL(iconUrl);
+					const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+					if (!fs.existsSync(filepath)) {
+						await downloadFile(url, shouldOptimize);
+					}
+				} catch (err) {
+					console.log(`Error downloading page icon: ${err}`);
+				}
+			}
+		} else if (pageObject.icon.type === "custom_emoji" && "custom_emoji" in pageObject.icon) {
+			const emojiUrl = pageObject.icon.custom_emoji?.url || "";
+			const shouldOptimize = shouldOptimizeIcon(emojiUrl);
+			// Strip query parameters before changing extension
+			const urlWithoutQuery = emojiUrl.split("?")[0];
+			const optimizedUrl =
+				shouldOptimize && OPTIMIZE_IMAGES
+					? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+					: emojiUrl;
+
+			icon = {
+				Type: "external", // Store as external type since it's a URL-based icon
+				Url: emojiUrl,
+				OptimizedUrl: optimizedUrl,
+			};
+
+			// Download custom emoji if it doesn't exist
+			if (emojiUrl) {
+				try {
+					const url = new URL(emojiUrl);
+					const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+					if (!fs.existsSync(filepath)) {
+						await downloadFile(url, shouldOptimize);
+					}
+				} catch (err) {
+					console.log(`Error downloading page custom emoji: ${err}`);
+				}
+			}
 		}
 	}
 
@@ -1682,7 +1871,7 @@ function _buildPost(pageObject: responses.PageObject): Post {
 	return post;
 }
 
-function _buildRichText(richTextObject: responses.RichTextObject): RichText {
+async function _buildRichText(richTextObject: responses.RichTextObject): Promise<RichText> {
 	const annotation: Annotation = {
 		Bold: richTextObject.annotations.bold,
 		Italic: richTextObject.annotations.italic,
@@ -1781,10 +1970,33 @@ function _buildRichText(richTextObject: responses.RichTextObject): RichText {
 			richTextObject.mention.type === "custom_emoji" &&
 			richTextObject.mention.custom_emoji
 		) {
+			const emojiUrl = richTextObject.mention.custom_emoji.url || "";
+			const shouldOptimize = shouldOptimizeIcon(emojiUrl);
+			// Strip query parameters before changing extension
+			const urlWithoutQuery = emojiUrl.split("?")[0];
+			const optimizedUrl =
+				shouldOptimize && OPTIMIZE_IMAGES
+					? urlWithoutQuery.substring(0, urlWithoutQuery.lastIndexOf(".")) + ".webp"
+					: emojiUrl;
+
 			mention.CustomEmoji = {
 				Name: richTextObject.mention.custom_emoji.name,
-				Url: richTextObject.mention.custom_emoji.url,
+				Url: emojiUrl,
+				OptimizedUrl: optimizedUrl,
 			};
+
+			// Download custom emoji if it doesn't exist
+			if (emojiUrl) {
+				try {
+					const url = new URL(emojiUrl);
+					const filepath = generateFilePath(url, shouldOptimize && OPTIMIZE_IMAGES);
+					if (!fs.existsSync(filepath)) {
+						await downloadFile(url, shouldOptimize);
+					}
+				} catch (err) {
+					console.log(`Error downloading custom emoji: ${err}`);
+				}
+			}
 		}
 
 		richText.Mention = mention;

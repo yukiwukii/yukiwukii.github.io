@@ -65,13 +65,11 @@ export function setTrackCurrentPageId(pageId: string) {
 export const filePath = (url: URL): string => {
 	const [dir, filename] = url.pathname.split("/").slice(-2);
 	return path.join(BASE_PATH, `/notion/${dir}/${filename}`);
-	// return path.join(BASE_PATH, `./src/notion-assets/${dir}/${filename}`);
 };
 
 export const buildTimeFilePath = (url: URL): string => {
 	const [dir, filename] = url.pathname.split("/").slice(-2);
 	return `/notion/${dir}/${filename}`;
-	// return path.join(BASE_PATH, `./src/notion-assets/${dir}/${filename}`);
 };
 
 export function getInterlinkedContentInPage(entryId: string) {

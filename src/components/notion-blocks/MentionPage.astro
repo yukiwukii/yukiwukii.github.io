@@ -1,7 +1,7 @@
 ---
 import { type Post } from "@/lib/interfaces.ts";
 import { getPostByPageId } from "@/lib/notion/client";
-import { getPostLink } from "@/lib/blog-helpers.ts";
+import { getPostLink, filePath } from "@/lib/blog-helpers.ts";
 import { MENU_PAGES_COLLECTION } from "@/constants";
 import { getIconTailwindFilterStyle } from "@/utils/style-helpers";
 import Icon from "@/components/ui/Icon.astro";
@@ -18,6 +18,15 @@ if (pageId) {
 }
 
 const hreflink = post ? getPostLink(post.Slug, post.Collection === MENU_PAGES_COLLECTION) : null;
+
+const iconPath =
+	post?.Icon && (post.Icon.Type === "external" || post.Icon.Type === "file") && post.Icon.Url
+		? filePath(
+				new URL(
+					(post.Icon as import("@/lib/interfaces.ts").FileObject).OptimizedUrl || post.Icon.Url,
+				),
+			)
+		: null;
 ---
 
 {
@@ -27,9 +36,9 @@ const hreflink = post ? getPostLink(post.Slug, post.Collection === MENU_PAGES_CO
 				<span class="mr-1 inline">
 					{post.Icon && post.Icon.Type === "emoji" ? (
 						post.Icon.Emoji
-					) : post.Icon && post.Icon.Type === "external" ? (
+					) : post.Icon && (post.Icon.Type === "external" || post.Icon.Type === "file") ? (
 						<img
-							src={post.Icon.Url}
+							src={iconPath}
 							class={`no-rss inline h-4 w-4 shrink-0 align-sub ${getIconTailwindFilterStyle(post.Icon.Url)}`}
 							alt=""
 						/>

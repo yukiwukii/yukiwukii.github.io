@@ -1,6 +1,7 @@
 ---
 import * as interfaces from "@/lib/interfaces.ts";
 import { getNotionColorToTailwindColor, getIconTailwindFilterStyle } from "@/utils/style-helpers";
+import { filePath } from "@/lib/blog-helpers.ts";
 import RichText from "@/components/notion-blocks/RichText.astro";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 
@@ -12,6 +13,17 @@ export interface Props {
 
 const { block, renderChildren = true, setId = true } = Astro.props;
 const hasRichTexts = block.Callout && block.Callout.RichTexts && block.Callout.RichTexts.length > 0;
+const iconPath =
+	block.Callout?.Icon &&
+	(block.Callout.Icon.Type === "external" || block.Callout.Icon.Type === "file") &&
+	block.Callout.Icon.Url
+		? filePath(
+				new URL(
+					(block.Callout.Icon as import("@/lib/interfaces.ts").FileObject).OptimizedUrl ||
+						block.Callout.Icon.Url,
+				),
+			)
+		: null;
 ---
 
 <div
@@ -30,9 +42,9 @@ const hasRichTexts = block.Callout && block.Callout.RichTexts && block.Callout.R
 			<div class="m-0 mr-2 leading-6">
 				{block.Callout.Icon.Type === "emoji" ? (
 					block.Callout.Icon.Emoji
-				) : block.Callout.Icon.Type === "external" ? (
+				) : block.Callout.Icon.Type === "external" || block.Callout.Icon.Type === "file" ? (
 					<img
-						src={block.Callout.Icon.Url}
+						src={iconPath}
 						class={`no-rss h-5 w-5 max-w-none ${getIconTailwindFilterStyle(block.Callout.Icon.Url)}`}
 						alt=""
 					/>

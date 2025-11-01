@@ -333,6 +333,7 @@ export interface LinkMention {
 export interface CustomEmojiMention {
 	Name: string;
 	Url?: string;
+	OptimizedUrl?: string;
 }
 
 export interface InterlinkedContent {

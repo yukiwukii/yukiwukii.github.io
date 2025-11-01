@@ -1,5 +1,6 @@
 ---
 import type { Mention } from "@/lib/interfaces.ts";
+import { filePath } from "@/lib/blog-helpers.ts";
 
 export interface Props {
 	mention: Mention;
@@ -11,15 +12,17 @@ if (!mention.CustomEmoji) {
 	return null;
 }
 
-const { Name, Url } = mention.CustomEmoji;
+const { Name, Url, OptimizedUrl } = mention.CustomEmoji;
 
 if (!Url) {
 	return null;
 }
+
+const iconPath = filePath(new URL(OptimizedUrl || Url));
 ---
 
 <img
-	src={Url}
+	src={iconPath}
 	alt={`custom emoji with name ${Name}`}
 	aria-label={`custom emoji with name ${Name}`}
 	class="no-rss mb-0.5 inline h-4 w-4 object-contain align-sub text-transparent"

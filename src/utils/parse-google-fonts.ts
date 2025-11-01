@@ -104,15 +104,21 @@ export function parseGoogleFontsUrl(
 	});
 
 	// Validation: warn if configured fonts aren't found in URL
-	const foundFontNames = fonts.map(f => f.name);
+	const foundFontNames = fonts.map((f) => f.name);
 	if (sanitizedSans && !foundFontNames.includes(sanitizedSans)) {
-		console.warn(`⚠️  Font "${sanitizedSans}" specified in sans-font-name not found in Google Fonts URL`);
+		console.warn(
+			`⚠️  Font "${sanitizedSans}" specified in sans-font-name not found in Google Fonts URL`,
+		);
 	}
 	if (sanitizedSerif && !foundFontNames.includes(sanitizedSerif)) {
-		console.warn(`⚠️  Font "${sanitizedSerif}" specified in serif-font-name not found in Google Fonts URL`);
+		console.warn(
+			`⚠️  Font "${sanitizedSerif}" specified in serif-font-name not found in Google Fonts URL`,
+		);
 	}
 	if (sanitizedMono && !foundFontNames.includes(sanitizedMono)) {
-		console.warn(`⚠️  Font "${sanitizedMono}" specified in mono-font-name not found in Google Fonts URL`);
+		console.warn(
+			`⚠️  Font "${sanitizedMono}" specified in mono-font-name not found in Google Fonts URL`,
+		);
 	}
 
 	return fonts;
