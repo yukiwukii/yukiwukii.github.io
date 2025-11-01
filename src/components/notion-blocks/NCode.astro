@@ -262,7 +262,17 @@ const plainTextCaption = block.Code?.Caption.map((richText) => richText.PlainTex
 		</div>
 	)
 }
-<script>
-	import mermaid from "mermaid";
-	mermaid.initialize({ startOnLoad: true, theme: "base" });
-</script>
+{
+	language === "mermaid" && (
+		<script>
+			// Only load Mermaid after page load
+			window.addEventListener("load", () => {
+				import("mermaid").then((module) => {
+					const mermaid = module.default;
+					mermaid.initialize({ startOnLoad: false, theme: "base" });
+					mermaid.run();
+				});
+			});
+		</script>
+	)
+}
