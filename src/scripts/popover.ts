@@ -1,10 +1,21 @@
-document.addEventListener("DOMContentLoaded", async () => {
-	// Dynamically import floating-ui to avoid blocking initial page load
-	const { computePosition, offset, shift, flip, autoUpdate } = await import(
-		"https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.7.4/+esm"
-	);
-	// State variables for popovers
+window.addEventListener("load", function () {
+	// Load floating-ui core first, then dom
+	const coreScript = document.createElement("script");
+	coreScript.src = "https://cdn.jsdelivr.net/npm/@floating-ui/core@1.7.3";
+	coreScript.onload = function () {
+		// Load dom after core is loaded
+		const domScript = document.createElement("script");
+		domScript.src = "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.7.4";
+		domScript.onload = initPopovers;
+		document.head.appendChild(domScript);
+	};
+	document.head.appendChild(coreScript);
+});
 
+function initPopovers() {
+	const { computePosition, offset, shift, flip, autoUpdate } = window.FloatingUIDOM;
+
+	// State variables for popovers
 	const smBreakpointQuery = window.matchMedia("(max-width: 639px)");
 	const lgBreakpointQuery = window.matchMedia("(min-width: 1024px)");
 
@@ -182,4 +193,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 			hideAllPopovers(-1);
 		}
 	});
-});
+}

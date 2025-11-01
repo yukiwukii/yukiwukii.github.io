@@ -1,8 +1,13 @@
-window.addEventListener("load", async () => {
-	// Dynamically import GLightbox to avoid blocking initial page load
-	await import("https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js");
+window.addEventListener("load", function () {
+	// Load GLightbox script
+	const script = document.createElement("script");
+	script.src = "https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js";
+	script.onload = initLightbox;
+	document.head.appendChild(script);
+});
 
+function initLightbox() {
 	const lightbox = GLightbox({
 		selector: ".mediaglightbox, .fileglightbox, .embedglightbox",
 	});
-});
+}
