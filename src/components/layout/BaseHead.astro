@@ -54,11 +54,12 @@ const umamiSrc = isBuildOrPreviewMode
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
 
 {/* Astro Fonts - served locally from your domain */}
-{THEME?.["fontfamily-google-fonts"]?.["combined-url"] && (
+{THEME?.["fontfamily-google-fonts"] && (
 	<>
-		<Font cssVariable="--font-sans" preload />
-		{THEME?.["fontfamily-google-fonts"]?.["mono-font-name"] && <Font cssVariable="--font-mono" preload />}
-		{THEME?.["fontfamily-google-fonts"]?.["serif-font-name"] && <Font cssVariable="--font-serif" preload />}
+		{(THEME["fontfamily-google-fonts"]["sans-font-name"] || THEME["fontfamily-google-fonts"]["mono-font-name"]) && (
+			<Font cssVariable="--font-sans" preload />
+		)}
+		{THEME["fontfamily-google-fonts"]["mono-font-name"] && <Font cssVariable="--font-mono" preload />}
 	</>
 )}
 {

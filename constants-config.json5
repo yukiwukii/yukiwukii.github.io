@@ -75,13 +75,16 @@
 			},
 		},
 		"fontfamily-google-fonts": {
-			// Provide the single, combined URL from Google Fonts for all font families you want to use.
-			"combined-url": "https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap",
-			// Font family names must exactly match the name provided by Google Fonts.
+			// Just specify the font names - no URLs, no escaping needed!
+			// We automatically load weights [400, 500, 600, 700] and styles [normal, italic] for all fonts (it is fine if they are not available).
+
+			// Main body/UI font - can be a sans-serif OR serif typeface (e.g., "Roboto", "Merriweather", "Inter")
+			// If empty and mono-font-name is set, mono will be used for everything.
 			"sans-font-name": "Roboto",
-			"serif-font-name": "",
-			// Important: If a font name contains a space, you must escape it with two backslashes.
-			"mono-font-name": "Roboto\\ Mono",
+
+			// Monospace font for code blocks (e.g., "Fira Code", "JetBrains Mono")
+			// No need to escape spaces in font names!
+			"mono-font-name": "Roboto Mono",
 		},
 	},
 

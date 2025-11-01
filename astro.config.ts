@@ -36,7 +36,7 @@ import rssContentEnhancer from "./src/integrations/rss-content-enhancer";
 import CSSWriter from "./src/integrations/theme-constants-to-css";
 import createFoldersIfMissing from "./src/integrations/create-folders-if-missing";
 import citationsInitializer from "./src/integrations/citations-initializer";
-import { parseGoogleFontsUrl } from "./src/utils/parse-google-fonts";
+import { fontProviders } from "astro/config";
 import robotsTxt from "astro-robots-txt";
 import partytown from "@astrojs/partytown";
 
@@ -83,16 +83,61 @@ export default defineConfig({
 		fonts: (() => {
 			const fontConfig = key_value_from_json?.theme?.["fontfamily-google-fonts"];
 
-			if (!fontConfig?.["combined-url"]) {
+			if (!fontConfig) {
 				return [];
 			}
 
-			return parseGoogleFontsUrl(
-				fontConfig["combined-url"],
-				fontConfig["sans-font-name"],
-				fontConfig["serif-font-name"],
-				fontConfig["mono-font-name"],
-			);
+			const fonts = [];
+			// Standard weights and styles for all fonts
+			const weights = [400, 500, 600, 700];
+			const styles = ["normal", "italic"];
+
+			const sansFontName = fontConfig["sans-font-name"];
+			const monoFontName = fontConfig["mono-font-name"];
+
+			// Add main body/UI font (can be sans or serif typeface)
+			if (sansFontName) {
+				fonts.push({
+					provider: fontProviders.google(),
+					name: sansFontName,
+					cssVariable: "--font-sans",
+					weights,
+					styles,
+					fallbacks: ["sans-serif"],
+					optimizedFallbacks: true,
+					display: "swap",
+				});
+			}
+
+			// Add mono font
+			if (monoFontName) {
+				// If mono is the ONLY font set, also use it for body text (--font-sans)
+				if (!sansFontName) {
+					fonts.push({
+						provider: fontProviders.google(),
+						name: monoFontName,
+						cssVariable: "--font-sans",
+						weights,
+						styles,
+						fallbacks: ["monospace", "sans-serif"],
+						optimizedFallbacks: true,
+						display: "swap",
+					});
+				}
+				// Always add mono to --font-mono for code blocks
+				fonts.push({
+					provider: fontProviders.google(),
+					name: monoFontName,
+					cssVariable: "--font-mono",
+					weights,
+					styles,
+					fallbacks: ["monospace"],
+					optimizedFallbacks: true,
+					display: "swap",
+				});
+			}
+
+			return fonts;
 		})(),
 	},
 	integrations: [
