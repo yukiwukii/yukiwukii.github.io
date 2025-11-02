@@ -3,8 +3,6 @@ import satori, { type SatoriOptions } from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import { getFormattedDate } from "@/utils";
 import { buildTimeFilePath } from "@/lib/blog-helpers";
-
-//ADDITION
 import { getPostBySlug, getAllEntries, getAllTagsWithCounts } from "@/lib/notion/client";
 import { getCollectionsWDesc } from "@/utils";
 
@@ -32,53 +30,70 @@ const rgbToHex = (rgb: string): string =>
 const rgbToRgba = (rgb: string, alpha: number): string =>
 	`rgba(${rgb.split(" ").join(", ")}, ${alpha})`;
 
-async function getFont(
-	font_name: string,
+async function getFontFromGoogle(
+	fontName: string,
 	weight: number,
-	font_url: string,
-): Promise<SatoriOptions["fonts"]> {
-	// Remove '&display=swap' from the URL if it exists
-	const url = font_url.replace("&display=swap", "");
+): Promise<SatoriOptions["fonts"][0]> {
+	// Validate weight - must be between 100-900 and typically in increments of 100
+	// If invalid, default to 400 (regular) or closest valid weight
+	let validWeight = weight;
+	if (weight < 100 || weight > 900 || !Number.isFinite(weight)) {
+		console.warn(`Invalid font weight ${weight} for ${fontName}, defaulting to 400`);
+		validWeight = 400;
+	}
 
-	// Extract the first font weight from the URL
-	// const weight = parseInt(url.match(/wght@\d+/)?.[0]?.match(/\d+/)?.[0] || default_weight, 10);
+	// Build Google Fonts URL for specific font and weight
+	const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@${validWeight}&display=swap`;
 
-	const css = await fetch(url, {
+	// Fetch the CSS with a User-Agent that forces TTF (not WOFF2)
+	const css = await fetch(googleFontsUrl, {
 		headers: {
-			// Make sure it returns TTF.
+			// This User-Agent makes Google return TTF format which Satori supports
 			"User-Agent":
 				"Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1",
 		},
 	}).then((response) => response.text());
 
+	// Extract font URL from CSS
 	const match = css.match(/src: url\((.+)\) format\('(opentype|truetype)'\)/);
 	if (!match) {
-		throw new Error(`Failed to find font URL}`);
+		throw new Error(`Failed to find font URL for ${fontName} weight ${weight}`);
 	}
 
 	const fontUrl = match[1];
 
+	// Download the font file
 	const buffer = await fetch(fontUrl).then((response) => response.arrayBuffer());
 
-	return [
-		{
-			name: font_name,
-			style: "normal",
-			weight: weight,
-			data: buffer,
-		},
-	] as SatoriOptions["fonts"];
+	return {
+		name: fontName,
+		style: "normal",
+		weight: weight,
+		data: buffer,
+	};
 }
 
-const ogOptions: SatoriOptions = {
-	width: 1200,
-	height: 630,
-	// debug: true,
-	fonts: [
-		...(await getFont("title-font", 700, OG_SETUP["title-font-url"])),
-		...(await getFont("footnote-font", 500, OG_SETUP["footnote-font-url"])),
-	],
-};
+async function getOgFonts(): Promise<SatoriOptions["fonts"]> {
+	const titleFontName = OG_SETUP["title-font-name"];
+	const titleFontWeight = OG_SETUP["title-font-weight"] || 700;
+	const footnoteFontName = OG_SETUP["footnote-font-name"];
+	const footnoteFontWeight = OG_SETUP["footnote-font-weight"] || 700;
+
+	const fonts: SatoriOptions["fonts"] = [];
+
+	if (titleFontName) {
+		fonts.push(await getFontFromGoogle(titleFontName, titleFontWeight));
+	}
+
+	if (footnoteFontName) {
+		fonts.push(await getFontFromGoogle(footnoteFontName, footnoteFontWeight));
+	}
+
+	return fonts;
+}
+
+const titleFontFamily = OG_SETUP["title-font-name"] || "sans-serif";
+const footnoteFontFamily = OG_SETUP["footnote-font-name"] || "monospace";
 
 const og_images_colors = {
 	backgroundColor: THEME["colors"]["bg"]["light"]
@@ -194,7 +209,7 @@ const obj_img_sq_without_desc = function (
 							height: "100%",
 							width: "100%",
 							display: "flex",
-							fontFamily: "title-font",
+							fontFamily: titleFontFamily,
 						},
 						children: [
 							{
@@ -270,7 +285,7 @@ const obj_img_sq_without_desc = function (
 																			color: og_images_colors["titleColor"],
 																			flex: "1",
 																			display: "flex",
-																			fontFamily: "title-font",
+																			fontFamily: titleFontFamily,
 																		},
 																		children: title,
 																	},
@@ -286,7 +301,7 @@ const obj_img_sq_without_desc = function (
 																			flexDirection: "row",
 																			justifyContent: "space-between",
 																			alignItems: "center",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																		},
 																		children: [
 																			{
@@ -375,7 +390,7 @@ const obj_img_sq_with_desc = function (
 							height: "100%",
 							width: "100%",
 							display: "flex",
-							fontFamily: "title-font",
+							fontFamily: titleFontFamily,
 						},
 						children: [
 							{
@@ -451,7 +466,7 @@ const obj_img_sq_with_desc = function (
 																			color: og_images_colors["titleColor"],
 																			flex: "0.5",
 																			display: "flex",
-																			fontFamily: "title-font",
+																			fontFamily: titleFontFamily,
 																		},
 																		children: title,
 																	},
@@ -467,7 +482,7 @@ const obj_img_sq_with_desc = function (
 																			color: og_images_colors["descColor"],
 																			flex: "1",
 																			display: "flex",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																		},
 																		children: desc,
 																	},
@@ -483,7 +498,7 @@ const obj_img_sq_with_desc = function (
 																			flexDirection: "row",
 																			justifyContent: "space-between",
 																			alignItems: "center",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																		},
 																		children: [
 																			{
@@ -520,7 +535,7 @@ const obj_img_sq_with_desc = function (
 																							props: {
 																								style: {
 																									marginRight: "16px",
-																									fontFamily: "footnote-font",
+																									fontFamily: footnoteFontFamily,
 																								},
 																								children: author,
 																							},
@@ -574,7 +589,7 @@ const obj_img_none_without_desc = function (title: string, pubDate: string, auth
 							fontWeight: "700",
 							backgroundImage: og_images_colors["backgroundImage"],
 							backgroundSize: "100px 100px",
-							fontFamily: "title-font",
+							fontFamily: titleFontFamily,
 						},
 						children: [
 							{
@@ -641,7 +656,7 @@ const obj_img_none_without_desc = function (title: string, pubDate: string, auth
 																			justifyContent: "space-between",
 																			alignItems: "center",
 																			padding: "10px 30px",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																		},
 																		children: [
 																			{
@@ -736,7 +751,7 @@ const obj_img_none_with_desc = function (
 							fontWeight: "700",
 							backgroundImage: og_images_colors["backgroundImage"],
 							backgroundSize: "100px 100px",
-							fontFamily: "title-font",
+							fontFamily: titleFontFamily,
 						},
 						children: [
 							{
@@ -796,7 +811,7 @@ const obj_img_none_with_desc = function (
 																	props: {
 																		style: {
 																			fontSize: "30px",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																			fontWeight: "700",
 																			lineHeight: "2rem",
 																			padding: "10px 30px",
@@ -819,7 +834,7 @@ const obj_img_none_with_desc = function (
 																			justifyContent: "space-between",
 																			alignItems: "center",
 																			padding: "10px 20px",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																		},
 																		children: [
 																			{
@@ -907,7 +922,7 @@ const obj_img_bg = function (title: string, pubDate: string, img_url: string, au
 							justifyContent: "center",
 							fontSize: "32px",
 							fontWeight: "700",
-							fontFamily: "title-font",
+							fontFamily: titleFontFamily,
 						},
 						children: [
 							{
@@ -990,7 +1005,7 @@ const obj_img_bg = function (title: string, pubDate: string, img_url: string, au
 																			flexDirection: "row",
 																			justifyContent: "space-between",
 																			alignItems: "center",
-																			fontFamily: "footnote-font",
+																			fontFamily: footnoteFontFamily,
 																			padding: "10px 20px",
 																		},
 																		children: [
@@ -1055,7 +1070,11 @@ const obj_img_bg = function (title: string, pubDate: string, img_url: string, au
 	};
 };
 
-export async function GET({ params: { slug }, props }: APIContext) {
+export async function GET(context: APIContext) {
+	const {
+		params: { slug },
+		props,
+	} = context;
 	const BASE_DIR = BUILD_FOLDER_PATHS["ogImages"];
 	let keyStr = slug;
 	let type = "postpage";
@@ -1074,6 +1093,14 @@ export async function GET({ params: { slug }, props }: APIContext) {
 				: false
 			: false;
 	}
+
+	// Load fonts from Google (TTF format for Satori compatibility)
+	const fonts = await getOgFonts();
+	const ogOptions: SatoriOptions = {
+		width: 1200,
+		height: 630,
+		fonts,
+	};
 
 	const imagePath = path.join(BASE_DIR, `${slug}.png`);
 

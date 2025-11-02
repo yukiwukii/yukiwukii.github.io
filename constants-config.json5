@@ -77,11 +77,9 @@
 		"fontfamily-google-fonts": {
 			// Just specify the font names - no URLs, no escaping needed!
 			// We automatically load weights [400, 500, 600, 700] and styles [normal, italic] for all fonts (it is fine if they are not available).
-
 			// Main body/UI font - can be a sans-serif OR serif typeface (e.g., "Roboto", "Merriweather", "Inter")
 			// If empty and mono-font-name is set, mono will be used for everything.
 			"sans-font-name": "Roboto",
-
 			// Monospace font for code blocks (e.g., "Fira Code", "JetBrains Mono")
 			// No need to escape spaces in font names!
 			"mono-font-name": "Roboto Mono",
@@ -141,9 +139,13 @@
 		columns: 1,
 		// If true, the post's excerpt will be included in the OG image.
 		excerpt: false,
-		// Google Font URLs for the title and footnote text on the OG image.
-		"title-font-url": "https://fonts.googleapis.com/css2?family=Kreon:wght@500&display=swap",
-		"footnote-font-url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap",
+		// Font configuration for OG images
+		// Title and footnote can be any google font
+		"title-font-name": "Kreon",
+		"title-font-weight": 500, // Default: 400 (regular)
+		// Footnote font (author, date etc)
+		"footnote-font-name": "JetBrains Mono",
+		"footnote-font-weight": 700, // Default: 400 (regular)
 	},
 
 	// === Comments Configuration ===
