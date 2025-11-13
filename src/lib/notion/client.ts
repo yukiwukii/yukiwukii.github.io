@@ -291,6 +291,11 @@ export async function getAllEntries(): Promise<Post[]> {
 
 	allEntriesCache = loadBuildcache<Post[]>("allEntries.json");
 	if (allEntriesCache) {
+		allEntriesCache = allEntriesCache.map((entry) => ({
+			...entry,
+			ExternalUrl: entry.ExternalUrl || null,
+			IsExternal: !!(entry.ExternalUrl || entry.IsExternal),
+		}));
 		return allEntriesCache;
 	}
 
@@ -413,6 +418,15 @@ export async function getPostContentByPostId(post: Post): Promise<{
 	footnotesInPage: Footnote[] | null;
 	citationsInPage: Citation[] | null;
 }> {
+	if (post.IsExternal) {
+		return {
+			blocks: [],
+			interlinkedContentInPage: null,
+			footnotesInPage: null,
+			citationsInPage: null,
+		};
+	}
+
 	const tmpDir = BUILD_FOLDER_PATHS["blocksJson"];
 	const cacheFilePath = path.join(tmpDir, `${post.PageId}.json`);
 	const cacheInterlinkedContentInPageFilePath = path.join(
@@ -1810,6 +1824,12 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 		}
 	}
 
+	const externalUrl =
+		prop["External URL"] && "url" in prop["External URL"] && prop["External URL"]?.url
+			? prop["External URL"].url.trim()
+			: "";
+	const isExternal = !!externalUrl;
+
 	const post: Post = {
 		PageId: pageObject.id,
 		Title: prop.Page?.title ? prop.Page.title.map((richText) => richText.plain_text).join("") : "",
@@ -1836,6 +1856,8 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 			prop["Bluesky Post Link"] && prop["Bluesky Post Link"].url
 				? prop["Bluesky Post Link"].url
 				: "",
+		IsExternal: isExternal,
+		ExternalUrl: externalUrl || null,
 	};
 	return post;
 }
