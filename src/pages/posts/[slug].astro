@@ -19,8 +19,11 @@ import { adjustedFootnotesConfig } from "@/lib/notion/client";
 import FootnotesSection from "@/components/auto-added-sections/FootnotesSection.astro";
 import BibliographySection from "@/components/auto-added-sections/BibliographySection.astro";
 import CiteThisPage from "@/components/auto-added-sections/CiteThisPage.astro";
+import { renderExternalHtml } from "@/lib/external-content/external-html-content";
 export async function getStaticPaths() {
-	const posts = (await getAllPosts()).filter((post) => !post.IsExternal);
+	const posts = (await getAllPosts()).filter(
+		(post) => !post.IsExternal || !!post.ExternalContent,
+	);
 	const allPostsMap: Record<string, Post> = Object.fromEntries(posts.map((p) => [p.PageId, p])); // Map of PageId to Post
 
 	return posts.map((post) => {
@@ -48,8 +51,11 @@ export async function getStaticPaths() {
 		const linkedPageIds = Array.from(linkedPageIdsSet); // Convert Set back to an array
 
 		// Check if the post was updated before LAST_BUILD_TIME
+		const isExternal = !!post.ExternalContent;
 		const postLastUpdatedBeforeLastBuild =
-			LAST_BUILD_TIME && post?.LastUpdatedTimeStamp && post.LastUpdatedTimeStamp < LAST_BUILD_TIME;
+			!isExternal && LAST_BUILD_TIME && post?.LastUpdatedTimeStamp
+				? post.LastUpdatedTimeStamp < LAST_BUILD_TIME
+				: false;
 
 		// Check if any linked post was updated after LAST_BUILD_TIME
 		const linkedPostsUpdated =
@@ -60,7 +66,7 @@ export async function getStaticPaths() {
 					return linkedPost && linkedPost.LastUpdatedTimeStamp > LAST_BUILD_TIME;
 				}));
 
-		const shouldUseCache = postLastUpdatedBeforeLastBuild && !linkedPostsUpdated;
+		const shouldUseCache = !isExternal && postLastUpdatedBeforeLastBuild && !linkedPostsUpdated;
 
 		return {
 			params: { slug: post.Slug },
@@ -75,13 +81,15 @@ interface Props {
 	postLastUpdatedBeforeLastBuild: boolean;
 }
 
-const { post, shouldUseCache, postLastUpdatedBeforeLastBuild } = Astro.props; // Extract shouldUseCache from props
+const { post, shouldUseCache, postLastUpdatedBeforeLastBuild } = Astro.props;
+const isExternalHtml = !!post?.ExternalContent && post.ExternalContent.type === "html";
 
 resetCurrentHeadings();
 let postFound = true;
 let headings = null;
 let blocks = null;
 let interlinkedContentInPage = null;
+let externalHtml = "";
 
 if (!post) {
 	console.log("Post not found. slug: ${slug}");
@@ -90,20 +98,25 @@ if (!post) {
 
 // Load cached HTML only if shouldUseCache is true
 let cachedHtml = "";
-if (postFound) {
+if (postFound && !isExternalHtml) {
 	cachedHtml = await loadCachedHtml(post.Slug, shouldUseCache);
 }
 
 // Load cached headings if available
 let cachedHeadings = null;
-if (postFound) {
+if (postFound && !isExternalHtml) {
 	cachedHeadings = await loadCachedHeadings(post.Slug, postLastUpdatedBeforeLastBuild);
 }
 
 let footnotesInPage = null;
 let citationsInPage = null;
 
-if (postFound) {
+if (postFound && isExternalHtml) {
+	const { html, headings: externalHeadings } = renderExternalHtml(post);
+	externalHtml = html;
+	headings = externalHeadings;
+	setCurrentHeadings(headings || []);
+} else if (postFound) {
 	const result = await getPostContentByPostId(post);
 	blocks = result.blocks;
 	interlinkedContentInPage = result.interlinkedContentInPage;
@@ -119,6 +132,7 @@ if (postFound) {
 
 	setCurrentHeadings(headings);
 }
+
 ---
 
 {
@@ -133,24 +147,35 @@ if (postFound) {
 				class="post-body max-w-[708px] print:max-w-full"
 				data-html-type={shouldUseCache && cachedHtml ? "cached" : "new"}
 			>
-				{shouldUseCache && cachedHtml ? (
+				{isExternalHtml ? (
+					<>
+						{externalHtml ? (
+							<div class="external-html" set:html={externalHtml} />
+						) : (
+							<p class="text-sm text-red-500">
+								External HTML content is missing for this post. Check the configured repository.
+							</p>
+						)}
+						{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post} />}
+						{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
+							adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.["generate-footnotes-section"] &&
+							footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
+						{BIBTEX_CITATIONS_ENABLED &&
+							CITATIONS?.["extract-and-process-bibtex-citations"]?.["generate-bibliography-section"] &&
+							citationsInPage &&
+							citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}
+					</>
+				) : shouldUseCache && cachedHtml ? (
 					<div set:html={cachedHtml} />
 				) : (
 					<>
 						<NotionBlocks blocks={blocks} />
-						{/* Cite This Page section */}
 						{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post} />}
-						{/* Footnotes section - only render when NOT using cache (cached HTML already includes it) */}
 						{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
-							adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.[
-								"generate-footnotes-section"
-							] &&
+							adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.["generate-footnotes-section"] &&
 							footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
-						{/* Bibliography section */}
 						{BIBTEX_CITATIONS_ENABLED &&
-							CITATIONS?.["extract-and-process-bibtex-citations"]?.[
-								"generate-bibliography-section"
-							] &&
+							CITATIONS?.["extract-and-process-bibtex-citations"]?.["generate-bibliography-section"] &&
 							citationsInPage &&
 							citationsInPage.length > 0 && <BibliographySection citations={citationsInPage} />}
 					</>

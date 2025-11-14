@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import JSON5 from "json5";
+import type { ExternalContentType } from "./lib/interfaces";
 
 const configContent = fs.readFileSync("./constants-config.json5", "utf8");
 const config = JSON5.parse(configContent);

@@ -20,6 +20,7 @@ import {
 	BIBTEX_CITATIONS_ENABLED,
 	CITATIONS,
 } from "../../constants";
+import { resolveExternalContentDescriptor } from "../external-content/external-content-parsing-helpers";
 import { extractFootnotesFromBlock } from "../../lib/footnotes";
 import { extractCitationsFromBlock } from "../../lib/citations";
 import type * as responses from "@/lib/notion/responses";
@@ -1830,6 +1831,14 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 			: "";
 	const isExternal = !!externalUrl;
 
+const slugValue = prop.Slug?.formula?.string ? slugify(prop.Slug.formula.string) : "";
+const externalContentDescriptor = resolveExternalContentDescriptor(externalUrl);
+	if (externalUrl && !externalContentDescriptor) {
+		console.warn(
+			`[external-content] External URL "${externalUrl}" does not match any configured source.`,
+		);
+	}
+
 	const post: Post = {
 		PageId: pageObject.id,
 		Title: prop.Page?.title ? prop.Page.title.map((richText) => richText.plain_text).join("") : "",
@@ -1839,7 +1848,7 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 		Icon: icon,
 		Cover: cover,
 		Collection: prop.Collection?.select ? prop.Collection.select.name : "",
-		Slug: prop.Slug?.formula?.string ? slugify(prop.Slug.formula.string) : "",
+		Slug: slugValue,
 		Date: prop["Publish Date"]?.formula?.date ? prop["Publish Date"]?.formula?.date.start : "",
 		Tags: prop.Tags?.multi_select ? prop.Tags.multi_select : [],
 		Excerpt:
@@ -1858,6 +1867,7 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 				: "",
 		IsExternal: isExternal,
 		ExternalUrl: externalUrl || null,
+		ExternalContent: externalContentDescriptor,
 	};
 	return post;
 }
