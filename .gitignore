@@ -27,8 +27,13 @@ yarn-error.log*
 .astro
 .vscode/
 public/notion/**/*
+public/external-posts/**/*
 public/assets/preloaded/*
 src/assets/notion/**/*
+src/components/custom-components/**/*
+src/external-posts/**/*
+src/posts/mdx-inject-snippets/**/*
+!src/posts/mdx-inject-snippets/.gitkeep
 tmp/*
 !tmp/.gitkeep
 src/styles/global.css

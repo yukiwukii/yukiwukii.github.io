@@ -9,9 +9,9 @@
 		"lastBuildTimestampStore": "vG3"
 	},
 	"scripts": {
-		"predev": "rm -rf buildcache && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache .astro; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
+		"predev": "rm -rf buildcache src/external-posts src/components/custom-components public/external-posts ./tmp/external-content && mkdir -p src/external-posts src/components/custom-components public/external-posts && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache .astro; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
 		"dev": "astro dev",
-		"prebuild-local": "rm -rf buildcache && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache .astro; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
+		"prebuild-local": "rm -rf buildcache src/external-posts src/components/custom-components public/external-posts ./tmp/external-content && mkdir -p src/external-posts src/components/custom-components public/external-posts && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache .astro; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
 		"build-local": "astro build",
 		"prebuild-localnodl": "rm -rf buildcache ./src/assets/notion/* ./node_modules/.astro/assets/* ./public/notion/* && for folder in blocks-html-cache blocks-json-cache rss-cache bib-files-cache .astro; do if [ -d \"./tmp/$folder\" ]; then echo \"Deleting $folder folder\"; rm -rf \"./tmp/$folder\"; else echo \"No $folder folder to delete\"; fi; done",
 		"build-localnodl": "astro build",
@@ -24,6 +24,7 @@
 		"build:cached": "npm run cache:fetch && astro build"
 	},
 	"dependencies": {
+		"@astrojs/mdx": "^4.3.10",
 		"@astrojs/partytown": "^2.1.4",
 		"@astrojs/rss": "^4.0.13",
 		"@atproto/api": "^0.18.0",
@@ -46,10 +47,18 @@
 		"metascraper-title": "^5.49.5",
 		"metascraper-url": "^5.49.5",
 		"png-to-ico": "^3.0.1",
+		"rehype-autolink-headings": "^7.1.0",
+		"rehype-slug": "^6.0.0",
+		"remark-frontmatter": "^5.0.0",
+		"remark-gfm": "^4.0.1",
+		"remark-mdx": "^3.1.1",
+		"remark-parse": "^11.0.0",
 		"sanitize-html": "^2.17.0",
 		"satori-html": "^0.3.2",
 		"sharp": "^0.34.5",
-		"superjson": "^2.2.5"
+		"superjson": "^2.2.5",
+		"unified": "^11.0.5",
+		"unist-util-visit": "^5.0.0"
 	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.5",

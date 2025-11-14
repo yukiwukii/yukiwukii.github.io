@@ -37,6 +37,7 @@ import CSSWriter from "./src/integrations/theme-constants-to-css";
 import createFoldersIfMissing from "./src/integrations/create-folders-if-missing";
 import citationsInitializer from "./src/integrations/citations-initializer";
 import astroImageCacheCleanerCopier from "./src/integrations/astro-image-cache-cleaner-copier";
+import externalContentDownloader from "./src/integrations/external-content-downloader";
 import { fontProviders } from "astro/config";
 import robotsTxt from "astro-robots-txt";
 import partytown from "@astrojs/partytown";
@@ -144,6 +145,7 @@ export default defineConfig({
 	},
 	integrations: [
 		createFoldersIfMissing(),
+		externalContentDownloader(),
 		buildTimestampRecorder(),
 		citationsInitializer(), // Initialize BibTeX cache after timestamp is recorded
 		EntryCacheEr(),
