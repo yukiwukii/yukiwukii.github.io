@@ -1,7 +1,4 @@
-import type {
-	ExternalContentDescriptor,
-	ExternalContentType,
-} from "@/lib/interfaces";
+import type { ExternalContentDescriptor, ExternalContentType } from "@/lib/interfaces";
 import { EXTERNAL_CONTENT_CONFIG } from "../../constants";
 
 const KNOWN_EXTERNAL_TYPES: ExternalContentType[] = ["html", "markdown", "mdx"];
@@ -39,9 +36,6 @@ export function resolveExternalContentDescriptor(
 
 		const type = source.id as ExternalContentType;
 		if (!KNOWN_EXTERNAL_TYPES.includes(type)) {
-			console.warn(
-				`[external-content] Source "${source.id}" is not a recognized external content type.`,
-			);
 			return null;
 		}
 

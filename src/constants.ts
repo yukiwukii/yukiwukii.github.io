@@ -274,8 +274,8 @@ export const OPTIMIZE_IMAGES =
 	key_value_from_json?.["block-rendering"]?.["optimize-images"] || false;
 
 const defaultShortcodes = {
-	"html-render": "",
-	"html-inject": "",
+	"html-render": "<!DOCTYPE html> <!-- iframe -->",
+	"html-inject": "<!DOCTYPE html> <!-- inject -->",
 	"alt-text": null,
 	"expressive-code": null,
 	"shiki-transform": "",

@@ -207,6 +207,10 @@ function getBibEntriesCache(): Map<string, ParsedCitationEntry> {
 	return bibEntriesCache;
 }
 
+export function getBibEntriesCacheSnapshot(): Map<string, ParsedCitationEntry> {
+	return getBibEntriesCache();
+}
+
 const BUILDCACHE_DIR = BUILD_FOLDER_PATHS["buildcache"];
 async function getResolvedDataSourceId(): Promise<string> {
 	// Initialize config once at module load
@@ -1831,8 +1835,8 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 			: "";
 	const isExternal = !!externalUrl;
 
-const slugValue = prop.Slug?.formula?.string ? slugify(prop.Slug.formula.string) : "";
-const externalContentDescriptor = resolveExternalContentDescriptor(externalUrl);
+	const slugValue = prop.Slug?.formula?.string ? slugify(prop.Slug.formula.string) : "";
+	const externalContentDescriptor = resolveExternalContentDescriptor(externalUrl);
 	if (externalUrl && !externalContentDescriptor) {
 		console.warn(
 			`[external-content] External URL "${externalUrl}" does not match any configured source.`,
