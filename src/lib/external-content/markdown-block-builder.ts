@@ -3,6 +3,7 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkFrontmatter from "remark-frontmatter";
+import remarkMdx from "remark-mdx";
 import type {
 	Block,
 	Footnote,
@@ -27,6 +28,8 @@ import type {
 	TableRow,
 	TableCell as MdTableCell,
 	HTML,
+	MdxJsxFlowElement,
+	MdxJsxTextElement,
 } from "mdast";
 import { toString } from "mdast-util-to-string";
 import { isRelativePath, toPublicUrl } from "./external-html-utils";
@@ -75,6 +78,7 @@ type ConvertInlineOptions = {
 type BuilderOptions = {
 	post: Post;
 	descriptor: ExternalContentDescriptor;
+	allowMdx?: boolean;
 };
 
 const MEDIA_EXTENSIONS = {
@@ -101,11 +105,13 @@ export class MarkdownBlockBuilder {
 	private blockIdCounter = 0;
 	private tree: Root;
 	private lastUpdated: Date;
+	private allowMdx: boolean;
 
 	constructor(
 		private markdown: string,
 		private options: BuilderOptions,
 	) {
+		this.allowMdx = !!options.allowMdx;
 		this.tree = this.parseMarkdown(markdown);
 		this.lastUpdated = options.post.LastUpdatedTimeStamp || new Date();
 	}
@@ -115,10 +121,13 @@ export class MarkdownBlockBuilder {
 	}
 
 	private parseMarkdown(source: string): Root {
-		const processor = unified()
-			.use(remarkParse)
-			.use(remarkGfm)
-			.use(remarkFrontmatter, ["yaml", "toml"]);
+		const processor = unified().use(remarkParse).use(remarkGfm);
+
+		if (this.allowMdx) {
+			processor.use(remarkMdx);
+		}
+
+		processor.use(remarkFrontmatter, ["yaml", "toml"]);
 		const tree = processor.parse(source) as Root;
 		const filteredChildren: Content[] = [];
 		for (const node of tree.children) {
@@ -282,6 +291,16 @@ export class MarkdownBlockBuilder {
 					return [];
 				}
 				return [createRichText(altText, state, { href: url })];
+			}
+			case "mdxJsxTextElement": {
+				const htmlString = this.serializeMdxJsx(node as unknown as MdxJsxTextElement);
+				if (!htmlString) return [];
+				if (options.addBlock) {
+					const block = this.buildHtmlBlock({ type: "html", value: htmlString } as HTML);
+					if (block) options.addBlock(block);
+					return [];
+				}
+				return [createRichText("")];
 			}
 			default:
 				return [];
@@ -698,6 +717,14 @@ export class MarkdownBlockBuilder {
 					if (block) blocks.push(block);
 					break;
 				}
+				case "mdxJsxFlowElement": {
+					const htmlString = this.serializeMdxJsx(node as unknown as MdxJsxFlowElement);
+					if (htmlString) {
+						const block = this.buildHtmlBlock({ type: "html", value: htmlString } as HTML);
+						if (block) blocks.push(block);
+					}
+					break;
+				}
 				case "heading": {
 					const block = this.buildHeadingBlock(node);
 					if (block) blocks.push(block);
@@ -732,6 +759,14 @@ export class MarkdownBlockBuilder {
 					if (block) blocks.push(block);
 					break;
 				}
+				case "mdxJsxTextElement": {
+					const htmlString = this.serializeMdxJsx(node as unknown as MdxJsxTextElement);
+					if (htmlString) {
+						const block = this.buildHtmlBlock({ type: "html", value: htmlString } as HTML);
+						if (block) blocks.push(block);
+					}
+					break;
+				}
 				case "link": {
 					const href = this.resolveAssetUrl(node.url || "");
 					const mediaKind = href ? this.classifyMedia(href) : null;
@@ -751,5 +786,38 @@ export class MarkdownBlockBuilder {
 			}
 		}
 		return blocks;
+	}
+
+	private serializeMdxJsx(node: MdxJsxFlowElement | MdxJsxTextElement): string {
+		if (!node || typeof node.name !== "string" || !node.name.trim()) return "";
+
+		const serializeAttr = (attr: any): string => {
+			if (!attr || attr.type !== "mdxJsxAttribute") return "";
+			if (!attr.name) return "";
+			if (attr.value === null || typeof attr.value === "undefined") return attr.name;
+			if (typeof attr.value === "string") {
+				const resolved = this.resolveAssetUrl(attr.value);
+				return `${attr.name}="${resolved}"`;
+			}
+			return `${attr.name}={...}`;
+		};
+
+		const attrs = (node.attributes || [])
+			.map((attr: any) => serializeAttr(attr))
+			.filter(Boolean)
+			.join(" ");
+		const open = attrs ? `<${node.name} ${attrs}>` : `<${node.name}>`;
+
+		const childContent =
+			node.children && node.children.length
+				? node.children.map((child) => toString(child as any)).join("")
+				: "";
+
+		if (!childContent) {
+			const selfClosing = attrs ? `<${node.name} ${attrs} />` : `<${node.name} />`;
+			return selfClosing;
+		}
+
+		return `${open}${childContent}</${node.name}>`;
 	}
 }

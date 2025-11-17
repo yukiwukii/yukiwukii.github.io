@@ -1837,11 +1837,6 @@ async function _buildPost(pageObject: responses.PageObject): Promise<Post> {
 
 	const slugValue = prop.Slug?.formula?.string ? slugify(prop.Slug.formula.string) : "";
 	const externalContentDescriptor = resolveExternalContentDescriptor(externalUrl);
-	if (externalUrl && !externalContentDescriptor) {
-		console.warn(
-			`[external-content] External URL "${externalUrl}" does not match any configured source.`,
-		);
-	}
 
 	const post: Post = {
 		PageId: pageObject.id,

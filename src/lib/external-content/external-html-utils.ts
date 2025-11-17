@@ -3,7 +3,7 @@ import { parseDocument, DomUtils } from "htmlparser2";
 import type { Document, Element } from "domhandler";
 import type { ExternalContentDescriptor } from "@/lib/interfaces";
 import type { Heading } from "@/types";
-import { slugify } from "@/utils/slugify";
+import { slugify } from "../../utils/slugify";
 
 export type HtmlTransformResult = {
 	html: string;
