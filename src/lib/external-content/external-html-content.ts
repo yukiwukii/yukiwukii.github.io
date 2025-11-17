@@ -4,6 +4,11 @@ import type { Post } from "@/lib/interfaces";
 import type { Heading } from "@/types";
 import { EXTERNAL_CONTENT_PATHS } from "@/constants";
 import { transformExternalHtml } from "./external-html-utils";
+import {
+	loadExternalRenderCache,
+	readExternalFolderVersion,
+	extractHeadingsFromHtml,
+} from "./external-render-cache";
 
 type HtmlRenderResult = {
 	html: string;
@@ -14,6 +19,16 @@ export function renderExternalHtml(post: Post): HtmlRenderResult {
 	const descriptor = post.ExternalContent;
 	if (!descriptor || descriptor.type !== "html") {
 		return { html: "", headings: [] };
+	}
+
+	const version = readExternalFolderVersion(descriptor);
+	const cached = loadExternalRenderCache(descriptor, version);
+	if (cached) {
+		const headings =
+			cached.meta.headings && cached.meta.headings.length
+				? cached.meta.headings
+				: extractHeadingsFromHtml(cached.html);
+		return { html: cached.html, headings };
 	}
 
 	const entryDir = path.join(EXTERNAL_CONTENT_PATHS.externalPosts, descriptor.folderName);

@@ -4,6 +4,7 @@ import path from "node:path";
 import fs from "node:fs";
 import type { ExternalContentSourceConfig } from "../constants";
 import { EXTERNAL_CONTENT_CONFIG, EXTERNAL_CONTENT_PATHS, LAST_BUILD_TIME } from "../constants";
+import { writeExternalFolderVersion } from "../lib/external-content/external-render-cache";
 
 const GITHUB_API_BASE = "https://api.github.com";
 const RAW_HEADERS = {
@@ -117,6 +118,8 @@ async function runExternalSync(logger: AstroIntegrationLogger) {
 	ensureDir(EXTERNAL_CONTENT_PATHS.customComponents);
 	ensureDir(EXTERNAL_CONTENT_PATHS.publicAssets);
 	ensureDir(EXTERNAL_CONTENT_PATHS.publicCustomComponents);
+	ensureDir(EXTERNAL_CONTENT_PATHS.commitMetadata);
+	ensureDir(EXTERNAL_CONTENT_PATHS.renderCache);
 
 	// Handle content sources
 	for (const source of EXTERNAL_CONTENT_CONFIG.sources) {
@@ -154,6 +157,13 @@ async function runExternalSync(logger: AstroIntegrationLogger) {
 			if (shouldDownload) {
 				fs.rmSync(stagingDir, { recursive: true, force: true });
 				await downloadFolder(source, remotePath, stagingDir, logger);
+			}
+
+			const version =
+				latestCommit?.toISOString() ||
+				(fs.existsSync(stagingDir) ? fs.statSync(stagingDir).mtime.toISOString() : "");
+			if (version) {
+				writeExternalFolderVersion(source.id, folderName, version, remotePath);
 			}
 
 			const destContent = path.join(EXTERNAL_CONTENT_PATHS.externalPosts, folderName);
@@ -198,6 +208,13 @@ async function runExternalSync(logger: AstroIntegrationLogger) {
 		if (shouldDownload) {
 			fs.rmSync(stagingDir, { recursive: true, force: true });
 			await downloadFolder(cc, cc.path, stagingDir, logger);
+		}
+
+		const version =
+			latestCommit?.toISOString() ||
+			(fs.existsSync(stagingDir) ? fs.statSync(stagingDir).mtime.toISOString() : "");
+		if (version) {
+			writeExternalFolderVersion(cc.id, "root", version, cc.path);
 		}
 
 		copyDir(stagingDir, EXTERNAL_CONTENT_PATHS.customComponents);

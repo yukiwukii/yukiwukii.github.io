@@ -174,6 +174,8 @@ export const EXTERNAL_CONTENT_PATHS = {
 	tmpRoot: path.join(BUILD_FOLDER_PATHS.tmp, "external-content"),
 	manifestDir: path.join(BUILD_FOLDER_PATHS.tmp, "cache-manifests"),
 	manifestFile: path.join(BUILD_FOLDER_PATHS.tmp, "cache-manifests", "external-content.json"),
+	commitMetadata: path.join(BUILD_FOLDER_PATHS.tmp, "external-content", "commit-meta"),
+	renderCache: path.join(BUILD_FOLDER_PATHS.tmp, "external-content", "render-cache"),
 	externalPosts: path.join("src", "external-posts"),
 	customComponents: path.join("src", "components", "custom-components"),
 	mdxSnippets: path.join("src", "blocks-mdx-inject-snippets"),

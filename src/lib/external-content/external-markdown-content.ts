@@ -8,6 +8,11 @@ import { buildHeadings } from "@/utils";
 import { extractPageContent } from "@/lib/blog-helpers";
 import { adjustedFootnotesConfig, getBibEntriesCacheSnapshot } from "@/lib/notion/client";
 import { extractCitationsFromBlock } from "@/lib/citations";
+import {
+	loadExternalRenderCache,
+	readExternalFolderVersion,
+	extractHeadingsFromHtml,
+} from "./external-render-cache";
 
 export type MarkdownRenderResult = {
 	blocks: Block[];
@@ -15,6 +20,7 @@ export type MarkdownRenderResult = {
 	footnotes: Footnote[] | null;
 	citations: Citation[] | null;
 	interlinkedContent: InterlinkedContentInPage[] | null;
+	cachedHtml?: string | null;
 };
 
 export async function renderExternalMarkdown(post: Post): Promise<MarkdownRenderResult> {
@@ -30,6 +36,23 @@ export async function renderExternalMarkdown(post: Post): Promise<MarkdownRender
 			`[external-content] Missing index.md for external post "${post.Slug}" at ${entryPath}`,
 		);
 		return { blocks: [], headings: [], footnotes: null, citations: null, interlinkedContent: null };
+	}
+
+	const version = readExternalFolderVersion(descriptor);
+	const cached = loadExternalRenderCache(descriptor, version);
+	if (cached) {
+		const headings =
+			cached.meta.headings && cached.meta.headings.length
+				? cached.meta.headings
+				: extractHeadingsFromHtml(cached.html);
+		return {
+			blocks: [],
+			headings,
+			footnotes: null,
+			citations: null,
+			interlinkedContent: null,
+			cachedHtml: cached.html,
+		};
 	}
 
 	let fileContents = "";

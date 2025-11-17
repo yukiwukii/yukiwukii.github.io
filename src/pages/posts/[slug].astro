@@ -124,11 +124,19 @@ if (postFound && isExternalHtml) {
 	setCurrentHeadings(headings || []);
 } else if (postFound && isExternalMarkdown) {
 	const markdownResult = await renderExternalMarkdown(post);
-	blocks = markdownResult.blocks;
-	headings = markdownResult.headings;
-	interlinkedContentInPage = markdownResult.interlinkedContent;
-	footnotesInPage = markdownResult.footnotes;
-	citationsInPage = markdownResult.citations;
+	if (markdownResult.cachedHtml) {
+		externalHtml = markdownResult.cachedHtml;
+		headings = markdownResult.headings;
+		footnotesInPage = null;
+		citationsInPage = null;
+		interlinkedContentInPage = null;
+	} else {
+		blocks = markdownResult.blocks;
+		headings = markdownResult.headings;
+		interlinkedContentInPage = markdownResult.interlinkedContent;
+		footnotesInPage = markdownResult.footnotes;
+		citationsInPage = markdownResult.citations;
+	}
 	setCurrentHeadings(headings || []);
 } else if (postFound && isExternalMdx) {
 	const mdxResult = await renderExternalMdx(post);
@@ -194,20 +202,26 @@ if (postFound && isExternalHtml) {
 					</>
 				) : isExternalMarkdown ? (
 					<>
-						{blocks ? (
+						{externalHtml ? (
+							<div class="external-html" set:html={externalHtml} />
+						) : blocks ? (
 							<NotionBlocks blocks={blocks} />
 						) : (
 							<p class="text-sm text-red-500">
 								Markdown content is missing for this post. Check the configured repository.
 							</p>
 						)}
-						{CITATIONS?.["add-cite-this-post-section"] && <CiteThisPage post={post} />}
-						{adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
+						{!externalHtml && CITATIONS?.["add-cite-this-post-section"] && (
+							<CiteThisPage post={post} />
+						)}
+						{!externalHtml &&
+							adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.enabled &&
 							adjustedFootnotesConfig?.["in-page-footnotes-settings"]?.[
 								"generate-footnotes-section"
 							] &&
 							footnotesInPage && <FootnotesSection footnotes={footnotesInPage} />}
-						{BIBTEX_CITATIONS_ENABLED &&
+						{!externalHtml &&
+							BIBTEX_CITATIONS_ENABLED &&
 							CITATIONS?.["extract-and-process-bibtex-citations"]?.[
 								"generate-bibliography-section"
 							] &&
