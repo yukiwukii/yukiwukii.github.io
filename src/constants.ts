@@ -291,9 +291,11 @@ const resolvedShortcodes =
 export const SHORTCODES = resolvedShortcodes;
 
 export const MDX_SNIPPET_TRIGGER =
-	typeof resolvedShortcodes?.["mdx-inject"] === "string" && resolvedShortcodes["mdx-inject"].trim()
+	process.env.MDX_SNIPPET_TRIGGER ||
+	(typeof resolvedShortcodes?.["mdx-inject"] === "string" && resolvedShortcodes["mdx-inject"].trim()
 		? resolvedShortcodes["mdx-inject"].trim()
-		: DEFAULT_MDX_SNIPPET_TRIGGER;
+		: key_value_from_json?.["mdx-snippets"]?.["trigger"]) ||
+	DEFAULT_MDX_SNIPPET_TRIGGER;
 
 // Function to read the build start time from the file
 const readBuildStartTime = () => {

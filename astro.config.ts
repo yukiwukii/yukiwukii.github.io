@@ -5,7 +5,7 @@ import mdx from "@astrojs/mdx";
 import path from "path";
 import fs from "fs";
 import JSON5 from "json5";
-import { CUSTOM_DOMAIN, BASE_PATH } from "./src/constants";
+import { CUSTOM_DOMAIN, BASE_PATH, EXTERNAL_CONTENT_CONFIG } from "./src/constants";
 import remarkExternalMdxAssets from "./src/lib/external-content/remark-external-mdx-assets";
 
 function ensureBlankLineAfterImports(source: string): string {
@@ -175,12 +175,12 @@ export default defineConfig({
 			return fonts;
 		})(),
 	},
-	integrations: [
-		createFoldersIfMissing(),
-		mdx({
-			remarkPlugins: [remarkExternalMdxAssets],
-		}),
-		externalContentDownloader(),
+integrations: [
+	createFoldersIfMissing(),
+	mdx({
+		remarkPlugins: [remarkExternalMdxAssets],
+	}),
+	EXTERNAL_CONTENT_CONFIG.enabled ? externalContentDownloader() : undefined,
 		buildTimestampRecorder(),
 		citationsInitializer(), // Initialize BibTeX cache after timestamp is recorded
 		EntryCacheEr(),

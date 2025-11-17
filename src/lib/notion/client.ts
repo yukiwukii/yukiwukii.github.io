@@ -19,6 +19,8 @@ import {
 	FOOTNOTES,
 	BIBTEX_CITATIONS_ENABLED,
 	CITATIONS,
+	MDX_SNIPPET_TRIGGER,
+	EXTERNAL_CONTENT_CONFIG,
 } from "../../constants";
 import { resolveExternalContentDescriptor } from "../external-content/external-content-parsing-helpers";
 import { extractFootnotesFromBlock } from "../../lib/footnotes";
@@ -74,6 +76,7 @@ import type {
 import { Client, APIResponseError } from "@notionhq/client";
 import { getFormattedDateWithTime } from "../../utils/date";
 import { slugify } from "../../utils/slugify";
+import { writeMdxSnippet } from "./mdx-snippet-writer";
 import { extractPageContent } from "../../lib/blog-helpers";
 import superjson from "superjson";
 
@@ -710,7 +713,9 @@ export async function getAllBlocksByBlockId(
 		params["start_cursor"] = res.next_cursor as string;
 	}
 
-	const allBlocks = await Promise.all(results.map((blockObject) => _buildBlock(blockObject)));
+	const allBlocks = await Promise.all(
+		results.map((blockObject) => _buildBlock(blockObject, blockId)),
+	);
 	// Filter blocks that have files to download
 	const allFileBlocks = allBlocks.filter(
 		(block) =>
@@ -896,7 +901,7 @@ export async function getBlock(
 			},
 		);
 
-		const block = await _buildBlock(res);
+		const block = await _buildBlock(res, blockId);
 
 		// If this is a file block, download it (unless skipFileDownload is true)
 		if (
@@ -1239,7 +1244,7 @@ export async function getDataSource(): Promise<Database> {
 	return database;
 }
 
-async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
+async function _buildBlock(blockObject: responses.BlockObject, pageId?: string): Promise<Block> {
 	const block: Block = {
 		Id: blockObject.id,
 		Type: blockObject.type,
@@ -1400,6 +1405,36 @@ async function _buildBlock(blockObject: responses.BlockObject): Promise<Block> {
 					Language: blockObject.code.language,
 				};
 				block.Code = code;
+
+				const rawText = (blockObject.code.rich_text || [])
+					.map((rt) => ("plain_text" in rt ? rt.plain_text : ""))
+					.join("")
+					.trim();
+				if (rawText.includes(MDX_SNIPPET_TRIGGER)) {
+					const hasExternal = EXTERNAL_CONTENT_CONFIG.enabled && EXTERNAL_CONTENT_CONFIG.sources.length > 0;
+					const hasCustomComponents = !!EXTERNAL_CONTENT_CONFIG.customComponents;
+					if (hasExternal && hasCustomComponents) {
+						const pageRef = pageId || blockObject.id || "snippet";
+						const blockId =
+							blockObject.id || `${pageRef}-mdx-${Math.random().toString(36).slice(2)}`;
+						block.Type = "mdx_snippet" as any;
+						block.MdxSnippet = {
+							PageId: pageRef,
+							BlockId: blockId,
+							Slug: slugify(`${pageRef}-${blockId}`),
+						};
+						const snippetContent = blockObject.code.rich_text
+							.map((rt) => ("plain_text" in rt ? rt.plain_text : ""))
+							.join("");
+						const cleanedContent = snippetContent.replaceAll(MDX_SNIPPET_TRIGGER, "").trimStart();
+						writeMdxSnippet({
+							pageId: pageRef,
+							blockId,
+							slug: slugify(`${pageRef}-${blockId}`),
+							content: cleanedContent,
+						});
+					}
+				}
 			}
 			break;
 		case "quote":

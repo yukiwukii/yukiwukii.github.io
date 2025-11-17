@@ -302,23 +302,26 @@
 		},
 	},
 
-	// === URL Redirects ===
-	// Create 301 redirects for old URLs to new URLs. Useful for SEO when migrating content.
-	// Format: "/old-path": "/new-path"
-	// Example: "/my-old-post.html": "/posts/my-new-post-slug/"
-	redirects: {},
-
 	// === External Content ===
 	// External URL prefixes that signal "pull content from GitHub and render it locally" rather than linking out.
 	// Add one or more public GitHub folder/file URLs (ending with /tree/... or /blob/...) that you plan to reference from Notion's "External URL" property.
 	// When a post's External URL begins with one of these prefixes, the build will download that GitHub path, treat it as internal Markdown/MDX/HTML, and render it like any other post.
 	"external-content": {
+		// Enable or disable the external content feature to pull content from remote sources based on Notion "External URL" property.
+		enabled: true,
+		// Remote folders containing external content files.
 		sources: {
 			markdown: "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/markdown",
 			mdx: "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/mdx",
-			html: "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/html",
+			html: "",
 		},
-		// Extra component folders remote MDX can import from (downloaded into src/external-content/custom-components).
+		// Extra component folders remote MDX can import from (downloaded into src/external-content/custom-components). Can also be used for markdown codeblocks with 'mdx-inject' shortcode.
 		"custom-components": "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/custom-components",
 	},
+
+	// === URL Redirects ===
+	// Create 301 redirects for old URLs to new URLs. Useful for SEO when migrating content.
+	// Format: "/old-path": "/new-path"
+	// Example: "/my-old-post.html": "/posts/my-new-post-slug/"
+	redirects: {},
 }

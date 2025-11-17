@@ -56,6 +56,11 @@ export interface Block {
 	NAudio?: NAudio;
 	File?: File;
 	Code?: Code;
+	MdxSnippet?: {
+		PageId: string;
+		BlockId: string;
+		Slug: string;
+	};
 	Quote?: Quote;
 	Equation?: Equation;
 	Callout?: Callout;
