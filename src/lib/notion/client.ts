@@ -1411,7 +1411,8 @@ async function _buildBlock(blockObject: responses.BlockObject, pageId?: string):
 					.join("")
 					.trim();
 				if (rawText.includes(MDX_SNIPPET_TRIGGER)) {
-					const hasExternal = EXTERNAL_CONTENT_CONFIG.enabled && EXTERNAL_CONTENT_CONFIG.sources.length > 0;
+					const hasExternal =
+						EXTERNAL_CONTENT_CONFIG.enabled && EXTERNAL_CONTENT_CONFIG.sources.length > 0;
 					const hasCustomComponents = !!EXTERNAL_CONTENT_CONFIG.customComponents;
 					if (hasExternal && hasCustomComponents) {
 						const pageRef = pageId || blockObject.id || "snippet";

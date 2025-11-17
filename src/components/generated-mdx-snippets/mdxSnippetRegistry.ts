@@ -1,7 +1,32 @@
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 
+import fs from "node:fs";
+import path from "node:path";
+import { EXTERNAL_CONTENT_PATHS } from "@/constants";
+
 type SnippetModule = { default: AstroComponentFactory };
-const snippetModules = import.meta.glob<SnippetModule>("/src/posts/mdx-inject-snippets/**/*.mdx");
+
+function ensureDir(dir: string) {
+	if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+function syncSnippetsFromCache() {
+	const cacheRoot = EXTERNAL_CONTENT_PATHS.mdxSnippetsCache;
+	const destRoot = EXTERNAL_CONTENT_PATHS.mdxSnippets;
+	if (!fs.existsSync(cacheRoot)) return;
+	ensureDir(destRoot);
+
+	const files = fs.readdirSync(cacheRoot, { withFileTypes: true }).filter((f) => f.isFile());
+	for (const file of files) {
+		const srcPath = path.join(cacheRoot, file.name);
+		const destPath = path.join(destRoot, file.name);
+		fs.copyFileSync(srcPath, destPath);
+	}
+}
+
+syncSnippetsFromCache();
+
+const snippetModules = import.meta.glob<SnippetModule>("/src/blocks-mdx-inject-snippets/**/*.mdx");
 
 export async function mdxSnippetLookup(
 	slug: string,

@@ -7,36 +7,8 @@ import fs from "fs";
 import JSON5 from "json5";
 import { CUSTOM_DOMAIN, BASE_PATH, EXTERNAL_CONTENT_CONFIG } from "./src/constants";
 import remarkExternalMdxAssets from "./src/lib/external-content/remark-external-mdx-assets";
+import { externalContentVitePlugins } from "./src/lib/vite-external-content-plugins";
 
-function ensureBlankLineAfterImports(source: string): string {
-	const lines = source.split(/\r?\n/);
-	let idx = 0;
-	let sawImport = false;
-
-	while (idx < lines.length) {
-		const trimmed = lines[idx].trim();
-		if (!trimmed) {
-			if (!sawImport) {
-				idx += 1;
-				continue;
-			}
-			break;
-		}
-		if (/^(import|export)\s/.test(trimmed)) {
-			sawImport = true;
-			idx += 1;
-			continue;
-		}
-		break;
-	}
-
-	if (!sawImport) return source;
-	if (idx >= lines.length) return source;
-	if (lines[idx].trim() === "") return source;
-
-	lines.splice(idx, 0, "");
-	return lines.join("\n");
-}
 const getSite = function () {
 	if (CUSTOM_DOMAIN) {
 		return new URL(BASE_PATH, `https://${CUSTOM_DOMAIN}`).toString();
@@ -175,12 +147,12 @@ export default defineConfig({
 			return fonts;
 		})(),
 	},
-integrations: [
-	createFoldersIfMissing(),
-	mdx({
-		remarkPlugins: [remarkExternalMdxAssets],
-	}),
-	EXTERNAL_CONTENT_CONFIG.enabled ? externalContentDownloader() : undefined,
+	integrations: [
+		createFoldersIfMissing(),
+		mdx({
+			remarkPlugins: [remarkExternalMdxAssets],
+		}),
+		EXTERNAL_CONTENT_CONFIG.enabled ? externalContentDownloader() : undefined,
 		buildTimestampRecorder(),
 		citationsInitializer(), // Initialize BibTeX cache after timestamp is recorded
 		EntryCacheEr(),
@@ -206,37 +178,7 @@ integrations: [
 	},
 	prefetch: true,
 	vite: {
-		plugins: [
-			{
-				name: "external-custom-components-fallback",
-				enforce: "pre",
-				load(id) {
-					const normalized = id.split(path.sep).join(path.sep);
-					const target = `${path.sep}src${path.sep}components${path.sep}custom-components${path.sep}`;
-					if (!normalized.includes(target)) return null;
-					if (fs.existsSync(id)) return null;
-					if (!/\.(astro|jsx|tsx|js|ts)$/.test(id)) return null;
-					return `---\nconst { children, ...props } = Astro.props;\n---\n<div class="missing-remote-component" data-missing-component={${JSON.stringify(
-						id,
-					)}} {...props}>\n  <slot />\n</div>\n`;
-				},
-			},
-			{
-				name: "external-mdx-prep",
-				enforce: "pre",
-				transform(code, id) {
-					if (
-						!id.endsWith(".mdx") ||
-						!id.includes(`${path.sep}src${path.sep}external-posts${path.sep}`)
-					) {
-						return null;
-					}
-					const adjusted = ensureBlankLineAfterImports(code);
-					return adjusted === code ? null : adjusted;
-				},
-			},
-			tailwindcss(),
-		],
+		plugins: [...externalContentVitePlugins(), tailwindcss()],
 		resolve: {
 			alias: {
 				"custom-components": path.resolve("./src/components/custom-components"),

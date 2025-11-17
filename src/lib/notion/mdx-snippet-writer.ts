@@ -42,7 +42,7 @@ export function writeMdxSnippet(options: {
 	slug: string;
 	content: string;
 }) {
-	const tmpDir = path.join(EXTERNAL_CONTENT_PATHS.tmpRoot, "mdx-snippets", options.pageId);
+	const tmpDir = EXTERNAL_CONTENT_PATHS.mdxSnippetsCache;
 	const destDir = EXTERNAL_CONTENT_PATHS.mdxSnippets;
 	ensureDir(tmpDir);
 	ensureDir(destDir);

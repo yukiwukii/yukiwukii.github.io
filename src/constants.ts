@@ -176,8 +176,10 @@ export const EXTERNAL_CONTENT_PATHS = {
 	manifestFile: path.join(BUILD_FOLDER_PATHS.tmp, "cache-manifests", "external-content.json"),
 	externalPosts: path.join("src", "external-posts"),
 	customComponents: path.join("src", "components", "custom-components"),
-	mdxSnippets: path.join("src", "posts", "mdx-inject-snippets"),
+	mdxSnippets: path.join("src", "blocks-mdx-inject-snippets"),
+	mdxSnippetsCache: path.join(BUILD_FOLDER_PATHS.tmp, "blocks-mdx-inject-snippets-cache"),
 	publicAssets: path.join("public", "external-posts"),
+	publicCustomComponents: path.join("public", "custom-components"),
 };
 
 export const NOTION_API_SECRET =
