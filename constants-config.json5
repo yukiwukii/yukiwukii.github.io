@@ -303,23 +303,28 @@
 	},
 
 	// === External Content ===
-	// External URL prefixes that signal "pull content from GitHub and render it locally" rather than linking out.
-	// Add one or more public GitHub folder/file URLs (ending with /tree/... or /blob/...) that you plan to reference from Notion's "External URL" property.
-	// When a post's External URL begins with one of these prefixes, the build will download that GitHub path, treat it as internal Markdown/MDX/HTML, and render it like any other post.
+	// URL prefixes that tell the site to fetch GitHub content and render it locally.
+	// Add public *parent* GitHub folder/file URLs (/tree/... or /blob/...) used in Notion’s “External URL” field.
+	// Each External URL in Notion should point to a post folder inside one of those parents.
+	// If it matches a prefix, the build downloads and renders it as internal Markdown/MDX/HTML.
 	"external-content": {
-		// Enable or disable the external content feature to pull content from remote sources based on Notion "External URL" property.
+		// Toggle external content pulled from remote sources via Notion’s “External URL” field. Must be true to use features below.
 		enabled: true,
 		// Remote folders containing external content files.
 		sources: {
-			//Each folder in this folder will be treated as a markdown based post. Can contain images and other assets, aimed to be styled close to Notion Blocks. Example url: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/markdown
+			// Each subfolder is treated as a markdown post. Supports media, styled using corresponding Notion blocks.
+			// Example: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/markdown
 			markdown: "",
-			//Each folder in this folder will be treated as a markdown based post. Can contain custom components, images and other assets, slightly styled as Notion blocks but not completely. Example url: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/mdx
+			// Each subfolder is treated as an MDX post. Supports custom components/media, lightly Notion-styled.
+			// Example: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/mdx
 			mdx: "",
-			//Each folder in this folder will be treated as a markdown based post. Can contain custom components, images and other assets, no styling done on webtrotion's end. Example url: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/html
+			// Each subfolder is treated as an HTML post. Supports assets, no styling applied.
+			// Example: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/html
 			html: "",
 		},
-		// Extra component folders remote MDX can import from (downloaded into src/external-content/custom-components). Can also be used for markdown codeblocks with 'mdx-inject' shortcode.
-		"custom-components": "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/custom-components",
+		// Remote component folders MDX can import from (downloaded to src/external-content/custom-components).
+		// Also usable for markdown codeblocks via `mdx-inject` shortcode above; supports media, no styling applied.
+		"custom-components": "",
 	},
 
 	// === URL Redirects ===
