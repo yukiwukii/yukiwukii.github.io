@@ -311,8 +311,11 @@
 		enabled: true,
 		// Remote folders containing external content files.
 		sources: {
-			markdown: "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/markdown",
-			mdx: "https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/mdx",
+			//Each folder in this folder will be treated as a markdown based post. Can contain images and other assets, aimed to be styled close to Notion Blocks. Example url: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/markdown
+			markdown: "",
+			//Each folder in this folder will be treated as a markdown based post. Can contain custom components, images and other assets, slightly styled as Notion blocks but not completely. Example url: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/mdx
+			mdx: "",
+			//Each folder in this folder will be treated as a markdown based post. Can contain custom components, images and other assets, no styling done on webtrotion's end. Example url: https://github.com/nerdymomocat-templates/webtrotion-external-content/tree/main/html
 			html: "",
 		},
 		// Extra component folders remote MDX can import from (downloaded into src/external-content/custom-components). Can also be used for markdown codeblocks with 'mdx-inject' shortcode.

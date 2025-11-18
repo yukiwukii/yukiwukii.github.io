@@ -929,6 +929,20 @@ export async function getBlock(
 	}
 }
 
+function containsMdxSnippetTrigger(rawText: string): boolean {
+	if (!rawText) return false;
+	const trigger = MDX_SNIPPET_TRIGGER?.toLowerCase().trim();
+	if (!trigger) return false;
+
+	const trimmed = rawText.trimStart();
+	const lower = trimmed.toLowerCase();
+	if (lower.startsWith(trigger)) return true;
+
+	// Also check for HTML-escaped comment markers at the start
+	const decoded = trimmed.replaceAll("&lt;!--", "<!--").replaceAll("--&gt;", "-->");
+	return decoded.toLowerCase().startsWith("<!-- mdx inject -->");
+}
+
 export function getUniqueTags(posts: Post[]) {
 	const tagNames: string[] = [];
 	return posts
@@ -1410,11 +1424,10 @@ async function _buildBlock(blockObject: responses.BlockObject, pageId?: string):
 					.map((rt) => ("plain_text" in rt ? rt.plain_text : ""))
 					.join("")
 					.trim();
-				if (rawText.includes(MDX_SNIPPET_TRIGGER)) {
-					const hasExternal =
-						EXTERNAL_CONTENT_CONFIG.enabled && EXTERNAL_CONTENT_CONFIG.sources.length > 0;
+				if (containsMdxSnippetTrigger(rawText)) {
 					const hasCustomComponents = !!EXTERNAL_CONTENT_CONFIG.customComponents;
-					if (hasExternal && hasCustomComponents) {
+					const featureEnabled = EXTERNAL_CONTENT_CONFIG.enabled || hasCustomComponents;
+					if (featureEnabled && hasCustomComponents) {
 						const pageRef = pageId || blockObject.id || "snippet";
 						const blockId =
 							blockObject.id || `${pageRef}-mdx-${Math.random().toString(36).slice(2)}`;
