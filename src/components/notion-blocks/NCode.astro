@@ -263,16 +263,20 @@ const plainTextCaption = joinPlainText(block.Code?.Caption || []);
 		</div>
 	)
 }
+
+{/* prettier-ignore */}
 {
 	language === "mermaid" && (
 		<script>
 			// Only load Mermaid after page load
 			window.addEventListener("load", () => {
-				import("mermaid").then((module) => {
-					const mermaid = module.default;
-					mermaid.initialize({ startOnLoad: false, theme: "base" });
-					mermaid.run();
-				});
+				if (document.querySelector(".mermaid")) {
+					import("mermaid").then((module) => {
+						const mermaid = module.default;
+						mermaid.initialize({ startOnLoad: false, theme: "base" });
+						mermaid.run();
+					});
+				}
 			});
 		</script>
 	)

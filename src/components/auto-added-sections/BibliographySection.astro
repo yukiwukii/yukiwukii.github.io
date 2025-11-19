@@ -129,21 +129,25 @@ const bibliographyHeaderStyles = `
 			</ol>
 
 			{/* Script to handle "Back to citation" button */}
+			{/* prettier-ignore */}
 			<script>
 				// Set up click handlers for back buttons
-				document.querySelectorAll('[data-back-to-citation]').forEach(button => {
-					button.addEventListener('click', (e) => {
+				document.querySelectorAll("[data-back-to-citation]").forEach((button) => {
+					button.addEventListener("click", (e) => {
 						e.preventDefault();
-						const listItem = button.closest('li');
+						const listItem = button.closest("li");
+						// @ts-ignore
 						const blockId = listItem?.dataset.backToBlock;
 
 						if (blockId) {
 							// Navigate back to the citation
 							window.location.hash = `#${blockId}`;
-							document.getElementById(blockId)?.scrollIntoView({ behavior: 'smooth' });
+							document.getElementById(blockId)?.scrollIntoView({ behavior: "smooth" });
 
 							// Clear the data attributes
+							// @ts-ignore
 							delete listItem.dataset.showBackButton;
+							// @ts-ignore
 							delete listItem.dataset.backToBlock;
 						}
 					});
