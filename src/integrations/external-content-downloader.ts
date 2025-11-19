@@ -13,12 +13,36 @@ const RAW_HEADERS = {
 };
 const githubToken = process.env.GITHUB_TOKEN;
 
-async function fetchJson(url: string) {
+interface GitHubEntry {
+	name: string;
+	path: string;
+	sha: string;
+	size: number;
+	url: string;
+	html_url: string;
+	git_url: string;
+	download_url: string | null;
+	type: "file" | "dir";
+}
+
+interface GitHubCommit {
+	sha: string;
+	commit: {
+		author: {
+			date: string;
+		};
+		committer: {
+			date: string;
+		};
+	};
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
 	const headers: Record<string, string> = { ...RAW_HEADERS };
 	if (githubToken) headers.Authorization = `Bearer ${githubToken}`;
 	const res = await fetch(url, { headers });
-	if (!res.ok) throw new Error(`GitHub request failed: ${res.status}`);
-	return res.json();
+	if (!res.ok) throw new Error(`GitHub request failed: ${res.status} ${res.statusText}`);
+	return res.json() as Promise<T>;
 }
 
 function ensureDir(dir: string) {
@@ -38,11 +62,12 @@ async function getLatestCommitDate(
 		remotePath,
 	)}&sha=${encodeURIComponent(source.ref)}&per_page=1`;
 	try {
-		const commits: any[] = await fetchJson(url);
+		const commits = await fetchJson<GitHubCommit[]>(url);
 		const first = Array.isArray(commits) ? commits[0] : null;
 		const dateString = first?.commit?.author?.date || first?.commit?.committer?.date;
 		return dateString ? new Date(dateString) : null;
 	} catch (error) {
+		console.warn(`[external-content] Error fetching commit date for ${remotePath}:`, error);
 		return null;
 	}
 }
@@ -63,11 +88,11 @@ async function downloadFolder(
 	const url = `${GITHUB_API_BASE}/repos/${source.owner}/${source.repo}/contents/${remotePath}?ref=${encodeURIComponent(
 		source.ref,
 	)}`;
-	const listing: any[] = await fetchJson(url);
+	const listing = await fetchJson<GitHubEntry[]>(url);
 	ensureDir(dest);
 	for (const entry of listing) {
 		const entryDest = path.join(dest, entry.name);
-		if (entry.type === "file") {
+		if (entry.type === "file" && entry.download_url) {
 			const rawUrl = entry.download_url;
 			const res = await fetch(rawUrl, {
 				headers: githubToken ? { Authorization: `Bearer ${githubToken}` } : {},
@@ -106,7 +131,14 @@ function copyAssetsFilter(src: string, dest: string, filter: (p: string) => bool
 		}
 	};
 	walk(src, dest);
-	if (!copiedAny) fs.rmSync(dest, { recursive: true, force: true });
+	if (!copiedAny && fs.existsSync(dest)) {
+		// Only remove if it exists and is empty/unused, but recursive force remove is safe
+		try {
+			fs.rmSync(dest, { recursive: true, force: true });
+		} catch (e) {
+			// Ignore cleanup errors
+		}
+	}
 	return copiedAny;
 }
 
@@ -123,12 +155,12 @@ async function runExternalSync(logger: AstroIntegrationLogger) {
 
 	// Handle content sources
 	for (const source of EXTERNAL_CONTENT_CONFIG.sources) {
-		let listing: any[] = [];
+		let listing: GitHubEntry[] = [];
 		try {
 			const url = `${GITHUB_API_BASE}/repos/${source.owner}/${source.repo}/contents/${source.path}?ref=${encodeURIComponent(
 				source.ref,
 			)}`;
-			listing = await fetchJson(url);
+			listing = await fetchJson<GitHubEntry[]>(url);
 		} catch (error) {
 			logger.warn(`[external-content] Failed to list folders for ${source.id}:`, error);
 			continue;
@@ -155,7 +187,9 @@ async function runExternalSync(logger: AstroIntegrationLogger) {
 			}
 
 			if (shouldDownload) {
-				fs.rmSync(stagingDir, { recursive: true, force: true });
+				if (fs.existsSync(stagingDir)) {
+					fs.rmSync(stagingDir, { recursive: true, force: true });
+				}
 				await downloadFolder(source, remotePath, stagingDir, logger);
 			}
 
@@ -206,7 +240,9 @@ async function runExternalSync(logger: AstroIntegrationLogger) {
 		}
 
 		if (shouldDownload) {
-			fs.rmSync(stagingDir, { recursive: true, force: true });
+			if (fs.existsSync(stagingDir)) {
+				fs.rmSync(stagingDir, { recursive: true, force: true });
+			}
 			await downloadFolder(cc, cc.path, stagingDir, logger);
 		}
 
