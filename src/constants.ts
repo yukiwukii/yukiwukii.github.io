@@ -77,6 +77,7 @@ function parseGitHubTreeUrl(rawUrl: string | null | undefined): GitHubTreeInfo |
 function buildExternalContentConfig(): ExternalContentConfig {
 	const rawConfig = key_value_from_json?.["external-content"];
 	const sources: ExternalContentSourceConfig[] = [];
+	const userEnabled = rawConfig?.enabled;
 
 	if (rawConfig && typeof rawConfig === "object") {
 		const rawSources = rawConfig?.sources;
@@ -129,8 +130,10 @@ function buildExternalContentConfig(): ExternalContentConfig {
 		}
 	}
 
+	const hasSourcesConfigured = sources.length > 0 || customComponents !== null;
+
 	return {
-		enabled: sources.length > 0 || customComponents !== null,
+		enabled: userEnabled ?? hasSourcesConfigured,
 		sources,
 		customComponents,
 	};

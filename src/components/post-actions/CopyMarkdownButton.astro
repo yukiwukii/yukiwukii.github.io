@@ -9,6 +9,7 @@ interface Props {
 
 const markdownUrl = new URL("./index.md", Astro.url);
 const markdownPath = markdownUrl.pathname;
+const isDevMode = import.meta.env.MODE !== "production";
 const {
 	label = "Copy as Markdown",
 	class: className = "",
@@ -22,31 +23,41 @@ const buttonClass = `${buttonClassName}`;
 	class:list={["copy-markdown-trigger flex items-center gap-2 text-sm", className]}
 	data-copy-md-root
 >
-	<button
-		type="button"
-		data-copy-md-button
-		data-md-url={markdownPath}
-		class:list={["copy-markdown-btn", buttonClass]}
-		data-copy-state="idle"
-		aria-label={label}
-	>
-		<span class="text-textColor relative flex items-center justify-center">
-			<Icon
-				name="copy-as-markdown"
-				class="copy-icon-default h-6 w-6 transition"
-				data-md-icon="default"
-				aria-hidden="true"
-				focusable="false"
-			/>
-			<Icon
-				name="clipboard-copy-code-done"
-				class="copy-icon-success absolute h-6 w-6 opacity-0 transition"
-				data-md-icon="success"
-				aria-hidden="true"
-				focusable="false"
-			/>
-		</span>
-	</button>
+	{
+		isDevMode ? (
+			<button type="button" class:list={["copy-markdown-btn", buttonClass]} disabled>
+				<span class="text-textColor flex flex-col items-center justify-center text-xs">
+					Only in prod
+				</span>
+			</button>
+		) : (
+			<button
+				type="button"
+				data-copy-md-button
+				data-md-url={markdownPath}
+				class:list={["copy-markdown-btn", buttonClass]}
+				data-copy-state="idle"
+				aria-label={label}
+			>
+				<span class="text-textColor relative flex items-center justify-center">
+					<Icon
+						name="copy-as-markdown"
+						class="copy-icon-default h-6 w-6 transition"
+						data-md-icon="default"
+						aria-hidden="true"
+						focusable="false"
+					/>
+					<Icon
+						name="clipboard-copy-code-done"
+						class="copy-icon-success absolute h-6 w-6 opacity-0 transition"
+						data-md-icon="success"
+						aria-hidden="true"
+						focusable="false"
+					/>
+				</span>
+			</button>
+		)
+	}
 </div>
 
 <script>
