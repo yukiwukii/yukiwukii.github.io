@@ -1,7 +1,4 @@
-import type {
-	ShikiHighlighter,
-	ShikiHighlighterHighlightOptions,
-} from "@astrojs/markdown-remark";
+import type { ShikiHighlighter, ShikiHighlighterHighlightOptions } from "@astrojs/markdown-remark";
 import { createShikiHighlighter } from "@astrojs/markdown-remark";
 
 const DEFAULT_THEME = "github-dark-dimmed";
