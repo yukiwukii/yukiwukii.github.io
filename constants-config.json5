@@ -195,6 +195,8 @@
 		// If true, images from Notion will be optimized (converted to WebP, resized).
 		// Warning: This can significantly increase build time, especially for sites with many images, but will be very helpful for your site size (because there isn't multiple size image rendering).
 		"optimize-images": true,
+		// If true, all pages/posts are converted to markdown format and saved alongside the HTML output for easy use with LLMs and other tools.
+		"process-content-to-markdown": true,
 	},
 
 	// === Shortcodes ===

@@ -161,6 +161,7 @@ export const BUILD_FOLDER_PATHS = {
 	rssCache: path.join("./tmp", "rss-cache"),
 	blocksHtmlCache: path.join("./tmp", "blocks-html-cache"),
 	interlinkedContentHtmlCache: path.join("./tmp", "blocks-html-cache", "interlinked-content"),
+	markdownCache: path.join("./tmp", "markdown-cache"),
 	astroAssetsCache: path.join("./tmp", ".astro", "assets"),
 	public: path.join("./public"),
 	publicNotion: path.join("./public", "notion/"),
@@ -298,6 +299,9 @@ const resolvedShortcodes =
 		: defaultShortcodes;
 
 export const SHORTCODES = resolvedShortcodes;
+
+export const MARKDOWN_EXPORT_ENABLED =
+	key_value_from_json?.["block-rendering"]?.["process-content-to-markdown"] === true;
 
 export const MDX_SNIPPET_TRIGGER =
 	process.env.MDX_SNIPPET_TRIGGER ||
