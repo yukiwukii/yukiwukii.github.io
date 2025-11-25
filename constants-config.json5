@@ -309,7 +309,7 @@
 	// If it matches a prefix, the build downloads and renders it as internal Markdown/MDX/HTML.
 	"external-content": {
 		// Toggle external content pulled from remote sources via Notion’s “External URL” field. Must be true to use features below.
-		enabled: true,
+		enabled: false,
 		// Remote folders containing external content files.
 		sources: {
 			// Each subfolder is treated as a markdown post. Supports media, styled using corresponding Notion blocks.
