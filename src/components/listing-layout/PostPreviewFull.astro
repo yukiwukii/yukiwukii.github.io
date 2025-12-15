@@ -1,6 +1,7 @@
 ---
 import type { HTMLTag } from "astro/types";
 import FormattedDate from "@/components/ui/FormattedDate.astro";
+import AuthorByline from "@/components/layout/AuthorByline.astro";
 import type { Post } from "@/lib/interfaces";
 import { getPostContentByPostId } from "@/lib/notion/client";
 import {
@@ -171,6 +172,8 @@ const postLink = resolvePostHref(post_full_preview);
 		</div>
 	)
 }
+
+{post_full_preview.Authors !== undefined && <AuthorByline authors={post_full_preview.Authors} compact={true} />}
 
 {
 	external ? (

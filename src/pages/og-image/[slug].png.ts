@@ -3,7 +3,7 @@ import satori, { type SatoriOptions } from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import { getFormattedDate } from "@/utils";
 import { buildTimeFilePath } from "@/lib/blog-helpers";
-import { getPostBySlug, getAllEntries, getAllTagsWithCounts } from "@/lib/notion/client";
+import { getPostBySlug, getAllEntries, getAllTagsWithCounts, getAllAuthorsWithCounts, shouldShowAuthors } from "@/lib/notion/client";
 import { getCollectionsWDesc } from "@/utils";
 
 import { siteInfo } from "@/siteInfo";
@@ -14,6 +14,7 @@ import {
 	THEME,
 	MENU_PAGES_COLLECTION,
 	BUILD_FOLDER_PATHS,
+	AUTHORS_CONFIG,
 } from "@/constants";
 
 import fs from "fs";
@@ -1181,6 +1182,13 @@ export async function GET(context: APIContext) {
 		chosen_markup = tagDescription
 			? obj_img_none_with_desc("All posts tagged with #" + keyStr, " ", tagDescription, author)
 			: obj_img_none_without_desc("All posts tagged with #" + keyStr, " ", author);
+	} else if (type == "authorpage") {
+		const authorDescription = (props as any)?.description || "";
+		chosen_markup = authorDescription
+			? obj_img_none_with_desc("Posts by " + keyStr, " ", authorDescription, "")
+			: obj_img_none_without_desc("Posts by " + keyStr, " ", "");
+	} else if (type == "authorsindex") {
+		chosen_markup = obj_img_none_without_desc("All Authors", " ", "");
 	} else {
 		chosen_markup = obj_img_none_without_desc("All posts in one place", " ", author);
 	}
@@ -1231,9 +1239,32 @@ export const getStaticPaths: GetStaticPaths = async () => {
 		props: { description: tag.description },
 	}));
 
+	// Add author pages OG images (conditional on shouldShowAuthors)
+	let authorMap: { params: { slug: string }; props?: { description: string } }[] = [];
+	let authorsindex: { params: { slug: string } } | null = null;
+
+	const showAuthors = await shouldShowAuthors();
+	if (showAuthors && AUTHORS_CONFIG.enableAuthorPages) {
+		const allAuthors = await getAllAuthorsWithCounts();
+		authorMap = allAuthors.map((author) => ({
+			params: { slug: "authorpage---" + author.name },
+			props: { description: author.bio || "" },
+		}));
+		authorsindex = { params: { slug: "authorsindex---index" } };
+	}
+
 	const tagsindex = { params: { slug: "tagsindex---index" } };
 	const postsindex = { params: { slug: "postsindex---index" } };
 	const collectionsindex = { params: { slug: "collectionsindex---index" } };
 
-	return [...postsMap, ...collectionMap, ...tagMap, tagsindex, postsindex, collectionsindex];
+	return [
+		...postsMap,
+		...collectionMap,
+		...tagMap,
+		...authorMap,
+		tagsindex,
+		postsindex,
+		collectionsindex,
+		...(authorsindex ? [authorsindex] : []),
+	];
 };

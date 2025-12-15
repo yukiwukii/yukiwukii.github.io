@@ -526,6 +526,11 @@ ${createCssVariables("dark")}
     @apply inline-block rounded-md px-1 text-sm;
   }
 
+  /* Count Badge (for tags and authors) */
+  .count-badge {
+    @apply ml-2 rounded-sm bg-gray-100 px-2 py-0.5 text-rose-800 dark:bg-gray-800 dark:text-rose-300;
+  }
+
   /* Image */
   .notion-image-figure {
     @apply mx-auto mt-1 max-w-full;
@@ -627,6 +632,15 @@ ${createCssVariables("dark")}
   /* Annotations */
   .anchor-link-dashed {
     @apply text-link decoration-accent-2/40 underline decoration-dashed underline-offset-2;
+  }
+
+  /* Author Byline */
+  .author-name-link {
+    @apply text-link underline decoration-wavy decoration-from-font decoration-accent-2/40 hover:decoration-accent-2/80 underline-offset-2 transition-all;
+  }
+
+  .author-icon-link {
+    @apply text-link inline-flex items-center transition-all hover:scale-110 hover:text-accent;
   }
 
   .annotation-code {
