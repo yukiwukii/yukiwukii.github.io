@@ -200,6 +200,35 @@ export const DATABASE_ID =
 export const DATA_SOURCE_ID =
 	process.env.DATA_SOURCE_ID || key_value_from_json?.notion?.["data-source-id"] || "";
 export const AUTHOR = key_value_from_json?.["site-info"]?.author || "";
+
+// Authors configuration for multi-author support
+export interface AuthorsConfig {
+	siteAuthorUrl: string;
+	siteAuthorPhoto: string;
+	enableAuthorPages: boolean;
+	onlyWhenCustomAuthors: boolean;
+}
+
+export const AUTHORS_CONFIG: AuthorsConfig = {
+	siteAuthorUrl: key_value_from_json?.["site-info"]?.authors?.["site-author-url"] || "",
+	siteAuthorPhoto: key_value_from_json?.["site-info"]?.authors?.["site-author-photo"] || "",
+	enableAuthorPages: key_value_from_json?.["site-info"]?.authors?.["enable-author-pages"] ?? true,
+	onlyWhenCustomAuthors:
+		key_value_from_json?.["site-info"]?.authors?.["only-when-custom-authors"] ?? true,
+};
+
+// Author shortcodes for parsing description field
+export const AUTHOR_SHORTCODES = {
+	url: {
+		start: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.start || "<<author-url>>",
+		end: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.end || "<<author-url>>",
+	},
+	photo: {
+		start: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.start || "<<author-photo-url>>",
+		end: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.end || "<<author-photo-url>>",
+	},
+};
+
 export const TRACKING = key_value_from_json["tracking"] || {};
 export const WEBMENTION_API_KEY =
 	import.meta.env.WEBMENTION_API_KEY ||

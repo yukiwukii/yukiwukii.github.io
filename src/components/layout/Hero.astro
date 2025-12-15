@@ -1,5 +1,6 @@
 ---
 import FormattedDate from "@/components/ui/FormattedDate.astro";
+import AuthorByline from "@/components/layout/AuthorByline.astro";
 import type { Post } from "@/lib/interfaces";
 import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import { areDifferentDates } from "@/utils/date";
@@ -28,6 +29,7 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 	{post.Title}
 </h1>
 {post.Excerpt && <q class="mb-2 block italic">{post.Excerpt}</q>}
+{post.Authors !== undefined && <AuthorByline authors={post.Authors} class="mb-2" />}
 <div class="flex max-w-full flex-wrap items-center gap-x-3 gap-y-2">
 	<p class="font-semibold">
 		<FormattedDate date={new Date(post.Date)} dateTimeOptions={dateTimeOptions} />
