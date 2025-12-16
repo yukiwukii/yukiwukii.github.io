@@ -381,7 +381,9 @@ export const COVER_OVERLAY_ENABLED = key_value_from_json?.["theme"]?.["cover-ove
 
 // Normalize listing-view: anything except explicit "list" falls back to the default "list".
 export const LISTING_VIEW: "list" | "gallery" =
-	key_value_from_json?.["theme"]?.["listing-view"] === "gallery" ? "gallery" : "list";
+	key_value_from_json?.["collections-and-listings"]?.["listing-view"] === "gallery"
+		? "gallery"
+		: "list";
 
 export const GOOGLE_SEARCH_CONSOLE_META_TAG =
 	key_value_from_json?.tracking?.["google-search-console-html-tag"] || null;
