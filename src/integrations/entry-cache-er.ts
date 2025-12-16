@@ -48,14 +48,19 @@ export default (): AstroIntegration => ({
 							url = new URL(entry.FeaturedImage.Url);
 
 							// Check if we need to download to public/notion (for OG images)
-							const publicPath = generateFilePath(url, false);
+							const publicPath = (() => {
+								const base = generateFilePath(url, false);
+								const ext = base.toLowerCase().slice(base.lastIndexOf("."));
+								if ([".jpg", ".jpeg", ".png"].includes(ext)) return base;
+								return base.replace(ext, ".png");
+							})();
 							const needsPublicDownload =
 								!LAST_BUILD_TIME ||
 								entry.LastUpdatedTimeStamp > LAST_BUILD_TIME ||
 								!fs.existsSync(publicPath);
 
 							if (needsPublicDownload) {
-								tasks.push(downloadFile(url, false));
+								tasks.push(downloadFile(url, false, false, true));
 							}
 
 							// For gallery view, also download to src/assets/notion for optimized images

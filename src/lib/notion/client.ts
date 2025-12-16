@@ -1313,7 +1313,9 @@ export async function downloadFile(
 	url: URL,
 	isImageForAstro: boolean = false,
 	isFavicon: boolean = false,
-) {
+	convertToPng: boolean = false,
+): Promise<string | void> {
+
 	let res!: AxiosResponse;
 	try {
 		res = await axios({
@@ -1333,6 +1335,8 @@ export async function downloadFile(
 	}
 
 	const filepath = generateFilePath(url, isImageForAstro);
+	const ext = path.extname(filepath).toLowerCase();
+	const pngPath = path.join(path.dirname(filepath), `${path.parse(filepath).name}.png`);
 
 	let stream = res.data;
 
@@ -1386,6 +1390,22 @@ export async function downloadFile(
 			resolve();
 		});
 	});
+
+	// Convert non-jpg/png images to png when we downloaded an asset image (favicons handled separately)
+	const shouldConvertToPng = convertToPng && !isFavicon && ![".jpg", ".jpeg", ".png"].includes(ext);
+
+	if (shouldConvertToPng) {
+		try {
+			await sharp(filepath).png().toFile(pngPath);
+			fs.unlinkSync(filepath);
+			return pngPath;
+		} catch (err) {
+			console.error("Error converting image to PNG (conversion skipped):", err);
+			return filepath;
+		}
+	}
+
+	return filepath;
 }
 
 export async function processFileBlocks(fileAttachedBlocks: Block[]) {
