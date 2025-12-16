@@ -1280,6 +1280,138 @@ html.dark :not(.datatable-ascending):not(.datatable-descending)>.datatable-sorte
   }
 }
 
+/* Gallery Grid Layout - 1 col sm, 2 cols md, 3 cols lg */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Post Card for Gallery View */
+.post-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-textColor) 10%, transparent);
+  border-radius: 0.5rem;
+  background-color: var(--color-bgColor);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.post-card:hover {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-textColor) 10%, transparent);
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Card link - covers entire card */
+.post-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Image container with 3:2 aspect ratio */
+.post-card-image-container {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+}
+
+.post-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.post-card:hover .post-card-image {
+  transform: scale(1.05);
+}
+
+.post-card-placeholder {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 10%, transparent), color-mix(in srgb, var(--color-accent) 20%, transparent));
+}
+
+.post-card-placeholder span {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+/* Tags section - positioned at bottom, allows separate clicks */
+.post-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0 0.75rem 0.75rem;
+}
+
+/* Authors section - positioned above tags, allows separate clicks */
+.post-card-authors {
+  padding: 0 0.75rem 0.25rem;
+}
+
+/* Cover Overlay for Hero and Stream */
+.cover-overlay-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  min-height: 120px;
+  max-height: 200px;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cover-overlay-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+}
+
+.cover-overlay-tint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-bgColor) 70%, transparent),
+    color-mix(in srgb, var(--color-bgColor) 85%, transparent)
+  );
+}
+
+.cover-overlay-content {
+  position: relative;
+  z-index: 10;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.cover-overlay-content h1,
+.cover-overlay-content .title {
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--color-bgColor) 30%, transparent);
+}
+
 .glightbox-clean .gslide-description {
   background: var(--color-bgColor);
 }`;

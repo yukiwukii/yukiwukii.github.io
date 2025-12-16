@@ -6,7 +6,7 @@ import {
 	getPostContentByPostId,
 	createInterlinkedContentToThisEntry,
 } from "../lib/notion/client";
-import { LAST_BUILD_TIME } from "../constants";
+import { LAST_BUILD_TIME, LISTING_VIEW } from "../constants";
 import fs from "node:fs";
 
 export default (): AstroIntegration => ({
@@ -19,20 +19,33 @@ export default (): AstroIntegration => ({
 				entries.map(async (entry) => {
 					let tasks = [];
 
-					// Conditionally add the downloadFile task for featured images
-					if (
-						entry.FeaturedImage &&
-						entry.FeaturedImage.Url &&
-						!(
-							LAST_BUILD_TIME &&
-							entry.LastUpdatedTimeStamp < LAST_BUILD_TIME &&
-							!fs.existsSync(generateFilePath(new URL(entry.FeaturedImage.Url)))
-						)
-					) {
+					// Download FeaturedImage if it exists
+					if (entry.FeaturedImage && entry.FeaturedImage.Url) {
 						let url;
 						try {
 							url = new URL(entry.FeaturedImage.Url);
-							tasks.push(downloadFile(url, false));
+
+							// Check if we need to download to public/notion (for OG images)
+							const publicPath = generateFilePath(url, false);
+							const needsPublicDownload = !LAST_BUILD_TIME ||
+								entry.LastUpdatedTimeStamp > LAST_BUILD_TIME ||
+								!fs.existsSync(publicPath);
+
+							if (needsPublicDownload) {
+								tasks.push(downloadFile(url, false));
+							}
+
+							// For gallery view, also download to src/assets/notion for optimized images
+							if (LISTING_VIEW === "gallery") {
+								const assetsPath = generateFilePath(url, true);
+								const needsAssetsDownload = !LAST_BUILD_TIME ||
+									entry.LastUpdatedTimeStamp > LAST_BUILD_TIME ||
+									!fs.existsSync(assetsPath);
+
+								if (needsAssetsDownload) {
+									tasks.push(downloadFile(url, true));
+								}
+							}
 						} catch (err) {
 							console.log("Invalid FeaturedImage URL");
 						}

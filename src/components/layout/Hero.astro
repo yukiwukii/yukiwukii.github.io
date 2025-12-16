@@ -4,60 +4,129 @@ import AuthorByline from "@/components/layout/AuthorByline.astro";
 import type { Post } from "@/lib/interfaces";
 import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import { areDifferentDates } from "@/utils/date";
-import { getNavLink } from "@/lib/blog-helpers";
+import { getNavLink, filePath } from "@/lib/blog-helpers";
 import Icon from "@/components/ui/Icon.astro";
 import { slugify } from "@/utils";
+import { COVER_OVERLAY_ENABLED } from "@/constants";
 
 interface Props {
 	post: Post;
 }
 
 const { post } = Astro.props;
-//FIXME: figure out what this remarkPluginFrontmatter is
-// const { remarkPluginFrontmatter } = await render();
 
 const dateTimeOptions: Intl.DateTimeFormatOptions = {
 	month: "long",
 };
+
+// Check if we should show cover overlay
+const hasCover = post.Cover && post.Cover.Url;
+const showOverlay = COVER_OVERLAY_ENABLED && hasCover;
+
+// Get cover image URL for background
+let coverImageUrl = "";
+if (showOverlay && post.Cover) {
+	try {
+		const coverUrl = new URL(post.Cover.Url);
+		// Use filePath for Notion-hosted images
+		coverImageUrl = filePath(coverUrl);
+	} catch {
+		// For external URLs or if parsing fails, use directly
+		coverImageUrl = post.Cover.Url;
+	}
+}
 ---
 
-<h1
-	class="title mb-3 sm:mb-1"
-	data-pagefind-filter=`collections:${post.Collection}`
-	data-pagefind-weight="10"
->
-	{post.Title}
-</h1>
-{post.Excerpt && <q class="mb-2 block italic">{post.Excerpt}</q>}
-{post.Authors !== undefined && <AuthorByline authors={post.Authors} class="mb-2" />}
-<div class="flex max-w-full flex-wrap items-center gap-x-3 gap-y-2">
-	<p class="font-semibold">
-		<FormattedDate date={new Date(post.Date)} dateTimeOptions={dateTimeOptions} />
-	</p>
-	{
-		post.Date && post.LastUpdatedDate && areDifferentDates(post.Date, post.LastUpdatedDate) && (
-			<span class="bg-quote/10 text-quote rounded-lg p-1">
-				{"Last Updated:"}
-				<FormattedDate
-					class="ms-1"
-					date={new Date(post.LastUpdatedDate)}
-					dateTimeOptions={dateTimeOptions}
+{showOverlay ? (
+	<div class="cover-overlay-container mb-4">
+		<div
+			class="cover-overlay-bg"
+			style={`background-image: url('${coverImageUrl}')`}
+		></div>
+		<div class="cover-overlay-tint"></div>
+		<div class="cover-overlay-content">
+			<h1
+				class="title mb-2 sm:mb-1"
+				data-pagefind-filter={`collections:${post.Collection}`}
+				data-pagefind-weight="10"
+			>
+				{post.Title}
+			</h1>
+			{post.Excerpt && <q class="mb-2 block italic text-sm">{post.Excerpt}</q>}
+			{post.Authors !== undefined && <AuthorByline authors={post.Authors} class="mb-2" />}
+			<div class="flex max-w-full flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+				<p class="font-semibold">
+					<FormattedDate date={new Date(post.Date)} dateTimeOptions={dateTimeOptions} />
+				</p>
+				{post.Date && post.LastUpdatedDate && areDifferentDates(post.Date, post.LastUpdatedDate) && (
+					<span class="bg-white/20 rounded-lg p-1">
+						{"Last Updated:"}
+						<FormattedDate
+							class="ms-1"
+							date={new Date(post.LastUpdatedDate)}
+							dateTimeOptions={dateTimeOptions}
+						/>
+					</span>
+				)}
+			</div>
+			{post.Tags && post.Tags.length > 0 && (
+				<div class="mt-2">
+					<Icon
+						class="me-1 inline-block h-4 w-4"
+						name={"tag-outline"}
+						aria-hidden="true"
+						focusable="false"
+					/>
+					{post.Tags.map((tag) => (
+						<a
+							class="mt-1 inline-block rounded-lg px-2 bg-white/20 text-white text-sm"
+							aria-label={`View more blogs with the tag ${tag.name}`}
+							href={getNavLink("/tags/" + slugify(tag.name) + "/")}
+							data-pagefind-filter="tags"
+						>
+							{tag.name}
+						</a>
+					))}
+				</div>
+			)}
+		</div>
+	</div>
+	<hr class="divider bg-accent/30 mx-auto my-4 h-1 w-full rounded-sm border-none" />
+) : (
+	<>
+		<h1
+			class="title mb-3 sm:mb-1"
+			data-pagefind-filter={`collections:${post.Collection}`}
+			data-pagefind-weight="10"
+		>
+			{post.Title}
+		</h1>
+		{post.Excerpt && <q class="mb-2 block italic">{post.Excerpt}</q>}
+		{post.Authors !== undefined && <AuthorByline authors={post.Authors} class="mb-2" />}
+		<div class="flex max-w-full flex-wrap items-center gap-x-3 gap-y-2">
+			<p class="font-semibold">
+				<FormattedDate date={new Date(post.Date)} dateTimeOptions={dateTimeOptions} />
+			</p>
+			{post.Date && post.LastUpdatedDate && areDifferentDates(post.Date, post.LastUpdatedDate) && (
+				<span class="bg-quote/10 text-quote rounded-lg p-1">
+					{"Last Updated:"}
+					<FormattedDate
+						class="ms-1"
+						date={new Date(post.LastUpdatedDate)}
+						dateTimeOptions={dateTimeOptions}
+					/>
+				</span>
+			)}
+		</div>
+		{post.Tags && post.Tags.length > 0 && (
+			<div class="mt-2">
+				<Icon
+					class="me-1 inline-block h-4 w-4"
+					name={"tag-outline"}
+					aria-hidden="true"
+					focusable="false"
 				/>
-			</span>
-		)
-	}
-</div>
-{
-	post.Tags && post.Tags.length > 0 && (
-		<div class="mt-2">
-			<Icon
-				class="me-1 inline-block h-4 w-4"
-				name={"tag-outline"}
-				aria-hidden="true"
-				focusable="false"
-			/>
-			{post.Tags.map((tag, i) => (
-				<>
+				{post.Tags.map((tag) => (
 					<a
 						class={`mt-1 inline-block rounded-lg px-2 ${getNotionColorToTailwindColor(
 							tag.color + "-background",
@@ -68,10 +137,10 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 						data-pagefind-filter="tags"
 					>
 						{tag.name}
-					</a>{" "}
-				</>
-			))}
-		</div>
-	)
-}
-<hr class="divider bg-accent/30 mx-auto my-4 h-1 w-full rounded-sm border-none" />
+					</a>
+				))}
+			</div>
+		)}
+		<hr class="divider bg-accent/30 mx-auto my-4 h-1 w-full rounded-sm border-none" />
+	</>
+)}

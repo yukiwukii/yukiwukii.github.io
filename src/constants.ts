@@ -370,6 +370,10 @@ export const BLUESKY_COMM = key_value_from_json?.comments?.["bluesky-comments"] 
 
 export const THEME = key_value_from_json["theme"] || {};
 
+export const COVER_OVERLAY_ENABLED = key_value_from_json?.["theme"]?.["cover-overlay"] ?? false;
+
+export const LISTING_VIEW: "list" | "gallery" = key_value_from_json?.["theme"]?.["listing-view"] ?? "list";
+
 export const GOOGLE_SEARCH_CONSOLE_META_TAG =
 	key_value_from_json?.tracking?.["google-search-console-html-tag"] || null;
 

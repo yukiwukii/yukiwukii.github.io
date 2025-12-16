@@ -2,11 +2,12 @@
 import type { Page, GetStaticPaths } from "astro";
 import PageLayout from "@/layouts/Base.astro";
 import PostPreview from "@/components/listing-layout/PostPreview.astro";
+import PostCardGallery from "@/components/listing-layout/PostCardGallery.astro";
 import Pagination from "@/components/listing-layout/Paginator.astro";
 import { getAllPosts, getAllAuthorsWithCounts, shouldShowAuthors } from "@/lib/notion/client";
 import type { Post } from "@/lib/interfaces";
 import { slugify } from "@/utils";
-import { HIDE_UNDERSCORE_SLUGS_IN_LISTS, NUMBER_OF_POSTS_PER_PAGE, AUTHORS_CONFIG } from "@/constants";
+import { HIDE_UNDERSCORE_SLUGS_IN_LISTS, NUMBER_OF_POSTS_PER_PAGE, AUTHORS_CONFIG, LISTING_VIEW } from "@/constants";
 import { getNavLink } from "@/lib/blog-helpers";
 import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import Icon from "@/components/ui/Icon.astro";
@@ -143,15 +144,21 @@ const paginationProps = {
 	</div>
 
 	<section aria-label="Blog post list">
-		<ul class="space-y-4">
-			{
-				page.data.map((p) => (
+		{LISTING_VIEW === "gallery" ? (
+			<div class="gallery-grid">
+				{page.data.map((p) => (
+					<PostCardGallery post={p} as="h2" />
+				))}
+			</div>
+		) : (
+			<ul class="space-y-4">
+				{page.data.map((p) => (
 					<li class="flex max-w-full flex-col flex-wrap gap-1.5 [&_q]:basis-full">
 						<PostPreview post={p} as="h2" withDesc />
 					</li>
-				))
-			}
-		</ul>
+				))}
+			</ul>
+		)}
 		<Pagination {...paginationProps} />
 	</section>
 </PageLayout>

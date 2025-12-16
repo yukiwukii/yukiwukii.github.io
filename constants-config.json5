@@ -101,6 +101,14 @@
 			// No need to escape spaces in font names!
 			"mono-font-name": "Roboto Mono",
 		},
+		// Enable overlay on hero cover images for better text readability.
+		// When enabled, displays a low-opacity tinted banner behind the title/date/tags area
+		// using the Cover image (only when a Cover image exists).
+		"cover-overlay": false,
+		// Listing view style for post lists.
+		// "list" (default): Traditional vertical list with title, date, excerpt, and tags.
+		// "gallery": Card-based grid layout with FeaturedImage thumbnails.
+		"listing-view": "gallery",
 	},
 
 	// === Social Media Links ===
