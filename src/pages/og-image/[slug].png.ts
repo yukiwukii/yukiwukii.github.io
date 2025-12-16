@@ -8,7 +8,10 @@ import {
 	getAllEntries,
 	getAllTagsWithCounts,
 	getAllAuthorsWithCounts,
-	shouldShowAuthors,
+	hasAuthorsProperty,
+	hasCustomAuthors,
+	downloadFile,
+	generateFilePath,
 } from "@/lib/notion/client";
 import { getCollectionsWDesc } from "@/utils";
 
@@ -192,6 +195,134 @@ const logo_src =
 			? await logoToBase64(customIconURL)
 			: null;
 
+const isImageUrl = (url?: string) =>
+	!!url &&
+	(() => {
+		try {
+			const pathname = new URL(url).pathname.toLowerCase();
+			return /\.(png|jpe?g|gif|webp|avif)$/i.test(pathname);
+		} catch {
+			return false;
+		}
+	})();
+
+const toPngDataUrl = async (filepath: string): Promise<string | null> => {
+	try {
+		const buffer = await sharp(filepath).png().toBuffer();
+		return `data:image/png;base64,${buffer.toString("base64")}`;
+	} catch (err) {
+		console.error("Error creating data URL:", err);
+		return null;
+	}
+};
+
+// For OG images: prefer existing local PNGs; otherwise download/convert via downloadFile.
+// mode: "featured" (check public/notion cached file) | "author" (allow direct jpg/png URLs)
+const normalizeOgImageSrc = async (
+	urlStr: string | undefined,
+	mode: "featured" | "author" = "featured",
+): Promise<string | undefined> => {
+	if (!urlStr) return undefined;
+	try {
+		const url = new URL(urlStr);
+		const ext = path.extname(url.pathname).toLowerCase();
+
+		const isPngLike = [".jpg", ".jpeg", ".png"].includes(ext);
+
+		if (mode === "featured") {
+			// Look for the cached/converted public file first
+			const publicPath = generateFilePath(
+				new URL(url.href.replace(ext || "", isPngLike ? ext : ".png")),
+				false,
+			);
+
+			if (fs.existsSync(publicPath)) {
+				const dataUrl = await toPngDataUrl(publicPath);
+				return dataUrl || publicPath;
+			}
+
+			// Fallback: download/convert to public/notion
+			const savedPath = await downloadFile(url, false, false, true);
+			if (savedPath) {
+				const dataUrl = await toPngDataUrl(savedPath);
+				return dataUrl || savedPath;
+			}
+
+			return undefined;
+		}
+
+		// mode === "author"
+		if (isPngLike) return urlStr; // remote jpg/png is acceptable
+
+		const savedPath = await downloadFile(url, false, false, true);
+		if (savedPath) {
+			const dataUrl = await toPngDataUrl(savedPath);
+			return dataUrl || savedPath;
+		}
+
+		return undefined;
+	} catch (err) {
+		console.error("Error normalizing OG image src:", err);
+		return undefined;
+	}
+};
+
+// Build the author block; shows logo if available, name only when non-empty
+const buildAuthorInfo = (author: string, size: number) => {
+	const children = [];
+
+	if (logo_src) {
+		children.push({
+			type: "img",
+			props: {
+				src: logo_src,
+				style: {
+					height: `${size}px`,
+					width: `${size}px`,
+					objectFit: "contain",
+					objectPosition: "center",
+				},
+			},
+		});
+	}
+
+	if (author) {
+		const names = author
+			.split(",")
+			.map((n) => n.trim())
+			.filter((n) => n.length > 0);
+		const count = names.length || 1;
+		const fontSize =
+			count > 2 ? Math.max(12, size - 8) : count === 2 ? Math.max(12, size - 4) : size;
+
+		children.push({
+			type: "span",
+			props: {
+				style: {
+					marginRight: "16px",
+					fontSize: `${fontSize}px`,
+					fontFamily: footnoteFontFamily,
+				},
+				children: names.join(", "),
+			},
+		});
+	}
+
+	if (children.length === 0) return null;
+
+	return {
+		type: "div",
+		props: {
+			style: {
+				display: "flex",
+				alignItems: "center",
+				gap: "10px",
+			},
+			children,
+		},
+	};
+};
+
 const obj_img_sq_without_desc = function (
 	title: string,
 	pubDate: string,
@@ -317,41 +448,7 @@ const obj_img_sq_without_desc = function (
 																					children: pubDate,
 																				},
 																			},
-																			{
-																				type: "div",
-																				props: {
-																					style: {
-																						display: "flex",
-																						alignItems: "center",
-																						gap: "10px",
-																					},
-																					children: [
-																						logo_src
-																							? {
-																									type: "img",
-																									props: {
-																										src: logo_src, // Add the source only if logo_src exists.
-																										style: {
-																											height: "40px",
-																											width: "40px",
-																											objectFit: "contain",
-																											objectPosition: "center",
-																										},
-																									},
-																								}
-																							: null,
-																						{
-																							type: "span",
-																							props: {
-																								style: {
-																									marginRight: "16px",
-																								},
-																								children: author,
-																							},
-																						},
-																					],
-																				},
-																			},
+																			buildAuthorInfo(author, 40),
 																		],
 																	},
 																},
@@ -514,42 +611,7 @@ const obj_img_sq_with_desc = function (
 																					children: pubDate,
 																				},
 																			},
-																			{
-																				type: "div",
-																				props: {
-																					style: {
-																						display: "flex",
-																						alignItems: "center",
-																						gap: "10px",
-																					},
-																					children: [
-																						logo_src
-																							? {
-																									type: "img",
-																									props: {
-																										src: logo_src, // Add the source only if logo_src exists.
-																										style: {
-																											height: "30px",
-																											width: "30px",
-																											objectFit: "contain",
-																											objectPosition: "center",
-																										},
-																									},
-																								}
-																							: null,
-																						{
-																							type: "span",
-																							props: {
-																								style: {
-																									marginRight: "16px",
-																									fontFamily: footnoteFontFamily,
-																								},
-																								children: author,
-																							},
-																						},
-																					],
-																				},
-																			},
+																			buildAuthorInfo(author, 30),
 																		],
 																	},
 																},
@@ -672,41 +734,7 @@ const obj_img_none_without_desc = function (title: string, pubDate: string, auth
 																					children: pubDate,
 																				},
 																			},
-																			{
-																				type: "div",
-																				props: {
-																					style: {
-																						display: "flex",
-																						alignItems: "center",
-																						gap: "10px",
-																					},
-																					children: [
-																						logo_src
-																							? {
-																									type: "img",
-																									props: {
-																										src: logo_src, // Add the source only if logo_src exists.
-																										style: {
-																											height: "30px",
-																											width: "30px",
-																											objectFit: "contain",
-																											objectPosition: "center",
-																										},
-																									},
-																								}
-																							: null,
-																						{
-																							type: "span",
-																							props: {
-																								style: {
-																									marginRight: "16px",
-																								},
-																								children: author,
-																							},
-																						},
-																					],
-																				},
-																			},
+																			buildAuthorInfo(author, 30),
 																		],
 																	},
 																},
@@ -850,41 +878,7 @@ const obj_img_none_with_desc = function (
 																					children: pubDate,
 																				},
 																			},
-																			{
-																				type: "div",
-																				props: {
-																					style: {
-																						display: "flex",
-																						alignItems: "center",
-																						gap: "10px",
-																					},
-																					children: [
-																						logo_src
-																							? {
-																									type: "img",
-																									props: {
-																										src: logo_src, // Add the source only if logo_src exists.
-																										style: {
-																											height: "30px",
-																											width: "30px",
-																											objectFit: "contain",
-																											objectPosition: "center",
-																										},
-																									},
-																								}
-																							: null,
-																						{
-																							type: "span",
-																							props: {
-																								style: {
-																									marginRight: "16px",
-																								},
-																								children: author,
-																							},
-																						},
-																					],
-																				},
-																			},
+																			buildAuthorInfo(author, 30),
 																		],
 																	},
 																},
@@ -915,6 +909,7 @@ const obj_img_bg = function (title: string, pubDate: string, img_url: string, au
 				width: "100%",
 				height: "100%",
 				backgroundColor: og_images_colors["backgroundColor"],
+				position: "relative",
 			},
 			children: [
 				{
@@ -1022,41 +1017,7 @@ const obj_img_bg = function (title: string, pubDate: string, img_url: string, au
 																					children: pubDate,
 																				},
 																			},
-																			{
-																				type: "div",
-																				props: {
-																					style: {
-																						display: "flex",
-																						alignItems: "center",
-																						gap: "10px",
-																					},
-																					children: [
-																						logo_src
-																							? {
-																									type: "img",
-																									props: {
-																										src: logo_src, // Add the source only if logo_src exists.
-																										style: {
-																											height: "30px",
-																											width: "30px",
-																											objectFit: "contain",
-																											objectPosition: "center",
-																										},
-																									},
-																								}
-																							: null,
-																						{
-																							type: "span",
-																							props: {
-																								style: {
-																									marginRight: "16px",
-																								},
-																								children: author,
-																							},
-																						},
-																					],
-																				},
-																			},
+																			buildAuthorInfo(author, 30),
 																		],
 																	},
 																},
@@ -1124,7 +1085,10 @@ export async function GET(context: APIContext) {
 
 	let chosen_markup;
 	let fallback_markup;
-	let author = siteInfo.author;
+	let author = siteInfo.author?.trim() || "";
+
+	const authorsPropertyExists = await hasAuthorsProperty();
+
 	if (type == "postpage") {
 		const title = post?.Title
 			? post.Slug == HOME_PAGE_SLUG
@@ -1136,30 +1100,25 @@ export async function GET(context: APIContext) {
 			(post?.Collection && MENU_PAGES_COLLECTION.includes(post?.Collection))
 				? ""
 				: getFormattedDate(post?.Date ?? post?.Date ?? Date.now());
-		author = post?.Slug == HOME_PAGE_SLUG ? "" : siteInfo.author;
-		if (
-			OG_SETUP["columns"] == 1 &&
-			post?.FeaturedImage &&
-			post?.FeaturedImage.ExpiryTime &&
-			Date.parse(post?.FeaturedImage.ExpiryTime) > Date.now() &&
-			(post.FeaturedImage.Url.includes(".jpg") ||
-				post.FeaturedImage.Url.includes(".png") ||
-				post.FeaturedImage.Url.includes(".jpeg"))
-		) {
-			chosen_markup = obj_img_bg(title, postDate, post.FeaturedImage.Url, author);
-		} else if (
-			OG_SETUP["columns"] &&
-			post?.FeaturedImage &&
-			post?.FeaturedImage.ExpiryTime &&
-			Date.parse(post?.FeaturedImage.ExpiryTime) > Date.now() &&
-			(post.FeaturedImage.Url.includes(".jpg") ||
-				post.FeaturedImage.Url.includes(".png") ||
-				post.FeaturedImage.Url.includes(".jpeg"))
-		) {
+		const postAuthors =
+			authorsPropertyExists && post?.Authors && post.Authors.length > 0
+				? post.Authors.map((a) => a.name).join(", ")
+				: "";
+
+		author = post?.Slug == HOME_PAGE_SLUG ? "" : postAuthors || author;
+
+		const normalizedFeaturedUrl = await normalizeOgImageSrc(post?.FeaturedImage?.Url);
+		const hasFeaturedImage =
+			!!normalizedFeaturedUrl &&
+			(!post?.FeaturedImage?.ExpiryTime || Date.parse(post?.FeaturedImage.ExpiryTime) > Date.now());
+
+		if (OG_SETUP["columns"] == 1 && hasFeaturedImage) {
+			chosen_markup = obj_img_bg(title, postDate, normalizedFeaturedUrl!, author);
+		} else if (OG_SETUP["columns"] && hasFeaturedImage) {
 			chosen_markup =
 				post?.Excerpt && OG_SETUP["excerpt"]
-					? obj_img_sq_with_desc(title, postDate, post?.Excerpt, post.FeaturedImage.Url, author)
-					: obj_img_sq_without_desc(title, postDate, post.FeaturedImage.Url, author);
+					? obj_img_sq_with_desc(title, postDate, post?.Excerpt, normalizedFeaturedUrl!, author)
+					: obj_img_sq_without_desc(title, postDate, normalizedFeaturedUrl!, author);
 		} else {
 			chosen_markup =
 				post?.Excerpt && OG_SETUP["excerpt"]
@@ -1171,28 +1130,52 @@ export async function GET(context: APIContext) {
 			: obj_img_none_without_desc(title, postDate, author);
 	} else if (type == "collectionpage") {
 		const collectionDescription = (props as any)?.description || "";
+		const byline = siteInfo.title || author;
 		chosen_markup = collectionDescription
 			? obj_img_none_with_desc(
 					keyStr + " : " + "A collection of posts",
 					" ",
 					collectionDescription,
-					author,
+					byline,
 				)
-			: obj_img_none_without_desc(keyStr + " : " + "A collection of posts", " ", author);
+			: obj_img_none_without_desc(keyStr + " : " + "A collection of posts", " ", byline);
 	} else if (type == "tagsindex") {
-		chosen_markup = obj_img_none_without_desc("All topics I've written about", " ", author);
+		const byline = siteInfo.title || author;
+		chosen_markup = obj_img_none_without_desc("All topics I've written about", " ", byline);
 	} else if (type == "collectionsindex") {
-		chosen_markup = obj_img_none_without_desc("All collections that hold my posts", " ", author);
+		const byline = siteInfo.title || author;
+		chosen_markup = obj_img_none_without_desc("All collections that hold my posts", " ", byline);
 	} else if (type == "tagpage") {
 		const tagDescription = (props as any)?.description || "";
+		const byline = siteInfo.title || author;
 		chosen_markup = tagDescription
-			? obj_img_none_with_desc("All posts tagged with #" + keyStr, " ", tagDescription, author)
-			: obj_img_none_without_desc("All posts tagged with #" + keyStr, " ", author);
+			? obj_img_none_with_desc("All posts tagged with #" + keyStr, " ", tagDescription, byline)
+			: obj_img_none_without_desc("All posts tagged with #" + keyStr, " ", byline);
 	} else if (type == "authorpage") {
 		const authorDescription = (props as any)?.description || "";
-		chosen_markup = authorDescription
-			? obj_img_none_with_desc("Posts by " + keyStr, " ", authorDescription, "")
-			: obj_img_none_without_desc("Posts by " + keyStr, " ", "");
+		const authorPhoto = (props as any)?.photo as string | undefined;
+		if (authorPhoto && isImageUrl(authorPhoto)) {
+			const normalizedPhoto = await normalizeOgImageSrc(authorPhoto, "author");
+			if (normalizedPhoto) {
+				chosen_markup = authorDescription
+					? obj_img_sq_with_desc(
+							"Posts by " + keyStr,
+							" ",
+							authorDescription,
+							normalizedPhoto,
+							"",
+						)
+					: obj_img_sq_without_desc("Posts by " + keyStr, " ", normalizedPhoto, "");
+			} else {
+				chosen_markup = authorDescription
+					? obj_img_none_with_desc("Posts by " + keyStr, " ", authorDescription, "")
+					: obj_img_none_without_desc("Posts by " + keyStr, " ", "");
+			}
+		} else {
+			chosen_markup = authorDescription
+				? obj_img_none_with_desc("Posts by " + keyStr, " ", authorDescription, "")
+				: obj_img_none_without_desc("Posts by " + keyStr, " ", "");
+		}
 	} else if (type == "authorsindex") {
 		chosen_markup = obj_img_none_without_desc("All Authors", " ", "");
 	} else {
@@ -1245,16 +1228,22 @@ export const getStaticPaths: GetStaticPaths = async () => {
 		props: { description: tag.description },
 	}));
 
-	// Add author pages OG images (conditional on shouldShowAuthors)
-	let authorMap: { params: { slug: string }; props?: { description: string } }[] = [];
+	// Author pages OG images (only when author pages are enabled and authors property exists)
+	let authorMap: { params: { slug: string }; props?: { description?: string; photo?: string } }[] =
+		[];
 	let authorsindex: { params: { slug: string } } | null = null;
 
-	const showAuthors = await shouldShowAuthors();
-	if (showAuthors && AUTHORS_CONFIG.enableAuthorPages) {
+	const authorsPropertyExists = await hasAuthorsProperty();
+	const includeAuthorPages =
+		AUTHORS_CONFIG.enableAuthorPages &&
+		authorsPropertyExists &&
+		(!AUTHORS_CONFIG.onlyWhenCustomAuthors || (await hasCustomAuthors()));
+
+	if (includeAuthorPages) {
 		const allAuthors = await getAllAuthorsWithCounts();
 		authorMap = allAuthors.map((author) => ({
 			params: { slug: "authorpage---" + author.name },
-			props: { description: author.bio || "" },
+			props: { description: author.bio || "", photo: author.photo },
 		}));
 		authorsindex = { params: { slug: "authorsindex---index" } };
 	}
