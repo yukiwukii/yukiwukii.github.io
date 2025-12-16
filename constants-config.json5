@@ -108,7 +108,7 @@
 		// Listing view style for post lists.
 		// "list" (default): Traditional vertical list with title, date, excerpt, and tags.
 		// "gallery": Card-based grid layout with FeaturedImage thumbnails.
-		"listing-view": "list",
+		"listing-view": "gallery",
 	},
 
 	// === Social Media Links ===

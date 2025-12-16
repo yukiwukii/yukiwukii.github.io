@@ -220,12 +220,19 @@ export const AUTHORS_CONFIG: AuthorsConfig = {
 // Author shortcodes for parsing description field
 export const AUTHOR_SHORTCODES = {
 	url: {
-		start: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.start || "<<author-url>>",
-		end: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.end || "<<author-url>>",
+		start:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.start ||
+			"<<author-url>>",
+		end:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.end || "<<author-url>>",
 	},
 	photo: {
-		start: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.start || "<<author-photo-url>>",
-		end: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.end || "<<author-photo-url>>",
+		start:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.start ||
+			"<<author-photo-url>>",
+		end:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.end ||
+			"<<author-photo-url>>",
 	},
 };
 

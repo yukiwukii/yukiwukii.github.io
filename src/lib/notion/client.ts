@@ -21,6 +21,7 @@ import {
 	CITATIONS,
 	MDX_SNIPPET_TRIGGER,
 	EXTERNAL_CONTENT_CONFIG,
+	AUTHORS_CONFIG,
 	AUTHOR_SHORTCODES,
 	AUTHOR,
 } from "../../constants";
@@ -1262,7 +1263,6 @@ export async function shouldShowAuthors(): Promise<boolean> {
 		return false;
 	}
 
-	const { AUTHORS_CONFIG } = await import("@/constants");
 	if (!AUTHORS_CONFIG.onlyWhenCustomAuthors) {
 		return true;
 	}

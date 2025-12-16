@@ -1,0 +1,23 @@
+---
+interface Props {
+	showOverlay: boolean;
+	backgroundUrl?: string;
+	class?: string;
+}
+
+const { showOverlay, backgroundUrl = "", class: className = "" } = Astro.props;
+---
+
+{
+	showOverlay ? (
+		<div class={`cover-overlay-container ${className}`.trim()}>
+			<div class="cover-overlay-bg" style={`background-image: url('${backgroundUrl}')`} />
+			<div class="cover-overlay-tint" />
+			<div class="cover-overlay-content">
+				<slot />
+			</div>
+		</div>
+	) : (
+		<slot />
+	)
+}

@@ -30,7 +30,8 @@ const meta = {
 			allAuthors.map((author) => {
 				// Use default photo ONLY if author name matches the site's author
 				const isSiteAuthor = author.name === siteInfo.author;
-				const authorPhoto = author.photo || (isSiteAuthor ? AUTHORS_CONFIG.siteAuthorPhoto : undefined);
+				const authorPhoto =
+					author.photo || (isSiteAuthor ? AUTHORS_CONFIG.siteAuthorPhoto : undefined);
 				return (
 					<div class="flex items-center">
 						<a
@@ -55,9 +56,7 @@ const meta = {
 									/>
 								)}
 								{author.name}
-								<span class="count-badge">
-									{author.count}
-								</span>
+								<span class="count-badge">{author.count}</span>
 							</span>
 						</a>
 					</div>

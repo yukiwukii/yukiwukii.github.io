@@ -49,7 +49,8 @@ export default (): AstroIntegration => ({
 
 							// Check if we need to download to public/notion (for OG images)
 							const publicPath = generateFilePath(url, false);
-							const needsPublicDownload = !LAST_BUILD_TIME ||
+							const needsPublicDownload =
+								!LAST_BUILD_TIME ||
 								entry.LastUpdatedTimeStamp > LAST_BUILD_TIME ||
 								!fs.existsSync(publicPath);
 
@@ -60,7 +61,8 @@ export default (): AstroIntegration => ({
 							// For gallery view, also download to src/assets/notion for optimized images
 							if (LISTING_VIEW === "gallery") {
 								const assetsPath = generateFilePath(url, true);
-								const needsAssetsDownload = !LAST_BUILD_TIME ||
+								const needsAssetsDownload =
+									!LAST_BUILD_TIME ||
 									entry.LastUpdatedTimeStamp > LAST_BUILD_TIME ||
 									!fs.existsSync(assetsPath);
 
