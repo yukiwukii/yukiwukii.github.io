@@ -9,7 +9,8 @@ import {
 	resolvePostHref,
 	setCurrentHeadings,
 	isExternalPost,
-	filePath,
+	getNotionImage,
+	getImageComponentFormat,
 } from "@/lib/blog-helpers";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
@@ -19,6 +20,7 @@ import { buildHeadings, slugify } from "@/utils";
 import fs from "fs/promises";
 import path from "path";
 import superjson from "superjson";
+import { getImage } from "astro:assets";
 
 interface Props {
 	post_full_preview: Post;
@@ -105,10 +107,22 @@ const showOverlay = COVER_OVERLAY_ENABLED && hasCover;
 
 // Get cover image URL for background
 let coverImageUrl = "";
-if (showOverlay && post_full_preview.Cover) {
+if (showOverlay && post_full_preview.Cover?.Url) {
 	try {
 		const coverUrl = new URL(post_full_preview.Cover.Url);
-		coverImageUrl = filePath(coverUrl);
+		const downloadedImage = await getNotionImage(coverUrl);
+
+		if (downloadedImage) {
+			const optimized = await getImage({
+				src: downloadedImage,
+				format: getImageComponentFormat(downloadedImage),
+				quality: 85,
+				width: downloadedImage.width,
+			});
+			coverImageUrl = optimized?.src || downloadedImage.src;
+		} else {
+			coverImageUrl = post_full_preview.Cover.Url;
+		}
 	} catch {
 		coverImageUrl = post_full_preview.Cover.Url;
 	}
@@ -171,12 +185,15 @@ if (showOverlay && post_full_preview.Cover) {
 					/>
 					{post_full_preview.Tags.map((tag) => (
 						<a
-							class="inline-block rounded-md px-1 text-sm bg-white/20"
-							aria-label={`View more blogs with the tag ${tag.name}`}
-							href={getNavLink("/tags/" + slugify(tag.name) + "/")}
-						>
-							{tag.name}
-						</a>
+						class={`inline-block rounded-md px-1 text-sm ${getNotionColorToTailwindColor(
+							tag.color + "-background",
+							true,
+						)}`}
+						aria-label={`View more blogs with the tag ${tag.name}`}
+						href={getNavLink("/tags/" + slugify(tag.name) + "/")}
+					>
+						{tag.name}
+					</a>
 					))}
 				</div>
 			)}

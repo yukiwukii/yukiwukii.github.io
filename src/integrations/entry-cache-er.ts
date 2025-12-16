@@ -5,8 +5,9 @@ import {
 	generateFilePath,
 	getPostContentByPostId,
 	createInterlinkedContentToThisEntry,
+	isImageTypeForAstro,
 } from "../lib/notion/client";
-import { LAST_BUILD_TIME, LISTING_VIEW } from "../constants";
+import { COVER_OVERLAY_ENABLED, LAST_BUILD_TIME, LISTING_VIEW } from "../constants";
 import fs from "node:fs";
 
 export default (): AstroIntegration => ({
@@ -18,6 +19,27 @@ export default (): AstroIntegration => ({
 			const interlinkedContentInEntries = await Promise.all(
 				entries.map(async (entry) => {
 					let tasks = [];
+
+					// Download Cover image for overlay (only to src/assets/notion)
+					if (COVER_OVERLAY_ENABLED && entry.Cover && entry.Cover.Url) {
+						try {
+							const url = new URL(entry.Cover.Url);
+							const isImage = isImageTypeForAstro(url.pathname);
+							if (isImage) {
+								const assetsPath = generateFilePath(url, true);
+								const needsAssetsDownload =
+									!LAST_BUILD_TIME ||
+									entry.LastUpdatedTimeStamp > LAST_BUILD_TIME ||
+									!fs.existsSync(assetsPath);
+
+								if (needsAssetsDownload) {
+									tasks.push(downloadFile(url, true));
+								}
+							}
+						} catch (err) {
+							console.log("Invalid Cover URL");
+						}
+					}
 
 					// Download FeaturedImage if it exists
 					if (entry.FeaturedImage && entry.FeaturedImage.Url) {

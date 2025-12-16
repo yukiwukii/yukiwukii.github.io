@@ -1370,41 +1370,48 @@ html.dark :not(.datatable-ascending):not(.datatable-descending)>.datatable-sorte
 
 /* Cover Overlay for Hero and Stream */
 .cover-overlay-container {
+  display: grid;
+  grid-template-areas: "stack";
+  isolation: isolate;
   position: relative;
   width: 100%;
   overflow: hidden;
-  min-height: 120px;
-  max-height: 200px;
+  min-height: 150px;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
 }
 
 .cover-overlay-bg {
+  grid-area: stack;
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0.25;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .cover-overlay-tint {
+  grid-area: stack;
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
     color-mix(in srgb, var(--color-bgColor) 70%, transparent),
-    color-mix(in srgb, var(--color-bgColor) 85%, transparent)
+    color-mix(in srgb, var(--color-bgColor) 50%, transparent)
   );
+  pointer-events: none;
 }
 
 .cover-overlay-content {
+  grid-area: stack;
   position: relative;
   z-index: 10;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 120px;
+  min-height: 150px;
 }
 
 .cover-overlay-content h1,

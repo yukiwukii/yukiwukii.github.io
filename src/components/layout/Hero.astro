@@ -4,9 +4,10 @@ import AuthorByline from "@/components/layout/AuthorByline.astro";
 import type { Post } from "@/lib/interfaces";
 import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
 import { areDifferentDates } from "@/utils/date";
-import { getNavLink, filePath } from "@/lib/blog-helpers";
+import { getNavLink, getNotionImage, getImageComponentFormat } from "@/lib/blog-helpers";
 import Icon from "@/components/ui/Icon.astro";
 import { slugify } from "@/utils";
+import { getImage } from "astro:assets";
 import { COVER_OVERLAY_ENABLED } from "@/constants";
 
 interface Props {
@@ -23,15 +24,26 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 const hasCover = post.Cover && post.Cover.Url;
 const showOverlay = COVER_OVERLAY_ENABLED && hasCover;
 
-// Get cover image URL for background
+// Get optimized cover image URL for background (use same pipeline as Notion images)
 let coverImageUrl = "";
-if (showOverlay && post.Cover) {
+if (showOverlay && post.Cover?.Url) {
 	try {
 		const coverUrl = new URL(post.Cover.Url);
-		// Use filePath for Notion-hosted images
-		coverImageUrl = filePath(coverUrl);
+		const downloadedImage = await getNotionImage(coverUrl);
+
+		if (downloadedImage) {
+			// Let Astro generate an optimized version; fall back to original metadata src
+			const optimized = await getImage({
+				src: downloadedImage,
+				format: getImageComponentFormat(downloadedImage),
+				quality: 85,
+				width: downloadedImage.width,
+			});
+			coverImageUrl = optimized?.src || downloadedImage.src;
+		} else {
+			coverImageUrl = post.Cover.Url;
+		}
 	} catch {
-		// For external URLs or if parsing fails, use directly
 		coverImageUrl = post.Cover.Url;
 	}
 }
@@ -79,7 +91,10 @@ if (showOverlay && post.Cover) {
 					/>
 					{post.Tags.map((tag) => (
 						<a
-							class="mt-1 inline-block rounded-lg px-2 bg-white/20 text-white text-sm"
+							class={`mt-1 inline-block rounded-lg px-2 text-sm ${getNotionColorToTailwindColor(
+								tag.color + "-background",
+								true,
+							)}`}
 							aria-label={`View more blogs with the tag ${tag.name}`}
 							href={getNavLink("/tags/" + slugify(tag.name) + "/")}
 							data-pagefind-filter="tags"
