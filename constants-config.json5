@@ -61,6 +61,8 @@
 	// === Theme Customization ===
 	// Customize the look and feel of your site, including colors and fonts.
 	theme: {
+		// Currently only the classic theme is supported and available. Changing this changes nothing.
+		preset: "classic",
 		// Define your site's color palette.
 		// Colors MUST be in RGB format, with spaces between numbers (e.g., "255 255 255").
 		colors: {
