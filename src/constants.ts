@@ -220,12 +220,19 @@ export const AUTHORS_CONFIG: AuthorsConfig = {
 // Author shortcodes for parsing description field
 export const AUTHOR_SHORTCODES = {
 	url: {
-		start: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.start || "<<author-url>>",
-		end: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.end || "<<author-url>>",
+		start:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.start ||
+			"<<author-url>>",
+		end:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-url"]?.end || "<<author-url>>",
 	},
 	photo: {
-		start: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.start || "<<author-photo-url>>",
-		end: key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.end || "<<author-photo-url>>",
+		start:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.start ||
+			"<<author-photo-url>>",
+		end:
+			key_value_from_json?.["shortcodes"]?.["author-desc"]?.["author-photo-url"]?.end ||
+			"<<author-photo-url>>",
 	},
 };
 
@@ -369,6 +376,14 @@ export const GISCUS = key_value_from_json?.comments?.giscus || null;
 export const BLUESKY_COMM = key_value_from_json?.comments?.["bluesky-comments"] || {};
 
 export const THEME = key_value_from_json["theme"] || {};
+
+export const COVER_OVERLAY_ENABLED = key_value_from_json?.["theme"]?.["cover-overlay"] ?? false;
+
+// Normalize listing-view: anything except explicit "list" falls back to the default "list".
+export const LISTING_VIEW: "list" | "gallery" =
+	key_value_from_json?.["collections-and-listings"]?.["listing-view"] === "gallery"
+		? "gallery"
+		: "list";
 
 export const GOOGLE_SEARCH_CONSOLE_META_TAG =
 	key_value_from_json?.tracking?.["google-search-console-html-tag"] || null;

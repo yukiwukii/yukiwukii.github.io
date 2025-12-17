@@ -59,7 +59,10 @@ export default function astroImageCacheCleanerCopier(): AstroIntegration {
 							const contextBefore = content.substring(Math.max(0, matchIndex - 100), matchIndex);
 
 							// Skip if this is an absolute URL (has :// before /_astro/ without a quote in between)
-							const lastQuote = Math.max(contextBefore.lastIndexOf('"'), contextBefore.lastIndexOf("'"));
+							const lastQuote = Math.max(
+								contextBefore.lastIndexOf('"'),
+								contextBefore.lastIndexOf("'"),
+							);
 							const lastProtocol = contextBefore.lastIndexOf("://");
 
 							// If there's a protocol marker and no quote after it, this is an absolute URL - skip it

@@ -35,9 +35,7 @@ const meta = {
 							)} `}
 						>
 							{tag.name}
-							<span class="count-badge">
-								{tag.count}
-							</span>
+							<span class="count-badge">{tag.count}</span>
 						</span>
 					</a>
 					{tag.description && <TagDescPopover description={tag.description} />}

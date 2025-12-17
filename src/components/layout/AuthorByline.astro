@@ -80,19 +80,13 @@ const getAuthorLinkInfo = (author: AuthorProperty) => {
 								target="_blank"
 								rel="noopener noreferrer"
 							>
-								<Icon
-									class={compact ? "h-3 w-3" : "h-4 w-4"}
-									name="author"
-								/>
+								<Icon class={compact ? "h-3 w-3" : "h-4 w-4"} name="author" />
 							</a>
 						)}
 						{linkInfo.nameLink ? (
 							<a
 								href={linkInfo.nameLink}
-								class:list={[
-									"author-name-link",
-									compact ? "text-xs" : "text-sm",
-								]}
+								class:list={["author-name-link", compact ? "text-xs" : "text-sm"]}
 								title={`View posts by ${author.name}`}
 							>
 								{author.name}

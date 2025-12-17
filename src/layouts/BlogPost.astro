@@ -67,7 +67,13 @@ const metaAuthor = getMetaAuthor();
 ---
 
 <BaseLayout
-	meta={{ title: post.Title, description: post.Excerpt, articleDate, ogImage: socialImage, author: metaAuthor }}
+	meta={{
+		title: post.Title,
+		description: post.Excerpt,
+		articleDate,
+		ogImage: socialImage,
+		author: metaAuthor,
+	}}
 >
 	<div class="max-w-[708px] sm:mr-20 print:mr-auto print:max-w-full">
 		<article class="break-words" data-pagefind-body>
