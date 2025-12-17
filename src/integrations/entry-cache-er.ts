@@ -9,6 +9,7 @@ import {
 } from "../lib/notion/client";
 import { COVER_OVERLAY_ENABLED, LAST_BUILD_TIME, LISTING_VIEW } from "../constants";
 import fs from "node:fs";
+import path from "path";
 
 export default (): AstroIntegration => ({
 	name: "entry-cache-er",
@@ -50,9 +51,12 @@ export default (): AstroIntegration => ({
 							// Check if we need to download to public/notion (for OG images)
 							const publicPath = (() => {
 								const base = generateFilePath(url, false);
-								const ext = base.toLowerCase().slice(base.lastIndexOf("."));
+								const ext = path.extname(base).toLowerCase();
 								if ([".jpg", ".jpeg", ".png"].includes(ext)) return base;
-								return base.replace(ext, ".png");
+								// Replicate downloadFile's PNG conversion naming logic
+								const dir = path.dirname(base);
+								const name = path.parse(base).name;
+								return path.join(dir, name + ".png");
 							})();
 							const needsPublicDownload =
 								!LAST_BUILD_TIME ||
