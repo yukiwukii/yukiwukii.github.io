@@ -23,7 +23,6 @@ const initialState =
 
 {
 	enableBackground ? (
-		<>
 			<div class={`cover-hero-container ${className}`.trim()}>
 				<div
 					class="cover-hero-image"
@@ -36,8 +35,6 @@ const initialState =
 					<slot />
 				</div>
 			</div>
-			{hasPlaceholder && <script src="../../scripts/heroBackgroundSwap.ts" />}
-		</>
 	) : (
 		<slot />
 	)
