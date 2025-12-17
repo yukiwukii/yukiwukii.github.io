@@ -377,7 +377,8 @@ export const BLUESKY_COMM = key_value_from_json?.comments?.["bluesky-comments"] 
 
 export const THEME = key_value_from_json["theme"] || {};
 
-export const COVER_OVERLAY_ENABLED = key_value_from_json?.["theme"]?.["cover-overlay"] ?? false;
+export const COVER_AS_HERO_BACKGROUND_ENABLED =
+	key_value_from_json?.["theme"]?.["cover-as-hero-background"] ?? false;
 
 // Normalize listing-view: anything except explicit "list" falls back to the default "list".
 export const LISTING_VIEW: "list" | "gallery" =

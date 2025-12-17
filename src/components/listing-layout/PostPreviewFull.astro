@@ -14,14 +14,18 @@ import {
 } from "@/lib/blog-helpers";
 import NotionBlocks from "@/components/NotionBlocks.astro";
 import { getNotionColorToTailwindColor } from "@/utils/style-helpers";
-import { MENU_PAGES_COLLECTION, BUILD_FOLDER_PATHS, COVER_OVERLAY_ENABLED } from "@/constants";
+import {
+	MENU_PAGES_COLLECTION,
+	BUILD_FOLDER_PATHS,
+	COVER_AS_HERO_BACKGROUND_ENABLED,
+} from "@/constants";
 import Icon from "@/components/ui/Icon.astro";
 import { buildHeadings, slugify } from "@/utils";
 import fs from "fs/promises";
 import path from "path";
 import superjson from "superjson";
 import { getImage } from "astro:assets";
-import CoverOverlayShell from "@/components/layout/CoverOverlayShell.astro";
+import HeroBackgroundCover from "@/components/layout/HeroBackgroundCover.astro";
 
 interface Props {
 	post_full_preview: Post;
@@ -102,13 +106,13 @@ if (!external && shouldUseCache) {
 
 const postLink = resolvePostHref(post_full_preview);
 
-// Check if we should show cover overlay
+// Check if we should show cover as hero background
 const hasCover = post_full_preview.Cover && post_full_preview.Cover.Url;
-const showOverlay = COVER_OVERLAY_ENABLED && hasCover;
+const showHeroBackground = COVER_AS_HERO_BACKGROUND_ENABLED && hasCover;
 
 // Get cover image URL for background
 let coverImageUrl = "";
-if (showOverlay && post_full_preview.Cover?.Url) {
+if (showHeroBackground && post_full_preview.Cover?.Url) {
 	try {
 		const coverUrl = new URL(post_full_preview.Cover.Url);
 		const downloadedImage = await getNotionImage(coverUrl);
@@ -130,7 +134,11 @@ if (showOverlay && post_full_preview.Cover?.Url) {
 }
 ---
 
-<CoverOverlayShell showOverlay={showOverlay} backgroundUrl={coverImageUrl} class="mb-4">
+<HeroBackgroundCover
+	enableBackground={showHeroBackground}
+	backgroundUrl={coverImageUrl}
+	class="mb-4"
+>
 	<FormattedDate
 		date={new Date(post_full_preview.Date)}
 		class="text-accent/90 min-w-[120px] text-xs"
@@ -210,7 +218,7 @@ if (showOverlay && post_full_preview.Cover?.Url) {
 			<AuthorByline authors={post_full_preview.Authors} compact={true} />
 		)
 	}
-</CoverOverlayShell>
+</HeroBackgroundCover>
 {
 	external ? (
 		<section class="post-body post-preview-full-container">

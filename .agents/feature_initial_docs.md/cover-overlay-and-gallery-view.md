@@ -17,7 +17,7 @@ Two features to add to the theme configuration:
     // ... existing settings ...
 
     // Enable overlay on hero cover images for better text readability
-    "cover-overlay": false,
+    "cover-as-hero-background": false,
 
     // Listing view style for post lists
     // Options: "list" (default) | "gallery"
@@ -42,16 +42,16 @@ Two features to add to the theme configuration:
 ### Files to Modify
 
 #### 1. `constants-config.json5`
-Add `"cover-overlay": false` under theme section
+Add `"cover-as-hero-background": false` under theme section
 
 #### 2. `src/constants.ts`
 Add export:
 ```typescript
-export const COVER_OVERLAY_ENABLED = key_value_from_json?.["theme"]?.["cover-overlay"] ?? false;
+export const COVER_AS_HERO_BACKGROUND_ENABLED = key_value_from_json?.["theme"]?.["cover-as-hero-background"] ?? false;
 ```
 
 #### 3. `src/components/layout/Hero.astro`
-- Import `COVER_OVERLAY_ENABLED` and `filePath` helper
+- Import `COVER_AS_HERO_BACKGROUND_ENABLED` and `filePath` helper
 - Check if `post.Cover` exists AND config enabled
 - Wrap metadata content in overlay container when active:
   - Background image with low opacity
@@ -193,7 +193,7 @@ Gallery grid styles (existing `.post-card` styles at lines 562-582 provide base)
 ## Implementation Order
 
 1. Config: Add both keys to `constants-config.json5`
-2. Constants: Export `COVER_OVERLAY_ENABLED` and `LISTING_VIEW`
+2. Constants: Export `COVER_AS_HERO_BACKGROUND_ENABLED` and `LISTING_VIEW`
 3. CSS: Add overlay and gallery styles to `global.css`
 4. Hero.astro: Implement cover overlay
 5. PostPreviewFull.astro: Implement stream cover overlay

@@ -1254,19 +1254,19 @@ html.dark :not(.datatable-ascending):not(.datatable-descending)>.datatable-sorte
   @apply px-3 pb-1;
 }
 
-/* Cover Overlay for Hero and Stream */
-.cover-overlay-container {
+/* Hero Background (formerly Cover Overlay) for Hero and Stream */
+.cover-hero-container {
   @apply grid relative w-full overflow-hidden min-h-[150px] rounded-lg mb-4;
   grid-template-areas: "stack";
   @apply isolate;
 }
 
-.cover-overlay-bg {
+.cover-hero-image {
   grid-area: stack;
   @apply absolute inset-0 bg-cover bg-center opacity-40 pointer-events-none;
 }
 
-.cover-overlay-tint {
+.cover-hero-tint {
   grid-area: stack;
   @apply absolute inset-0 pointer-events-none;
   background: linear-gradient(
@@ -1276,7 +1276,7 @@ html.dark :not(.datatable-ascending):not(.datatable-descending)>.datatable-sorte
   );
 }
 
-.cover-overlay-content {
+.cover-hero-content {
   grid-area: stack;
   @apply relative z-10 min-h-[150px] p-6 flex flex-col justify-center;
 }

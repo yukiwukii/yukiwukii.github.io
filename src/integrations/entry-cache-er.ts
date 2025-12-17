@@ -7,7 +7,7 @@ import {
 	createInterlinkedContentToThisEntry,
 	isImageTypeForAstro,
 } from "../lib/notion/client";
-import { COVER_OVERLAY_ENABLED, LAST_BUILD_TIME, LISTING_VIEW } from "../constants";
+import { COVER_AS_HERO_BACKGROUND_ENABLED, LAST_BUILD_TIME, LISTING_VIEW } from "../constants";
 import fs from "node:fs";
 import path from "path";
 
@@ -22,7 +22,7 @@ export default (): AstroIntegration => ({
 					let tasks = [];
 
 					// Download Cover image for overlay (only to src/assets/notion)
-					if (COVER_OVERLAY_ENABLED && entry.Cover && entry.Cover.Url) {
+					if (COVER_AS_HERO_BACKGROUND_ENABLED && entry.Cover && entry.Cover.Url) {
 						try {
 							const url = new URL(entry.Cover.Url);
 							const isImage = isImageTypeForAstro(url.pathname);

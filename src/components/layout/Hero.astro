@@ -8,8 +8,8 @@ import { getNavLink, getNotionImage, getImageComponentFormat } from "@/lib/blog-
 import Icon from "@/components/ui/Icon.astro";
 import { slugify } from "@/utils";
 import { getImage } from "astro:assets";
-import { COVER_OVERLAY_ENABLED } from "@/constants";
-import CoverOverlayShell from "@/components/layout/CoverOverlayShell.astro";
+import { COVER_AS_HERO_BACKGROUND_ENABLED } from "@/constants";
+import HeroBackgroundCover from "@/components/layout/HeroBackgroundCover.astro";
 
 interface Props {
 	post: Post;
@@ -21,13 +21,13 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 	month: "long",
 };
 
-// Check if we should show cover overlay
+// Check if we should show cover as hero background
 const hasCover = post.Cover && post.Cover.Url;
-const showOverlay = COVER_OVERLAY_ENABLED && hasCover;
+const showHeroBackground = COVER_AS_HERO_BACKGROUND_ENABLED && hasCover;
 
 // Get optimized cover image URL for background (use same pipeline as Notion images)
 let coverImageUrl = "";
-if (showOverlay && post.Cover?.Url) {
+if (showHeroBackground && post.Cover?.Url) {
 	try {
 		const coverUrl = new URL(post.Cover.Url);
 		const downloadedImage = await getNotionImage(coverUrl);
@@ -50,7 +50,11 @@ if (showOverlay && post.Cover?.Url) {
 }
 ---
 
-<CoverOverlayShell showOverlay={showOverlay} backgroundUrl={coverImageUrl} class="mb-4">
+<HeroBackgroundCover
+	enableBackground={showHeroBackground}
+	backgroundUrl={coverImageUrl}
+	class="mb-4"
+>
 	<h1
 		class="title mb-3 sm:mb-1"
 		data-pagefind-filter=`collections:${post.Collection}`
@@ -104,5 +108,5 @@ if (showOverlay && post.Cover?.Url) {
 			</div>
 		)
 	}
-</CoverOverlayShell>
+</HeroBackgroundCover>
 <hr class="divider bg-accent/30 mx-auto my-4 h-1 w-full rounded-sm border-none" />
