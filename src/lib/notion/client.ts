@@ -1315,7 +1315,6 @@ export async function downloadFile(
 	isFavicon: boolean = false,
 	convertToPng: boolean = false,
 ): Promise<string | void> {
-
 	let res!: AxiosResponse;
 	try {
 		res = await axios({

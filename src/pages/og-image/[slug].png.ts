@@ -79,7 +79,11 @@ const imageToDataUrl = async (filepath: string, resize?: { w: number; h: number 
 let customIconURL = "";
 if (siteInfo.logo && siteInfo.logo.Type === "file") {
 	try {
-		customIconURL = path.join(process.cwd(), "public", buildTimeFilePath(new URL(siteInfo.logo.Url)));
+		customIconURL = path.join(
+			process.cwd(),
+			"public",
+			buildTimeFilePath(new URL(siteInfo.logo.Url)),
+		);
 	} catch (err) {
 		console.log("Invalid DB custom icon URL");
 	}
@@ -189,7 +193,10 @@ const buildAuthorBlock = (author: string, size: number) => {
 		});
 	}
 	if (author) {
-		const names = author.split(",").map((n) => n.trim()).filter(Boolean);
+		const names = author
+			.split(",")
+			.map((n) => n.trim())
+			.filter(Boolean);
 		const fontSize =
 			names.length > 2
 				? Math.max(12, size - 8)
@@ -501,9 +508,7 @@ export async function GET(context: APIContext) {
 			: siteInfo.title;
 		const isMenuPage = post?.Collection && MENU_PAGES_COLLECTION.includes(post.Collection);
 		dateStr =
-			post?.Slug == HOME_PAGE_SLUG || isMenuPage
-				? ""
-				: getFormattedDate(post?.Date ?? Date.now());
+			post?.Slug == HOME_PAGE_SLUG || isMenuPage ? "" : getFormattedDate(post?.Date ?? Date.now());
 
 		const authorsProp = await hasAuthorsProperty();
 		if (authorsProp && post?.Authors?.length) {
@@ -514,8 +519,7 @@ export async function GET(context: APIContext) {
 		const featuredUrl = await normalizeOgImageSrc(post?.FeaturedImage?.Url);
 		const hasValidImg =
 			featuredUrl &&
-			(!post?.FeaturedImage?.ExpiryTime ||
-				Date.parse(post.FeaturedImage.ExpiryTime) > Date.now());
+			(!post?.FeaturedImage?.ExpiryTime || Date.parse(post.FeaturedImage.ExpiryTime) > Date.now());
 
 		img = hasValidImg ? featuredUrl : undefined;
 		desc = (OG_SETUP["excerpt"] && post?.Excerpt) || "";
