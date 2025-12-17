@@ -210,8 +210,8 @@ export interface AuthorsConfig {
 }
 
 export const AUTHORS_CONFIG: AuthorsConfig = {
-	siteAuthorUrl: key_value_from_json?.["site-info"]?.authors?.["site-author-url"] || "",
-	siteAuthorPhoto: key_value_from_json?.["site-info"]?.authors?.["site-author-photo"] || "",
+	siteAuthorUrl: key_value_from_json?.["site-info"]?.["site-author-url"] || "",
+	siteAuthorPhoto: key_value_from_json?.["site-info"]?.["site-author-photo"] || "",
 	enableAuthorPages: key_value_from_json?.["site-info"]?.authors?.["enable-author-pages"] ?? true,
 	onlyWhenCustomAuthors:
 		key_value_from_json?.["site-info"]?.authors?.["only-when-custom-authors"] ?? true,

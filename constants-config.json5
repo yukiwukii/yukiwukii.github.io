@@ -18,17 +18,17 @@
 		"custom-domain": "",
 		// The sub-directory your site is deployed in (e.g., "/blog"). Leave empty if your site is at the root of your domain. Must start with a forward slash "/" if used.
 		"base-path": "",
+		// If the Authors property doesn't exist in your Notion database, all settings from now on below in this key are ignored.
+		// Personal URL for the site's author (from "author" field above). Only applies when an author's name matches the site author.
+		// Leave blank to link to author page (if enabled) or show as plain text.
+		"site-author-url": "",
+		// Avatar/photo URL for the site's author (from "author" field above). Only applies when an author's name matches the site author.
+		// Leave blank for no avatar.
+		"site-author-photo": "",
 		// === Multi-Author Support ===
 		// Configure author handling for posts with a multi-select Authors property in Notion.
-		// If the Authors property doesn't exist in your Notion database, these settings are ignored.
 		// When a post's Authors property is empty, the site's author (above) is used as fallback.
 		authors: {
-			// Personal URL for the site's author (from "author" field above). Only applies when an author's name matches the site author.
-			// Leave blank to link to author page (if enabled) or show as plain text.
-			"site-author-url": "",
-			// Avatar/photo URL for the site's author (from "author" field above). Only applies when an author's name matches the site author.
-			// Leave blank for no avatar.
-			"site-author-photo": "",
 			// If true, builds /authors/ index and /authors/[author]/ pages. Set to false to disable author pages entirely.
 			"enable-author-pages": true,
 			// If true, only show bylines and build author pages when at least one post has a non-default author.
