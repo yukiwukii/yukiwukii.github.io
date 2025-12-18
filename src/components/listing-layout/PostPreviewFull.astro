@@ -122,7 +122,7 @@ if (showHeroBackground && post_full_preview.Cover?.Url) {
 			const optimized = await getImage({
 				src: downloadedImage,
 				format: getImageComponentFormat(downloadedImage),
-				quality: 75,
+				quality: 65,
 				width: downloadedImage.width,
 			});
 			coverImageUrl = optimized?.src || downloadedImage.src;
