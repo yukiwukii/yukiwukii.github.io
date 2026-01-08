@@ -88,8 +88,8 @@
 			},
 			// Secondary accent color (e.g., for borders, subtle highlights)
 			"accent-2": {
-				light: "17 17 17",
-				dark: "237 237 237",
+				light: "94 122 110",
+				dark: "188 214 201",
 			},
 			// Color for blockquotes and other special text
 			quote: {
