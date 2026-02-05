@@ -118,8 +118,8 @@
 	// The keys (e.g., 'github', 'twitter') are fixed and correspond to specific icons.
 	socials: {
 		email: "mailto:your-email@example.com",
-		github: "",
-		googlescholar: "",
+		github: "https://github.com/yukiwukii",
+		googlescholar: "https://scholar.google.com/citations?user=Vot4Ol0AAAAJ&hl=en",
 		semanticscholar: "",
 		dblp: "",
 		substack: "",
@@ -129,7 +129,7 @@
 		instagram: "",
 		mastodon: "",
 		bluesky: "",
-		calendar: "",
+		calendar: "https://cal.com/nadya-yuki/quick-chat",
 		kofi: "",
 		"buy-me-a-coffee": "",
 		// This link is for forked repo you'll end up having. Feel free to change it to your needs.
