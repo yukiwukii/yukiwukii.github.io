@@ -4,7 +4,7 @@
 	// This section configures the connection to your Notion database.
 	notion: {
 		// (Preferred) The Data Source ID for your Notion integration. This is a more stable way to connect to your database. You can find this in UI here: https://developers.notion.com/reference/retrieve-a-data-source#finding-a-data-source-id
-		"data-source-id": "1a55baa2cec48028894fd63c83914967",
+		"data-source-id": "1a55baa2-cec4-8147-89bc-000b414cbfbd",
 		// (Fallback) The classic Database ID. This is used only if 'data-source-id' is empty. The integration will automatically find the Data Source ID and use the first one from this if needed.
 		"database-id": "1a55baa2cec48028894fd63c83914967",
 	},
