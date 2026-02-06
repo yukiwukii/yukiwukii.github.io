@@ -102,10 +102,10 @@
 			// We automatically load weights [400, 500, 600, 700] and styles [normal, italic] for all fonts (it is fine if they are not available).
 			// Main body/UI font - can be a sans-serif OR serif typeface (e.g., "Roboto", "Merriweather", "Inter")
 			// If empty and mono-font-name is set, mono will be used for everything.
-			"sans-font-name": "Roboto",
+			"sans-font-name": "Inter",
 			// Monospace font for code blocks (e.g., "Fira Code", "JetBrains Mono")
 			// No need to escape spaces in font names!
-			"mono-font-name": "Roboto Mono",
+			"mono-font-name": "Jetbrains Mono",
 		},
 		// Enable using the cover image as the hero background (with an overlay for text readability).
 		// When enabled, displays a low-opacity tinted banner behind the title/date/tags area
